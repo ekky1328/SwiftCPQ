@@ -1,0 +1,30 @@
+{
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@primevue/themes": "^4.2.4",
+    "pinia": "^2.2.8",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.2.4",
+    "quill": "^2.0.3",
+    "tailwindcss-primeui": "^0.3.4",
+    "vue": "^3.5.13",
+    "vuedraggable": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.1",
+    "vue-tsc": "^2.1.10"
+  }
+}
