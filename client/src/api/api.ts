@@ -28,6 +28,10 @@ export async function GetProposals() {
 export async function GetProposalById(id: string) {
     try {
         const data = await fetch(`${domain}/api/v1/proposal/${id}`);
+        if (data.status === 500) {
+            throw new Error(await data.text())
+        }
+
         const body = data.json();
         return body;
     } 
@@ -35,7 +39,7 @@ export async function GetProposalById(id: string) {
     catch (error) {
         console.error(`There was an error with 'GetProposalById'.`)
         console.error(error);
-        return null;
+        return { error: true, message: `There was an issue getting data for proposal with id '${id}'.`}
     }
 }
 

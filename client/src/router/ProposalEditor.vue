@@ -1,6 +1,6 @@
 
 <template>
-  <div id="proposal-editor" v-if="proposalStore.data">
+  <div id="proposal-editor" v-if="proposalStore.data !== null">
     <Toolbar class="proposal-toolbar m-2 !px-0 !bg-transparent !border-none">
       <template #start> 
         <h1 class="m-0 text-3xl">{{ proposalStore.data.identifier }}</h1>
@@ -85,11 +85,12 @@ import Column from 'primevue/column';
 
 import { GetProposalById, SaveProposal } from '../api/api'
 
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { SECTION_TYPES } from '../constants/sections';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
+const router = useRouter();
 const toast = useToast();
 
 const proposalStore = useProposalStore();
@@ -128,12 +129,29 @@ async function triggerSaveProposal() {
   toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
 }
 
-onMounted(async function() {
-  if (proposalStore.data === null) {
-    const proposal = await GetProposalById(route.params.id);
-    proposalStore.data = proposal
-  }
-  document.title = `${proposalStore.data.identifier} - ${proposalStore.data.title}`;
+onMounted(async () => {
+
+    if (proposalStore.data === null) {
+      const proposal = await GetProposalById(route.params.id);
+
+      console.log(proposal)
+      if (proposal.error) {
+        router.push('/');
+        toast.add({ severity: 'error', summary: 'Error', detail: proposal.message, life: 3000 })
+        return;
+      }
+
+      if (proposal) {
+        proposalStore.data = proposal
+        document.title = `${proposalStore.data.identifier} - ${proposalStore.data.title}`;
+        return;
+      }
+    } 
+  
+});
+
+onUnmounted(() => {
+  proposalStore.data = null;
 });
 </script>
 
