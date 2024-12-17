@@ -131,3 +131,6 @@ dist
 
 # Supabase
 **.exe
+
+/server/data/proposals/*.json
+deploy.sh
