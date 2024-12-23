@@ -36,7 +36,16 @@
                         <th class="p-2 border border-gray-300 text-right">Subtotal</th>
                     </tr>
                     </thead>
-                    <Draggable tag="tbody" v-model="section.items" v-bind="dragOptions"  @start="drag = true" @end="drag = false" handle=".handle" item-key="id" >
+                    <Draggable 
+                        tag="tbody" 
+                        v-model="section.items" 
+                        v-bind="dragOptions"  
+                        @start="drag = true" 
+                        @end="drag = false" 
+                        handle=".handle" 
+                        item-key="id" 
+                        :animation="200"
+                    >
                         <template #item="{ element: item }">
                             <tr class="product-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
 
@@ -52,7 +61,17 @@
                                 </td>
                                 <td v-if="!isComment(item)" class="product title p-2 border border-gray-300">
                                     <InputText placeholder="Product Title" v-model="item.title" inputClass="w-full title" size="small" fluid />
-                                    <Editor placeholder="Description..." v-model="item.description" class="mt-2 description" editorStyle="height: 150px" />
+
+                                    <Inplace :active="item.description.trim() !== ''">
+                                        <template #display>
+                                            <a>Edit Description</a>
+                                        </template>
+                                        <template #content="{ closeCallback }">
+                                            <Editor placeholder="Description..." v-model="item.description" class="mt-2 description" editorStyle="height: 150px" />
+                                            <a class="description-close" @click="closeCallback">Close Description</a>
+                                        </template>
+                                    </Inplace>
+
                                 </td>
                                 <td v-if="!isComment(item)" class="product qty p-2 border border-gray-300 text-right">
                                     <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'QTY')" v-model="item.qty" inputClass="text-right" size="small" fluid />
@@ -70,7 +89,7 @@
                                     <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL')" v-model="item.subtotal" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
                                 </td>
 
-                                <td v-if="isComment(item)" class="product-comment px-2 border border-gray-300 bg-gray-200 text-left" colspan="7">
+                                <td v-if="isComment(item)" class="product-comment border border-gray-300 bg-gray-200 text-left" colspan="7">
                                     <Editor placeholder="Description..." v-model="item.description" />
                                 </td>
                             </tr>
@@ -124,6 +143,7 @@
     import Editor from 'primevue/editor';
     import SpeedDial from 'primevue/speeddial';
     import SplitButton from 'primevue/splitbutton';
+    import Inplace from 'primevue/inplace';
 
     const toast = useToast();
     
@@ -299,6 +319,7 @@
     .add-section-container .p-speeddial-open .p-speeddial-list {
         transition: all 200ms;
         background: white;
+        margin-top: -10px;
         padding: 8px;
         top: -8px;
         border-radius: 30px;
@@ -313,6 +334,22 @@
     .add-section-container .p-speeddial .p-speeddial-button {
         background: black !important;
         border-color: black !important;
+    }
+
+    .product.title .p-inplace-content {
+        position: relative;
+    }
+
+    .product.title .p-inplace-display {
+        opacity: 0.5;
+        background: none;
+        padding: 0;
+        font-size: 12px;
+        text-decoration: underline;
+    }
+
+    .product.title .p-inplace-display:hover {
+        opacity: 1;
     }
     
     /* Product Styling */
@@ -383,6 +420,17 @@
         border-color: rgb(143, 0, 0);
         background-color: rgb(143, 0, 0);
     }
+
+    .product.title .description-close {
+        opacity: 0.5;
+        font-size: 12px;
+        text-decoration: underline;
+        background: white;
+    }
+
+    .product.title .description-close:hover {
+        opacity: 1;
+    }
     
     /* Vue Draggable */
     .reorder {
@@ -399,7 +447,7 @@
     }
 
     .ghost {
-        opacity: 0.5;
+        opacity: 0.25;
         background: #c8ebfb;
     }
 </style>

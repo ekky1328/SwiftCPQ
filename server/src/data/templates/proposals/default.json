@@ -10,34 +10,37 @@
     "sections": [
         {
             "id": 1,
-            "title": "Scope Of Works",
-            "type": "INFO",
+            "title": "Cover Letter",
+            "type": "COVER_LETTER",
             "order": 1,
             "recurrance": null,
             "description": "",
             "isOptional": false,
-            "isLocked": true
+            "isLocked": true,
+            "__block_removal": true
         },
         {
             "id": 2,
+            "title": "Scope Of Works",
+            "type": "INFO",
+            "order": 2,
+            "recurrance": null,
+            "description": "",
+            "isOptional": false,
+            "isLocked": false,
+            "__block_removal": false
+        },
+        {
+            "id": 3,
             "title": "",
             "type": "PRODUCTS",
-            "order": 2,
+            "order": 3,
             "recurrance": "ONE_TIME",
             "description": null,
             "isOptional": false,
             "isLocked": false,
-            "items": []
-        },
-        {
-            "id": 3,
-            "title": "Terms and Conditions",
-            "type": "TERMS_AND_CONDITIONS",
-            "order": 3,
-            "recurrance": null,
-            "description": "<p><strong>1. Scope of Work</strong></p><p>The Service Provider will perform the Services as described in the accompanying proposal (\"Proposal\"). Any additional work requested by the Client beyond the agreed scope will require a written change order and may incur additional costs.</p><p><br></p><p><strong>2. Project Timeline</strong></p><p>The timeline for delivery of the Services is outlined in the Proposal. While the Service Provider will make every effort to meet these timelines, they are estimates and may be adjusted due to unforeseen circumstances. Any changes will be communicated promptly to the Client.</p><p><br></p><p><strong>3. Payment Terms</strong></p><p><br></p><p>\t<u>3.1 Fees: </u></p><p>\tPayment terms, including fees, are outlined in the Proposal. All payments are due as specified in the payment schedule.</p><p><br></p><p>\t<u>3.2 Late Payments: </u></p><p>\tLate payments may be subject to a penalty of [X]% per month on the outstanding balance.</p><p><br></p><p>\t<u>3.3 Taxes:</u> </p><p>\tThe Client is responsible for all applicable taxes unless otherwise specified.</p><p><br></p><p><strong>4. Client Responsibilities</strong></p><p><br></p><p>The Client agrees to provide timely access to relevant personnel, systems, and information required for the execution of the Services. Approve or provide feedback on deliverables within agreed timelines. Ensure third-party dependencies (if any) are fulfilled.</p><p><br></p><p><strong>5. Ownership and Intellectual Property</strong></p><p><br></p><p>\t<u>5.1 Deliverables: </u></p><p>\tUpon full payment, ownership of the final deliverables will transfer to the Client. The Service Provider retains the right to use any pre-existing tools, libraries, or frameworks integrated into the deliverables.</p><p><br></p><p>\t<u>5.2 License: </u></p><p>\tAny software, frameworks, or libraries used by the Service Provider that are not custom-built remain the intellectual property of their respective owners.</p><p><br></p><p>\t<u>5.3 Service Provider IP: </u></p><p>\tThe Service Provider retains ownership of any proprietary methodologies, templates, or tools used in providing the Services.</p><p><br></p><p><strong>6. Confidentiality</strong></p><p>Both parties agree to maintain the confidentiality of all proprietary and sensitive information shared during the course of the project. Confidential information shall not be disclosed to third parties without prior written consent.</p><p><br></p><p><strong>7. Limitation of Liability</strong></p><p>The Service Provider’s total liability for any claims related to this Agreement will be limited to the fees paid by the Client for the Services. The Service Provider is not liable for indirect, incidental, or consequential damages arising from the use of deliverables or Services.</p><p><br></p><p><strong>8. Warranties and Representations</strong></p><p><br></p><p>\t<u>8.1 Service Provider: </u></p><p>\tThe Service Provider warrants that the Services will be performed in a professional and workmanlike manner.</p><p>\t</p><p>\t<u>8.2 Client: </u></p><p>\tThe Client warrants that any materials, content, or data provided for the Services are owned by the Client or that the Client has the necessary rights to use them.</p><p><br></p><p><strong>9. Termination</strong></p><p><br></p><p>\t<u>9.1 By Client: </u></p><p>\tThe Client may terminate the Agreement with 15 days' written notice. Fees for work completed up to the termination date will be invoiced and must be paid in full.</p><p><br></p><p>\t<u>9.2 By Service Provider: </u></p><p>\tThe Service Provider may terminate the Agreement if the Client fails to meet payment or other obligations under this Agreement, with 15 days' written notice.</p><p><br></p><p><strong>10. Force Majeure</strong></p><p>Neither party shall be held liable for delays or failure to fulfill obligations due to causes beyond their reasonable control, including but not limited to natural disasters, strikes, or government regulations.</p><p><br></p><p><strong>11. Dispute Resolution</strong></p><p>Any disputes arising from this Agreement shall first be resolved through good-faith negotiations. If a resolution cannot be reached, disputes will be submitted to binding arbitration under the rules of [Arbitration Organization].</p><p><br></p><p><strong>12. Governing Law</strong></p><p>This Agreement is governed by the laws of [Your Jurisdiction].</p><p><br></p><p><strong>13. Entire Agreement</strong></p><p>This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements, representations, and understandings.</p><p><br></p><p><strong>14. Amendments</strong></p><p>Any amendments to this Agreement must be made in writing and signed by both parties.</p>",
-            "isOptional": false,
-            "isLocked": true
+            "items": [],
+            "__block_removal": false
         },
         {
             "id": 4,
@@ -45,9 +48,21 @@
             "type": "TOTALS",
             "order": 4,
             "recurrance": null,
-            "description": "This section summarizes the total cost of the project, including all services and deliverables.",
+            "description": null,
             "isOptional": false,
-            "isLocked": true
+            "isLocked": true,
+            "__block_removal": true
+        },
+        {
+            "id": 5,
+            "title": "Terms and Conditions",
+            "type": "TERMS_AND_CONDITIONS",
+            "order": 5,
+            "recurrance": null,
+            "description": "<p><strong>1. Scope of Work</strong></p><p>The Service Provider will perform the Services as described in the accompanying proposal (\"Proposal\"). Any additional work requested by the Client beyond the agreed scope will require a written change order and may incur additional costs.</p><p><br></p><p><strong>2. Project Timeline</strong></p><p>The timeline for delivery of the Services is outlined in the Proposal. While the Service Provider will make every effort to meet these timelines, they are estimates and may be adjusted due to unforeseen circumstances. Any changes will be communicated promptly to the Client.</p><p><br></p><p><strong>3. Payment Terms</strong></p><p><br></p><p>\t<u>3.1 Fees: </u></p><p>\tPayment terms, including fees, are outlined in the Proposal. All payments are due as specified in the payment schedule.</p><p><br></p><p>\t<u>3.2 Late Payments: </u></p><p>\tLate payments may be subject to a penalty of [X]% per month on the outstanding balance.</p><p><br></p><p>\t<u>3.3 Taxes:</u> </p><p>\tThe Client is responsible for all applicable taxes unless otherwise specified.</p><p><br></p><p><strong>4. Client Responsibilities</strong></p><p><br></p><p>The Client agrees to provide timely access to relevant personnel, systems, and information required for the execution of the Services. Approve or provide feedback on deliverables within agreed timelines. Ensure third-party dependencies (if any) are fulfilled.</p><p><br></p><p><strong>5. Ownership and Intellectual Property</strong></p><p><br></p><p>\t<u>5.1 Deliverables: </u></p><p>\tUpon full payment, ownership of the final deliverables will transfer to the Client. The Service Provider retains the right to use any pre-existing tools, libraries, or frameworks integrated into the deliverables.</p><p><br></p><p>\t<u>5.2 License: </u></p><p>\tAny software, frameworks, or libraries used by the Service Provider that are not custom-built remain the intellectual property of their respective owners.</p><p><br></p><p>\t<u>5.3 Service Provider IP: </u></p><p>\tThe Service Provider retains ownership of any proprietary methodologies, templates, or tools used in providing the Services.</p><p><br></p><p><strong>6. Confidentiality</strong></p><p>Both parties agree to maintain the confidentiality of all proprietary and sensitive information shared during the course of the project. Confidential information shall not be disclosed to third parties without prior written consent.</p><p><br></p><p><strong>7. Limitation of Liability</strong></p><p>The Service Provider’s total liability for any claims related to this Agreement will be limited to the fees paid by the Client for the Services. The Service Provider is not liable for indirect, incidental, or consequential damages arising from the use of deliverables or Services.</p><p><br></p><p><strong>8. Warranties and Representations</strong></p><p><br></p><p>\t<u>8.1 Service Provider: </u></p><p>\tThe Service Provider warrants that the Services will be performed in a professional and workmanlike manner.</p><p>\t</p><p>\t<u>8.2 Client: </u></p><p>\tThe Client warrants that any materials, content, or data provided for the Services are owned by the Client or that the Client has the necessary rights to use them.</p><p><br></p><p><strong>9. Termination</strong></p><p><br></p><p>\t<u>9.1 By Client: </u></p><p>\tThe Client may terminate the Agreement with 15 days' written notice. Fees for work completed up to the termination date will be invoiced and must be paid in full.</p><p><br></p><p>\t<u>9.2 By Service Provider: </u></p><p>\tThe Service Provider may terminate the Agreement if the Client fails to meet payment or other obligations under this Agreement, with 15 days' written notice.</p><p><br></p><p><strong>10. Force Majeure</strong></p><p>Neither party shall be held liable for delays or failure to fulfill obligations due to causes beyond their reasonable control, including but not limited to natural disasters, strikes, or government regulations.</p><p><br></p><p><strong>11. Dispute Resolution</strong></p><p>Any disputes arising from this Agreement shall first be resolved through good-faith negotiations. If a resolution cannot be reached, disputes will be submitted to binding arbitration under the rules of [Arbitration Organization].</p><p><br></p><p><strong>12. Governing Law</strong></p><p>This Agreement is governed by the laws of [Your Jurisdiction].</p><p><br></p><p><strong>13. Entire Agreement</strong></p><p>This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements, representations, and understandings.</p><p><br></p><p><strong>14. Amendments</strong></p><p>Any amendments to this Agreement must be made in writing and signed by both parties.</p>",
+            "isOptional": false,
+            "isLocked": true,
+            "__block_removal": true
         }
     ],
     "createdOnDate": null,

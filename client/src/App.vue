@@ -2,9 +2,15 @@
 <template>
   <main>
     <nav class="bg-white border-r border-r-gray-300">
-      <div class="mt-[75px]">
-        <router-link to="/">
+      <div class="grid place-content-center h-[75px] cursor-default" v-tooltip="'⚡ SwiftCPQ'">
+        ⚡
+      </div>
+      <div>
+        <router-link to="/" v-tooltip="'Home'">
           <span class="pi pi-home" title="Home"></span>
+        </router-link>
+        <router-link to="/catalogue" disabled v-tooltip="'Catalogue'">
+          <span class="pi pi-database" title="Catalogue"></span>
         </router-link>
       </div>
     </nav>

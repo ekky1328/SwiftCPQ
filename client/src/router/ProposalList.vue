@@ -10,7 +10,7 @@
         </Toolbar>
         <Card>
             <template #content class="p-0">
-                <DataTable :value="proposals" :loading="isLoading">
+                <DataTable :value="proposals">
                     <Column header="Id" class="w-32">
                         <template #body="{ data }">
                             <router-link :to="`/proposals/${data.id}`" class="underline">{{ data.identifier }}</router-link>
@@ -74,6 +74,7 @@ async function triggerCreateNewProposal() {
 }
 
 onMounted(async () => {
+    document.title = `SwiftCPQ -  Quote faster with precision`
     const data = await GetProposals();
     proposals.value = data;
     setTimeout(() => {
@@ -89,5 +90,9 @@ onMounted(async () => {
 
 #proposal-list .p-card-content {
     padding: 0 !important;
+}
+
+.p-datatable-table-container {
+    border-radius: 8px;
 }
 </style>

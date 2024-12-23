@@ -1,4 +1,7 @@
+import { Section } from "../store/proposalStore"
+
 export const SECTION_TYPES = {
+    COVER_LETTER: 'COVER_LETTER',
     PRODUCTS: 'PRODUCTS',
     INFO: 'INFO',
     TERMS_AND_CONDITIONS: 'TERMS_AND_CONDITIONS',
@@ -7,28 +10,29 @@ export const SECTION_TYPES = {
 export const SECTION_RECURRANCE = {
     ONE_TIME: 'ONE_TIME',
     RECURRING: 'RECURRING',
-    NONE: 'NONE',
 }
 
 export const DEFAULT_PRODUCT_SECTION = {
-    id: null,
+    id: 0,
     title: "",
     type: SECTION_TYPES.PRODUCTS,
-    order: null,
+    order: 0,
     recurrance: SECTION_RECURRANCE.ONE_TIME,
-    description: null,
+    description: "",
     isOptional: false,
     isLocked: false,
+    __block_removal: false,
     items: []
-}
+} as Section;
 
 export const DEFAULT_INFO_SECTION = {
-    id: null,
+    id: 0,
     title: "",
     type: SECTION_TYPES.INFO,
-    order: null,
+    order: 0,
     recurrance: null,
     description: "",
     isOptional: false,
-    isLocked: true
-}
+    isLocked: false,
+    __block_removal: false
+} as Section;

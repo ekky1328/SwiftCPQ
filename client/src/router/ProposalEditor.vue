@@ -1,7 +1,8 @@
 
 <template>
   <div id="proposal-editor" v-if="proposalStore.data !== null">
-    <Toolbar class="proposal-toolbar m-2 !px-0 !bg-transparent !border-none">
+
+    <Toolbar class="proposal-toolbar m-2 mt-0 !border-none">
       <template #start> 
         <h1 class="m-0 text-3xl">{{ proposalStore.data.identifier }}</h1>
       </template>
@@ -24,7 +25,7 @@
               </div>
               <div class="flex flex-col">
                 <label for="title">Description</label>
-                <Textarea v-model="proposalStore.data.description" size="small" fluid autoResize />
+                <Textarea v-model="proposalStore.data.description" size="small" fluid auto-resize />
               </div>
               <div class="flex flex-col">
                 <label for="title">Name</label>
@@ -35,19 +36,20 @@
         </Card>
 
         <Card class="mt-4">
+          <template #title>Sections</template>
           <template #content>
             <Draggable
               v-model="proposalStore.data.sections"
               tag="ul"
               item-key="id"
-              class="bg-white shadow-md rounded-lg p-4"
-              :animation="200"
+              class="flex flex-col gap-2"
               ghost-class="bg-gray-200"
+              :animation="200"
             >
               <template #item="{ element : section }">
-                <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type)" class="cursor-move border border-gray-300  p-2 rounded-md mb-2 flex items-center">
+                <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type)" class="cursor-move border border-gray-300 p-2 rounded-md flex items-center">
                   <span class="text-sm text-gray-500">⋮⋮</span>
-                  <span class="text-left ml-2">{{ section.title }}</span>
+                  <span class="text-left text-sm ml-2">{{ section.title }}</span>
                 </li>
               </template>
             </Draggable>
@@ -132,9 +134,8 @@ async function triggerSaveProposal() {
 onMounted(async () => {
 
     if (proposalStore.data === null) {
-      const proposal = await GetProposalById(route.params.id);
 
-      console.log(proposal)
+      const proposal = await GetProposalById(route.params.id);
       if (proposal.error) {
         router.push('/');
         toast.add({ severity: 'error', summary: 'Error', detail: proposal.message, life: 3000 })
@@ -146,6 +147,7 @@ onMounted(async () => {
         document.title = `${proposalStore.data.identifier} - ${proposalStore.data.title}`;
         return;
       }
+      
     } 
   
 });
@@ -158,6 +160,16 @@ onUnmounted(() => {
 <style>
   .proposal-toolbar {
     max-width: 1965px;
+  }
+
+  #proposal-editor .p-toolbar {
+    position: sticky !important;
+    top: 0;
+    padding: 8px 8px !important;
+    border: 2px solid #cdcdcd !important;
+    border-radius: 0px 0px 8px 8px !important;
+    border-top: 0 !important;
+    z-index: 200;
   }
 
   .proposal_editor_container {
@@ -208,16 +220,6 @@ onUnmounted(() => {
 
   .p-datatable-header-cell {
     padding: 4px 16px !important;
-  }
-
-  .p-textarea {
-    border-width: 2px !important;
-    border-style: dashed !important;
-  }
-
-  .p-textarea:focus {
-    border-width: 2px !important;
-    border-style: solid !important;
   }
 
   li[draggable="false"] {

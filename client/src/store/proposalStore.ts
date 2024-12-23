@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/products';
 import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION } from '../constants/sections';
 
-interface Proposal {
+export interface Proposal {
     id: number
     version: number
     title: string
@@ -15,20 +15,22 @@ interface Proposal {
     sections: Section[]
 }
 
-interface Section {
+export interface Section {
     id: number
     title: string
     type: string
     order: number
-    recurrance?: string
+    recurrance?: string | null
     description?: string
     isOptional: boolean
     isLocked: boolean
-    items: Item[];
+    __block_removal: boolean
+    items?: Item[];
 }
 
-interface Item {
+export interface Item {
     id: number
+    sku?: string | null
     title: string
     description: string
     order: number
@@ -37,7 +39,6 @@ interface Item {
     price: number
     margin: number
     subtotal: number
-    sku?: string
     type: string
     isOptional: boolean
 }
@@ -98,7 +99,7 @@ export const useProposalStore = defineStore('proposal', () => {
 
         const clonedSection = _.cloneDeep(section);
 
-        clonedSection.id = sections.length > 0 ? Math.max(...sections.map((s: any) => s.id)) + 1 : 1;
+        clonedSection.id = sections.length;
         clonedSection.title = `${section.title} (Copy)`
 
         sections = sections.splice(sectionIndex + 1, 0, clonedSection)
@@ -150,12 +151,13 @@ export const useProposalStore = defineStore('proposal', () => {
             throw new Error(`Invalid item type: ${itemType}`);
         }
 
+        newItemToAdd.id = section.items.length as unknown as number;
+
         const itemToAdd: Item = {
-            // @ts-ignore
-            id: section.items.length,
             ...newItemToAdd,
+            id: section.items.length,
             order: section.items.length + 1,
-        };
+        } as Item;
 
         section.items.push(itemToAdd);
 
@@ -184,7 +186,7 @@ export const useProposalStore = defineStore('proposal', () => {
     
         const clonedItem = _.cloneDeep(item);
     
-        clonedItem.id = items.length > 0 ? Math.max(...items.map((i: any) => i.id)) + 1 : 1;
+        clonedItem.id = items.length;
         clonedItem.title = `${item.title} (Copy)`;
     
         items.splice(itemIndex + 1, 0, clonedItem);
@@ -228,7 +230,11 @@ export const useProposalStore = defineStore('proposal', () => {
 
         const section = newData.sections.find( sec => sec.id === sectionId);
         if (!section) {
-            throw new Error(`Section with id ${itemId} not found in proposal`);
+            throw new Error(`Section with id ${sectionId} not found in proposal`);
+        }
+
+        if (!section.items) {
+            throw new Error(`Section with id ${sectionId} had no items.`);
         }
     
         const itemIndex = section.items.findIndex((item) => item.id === itemId);

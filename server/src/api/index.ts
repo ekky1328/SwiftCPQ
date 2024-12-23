@@ -27,15 +27,9 @@ router.get<{}, MessageResponse>('/proposal/', (req, res) => {
       continue;
     }
 
-    all_proposals.push({
-      id: proposal.id,
-      version: proposal.version,
-      identifier: proposal.identifier,
-      title: proposal.title,
-      customer: proposal.customer.name,
-      createdOnDate: proposal.createdOnDate,
-      modifiedOnDate: proposal.modifiedOnDate
-    })
+    delete proposal.sections;
+
+    all_proposals.push(proposal)
   }
 
   res.json(all_proposals);
