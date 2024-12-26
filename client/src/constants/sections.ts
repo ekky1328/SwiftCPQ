@@ -5,12 +5,16 @@ export const SECTION_TYPES = {
     PRODUCTS: 'PRODUCTS',
     INFO: 'INFO',
     TERMS_AND_CONDITIONS: 'TERMS_AND_CONDITIONS',
+    TOTALS: 'TOTALS',
 }
 
 export const SECTION_RECURRANCE = {
     ONE_TIME: 'ONE_TIME',
-    RECURRING: 'RECURRING',
-}
+    DAILY: 'DAILY',
+    WEEKLY: 'WEEKLY',
+    MONTHLY: 'MONTHLY',
+    ANNUAL: 'ANNUAL',
+};
 
 export const DEFAULT_PRODUCT_SECTION = {
     id: 0,

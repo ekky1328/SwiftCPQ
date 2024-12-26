@@ -7,6 +7,7 @@
         <h1 class="m-0 text-3xl">{{ proposalStore.data.identifier }}</h1>
       </template>
       <template #end> 
+        <Badge class="mr-2" v-if="proposalStore.isDraft" value="Changes Detected" severity="warn"></Badge>
         <SplitButton label="Save" size="small" :model="proposalOptions" @click="triggerSaveProposal" severity="contrast"></SplitButton>
       </template>
     </Toolbar>
@@ -35,26 +36,76 @@
           </template>
         </Card>
 
-        <Card class="mt-4">
-          <template #title>Sections</template>
-          <template #content>
-            <Draggable
-              v-model="proposalStore.data.sections"
-              tag="ul"
-              item-key="id"
-              class="flex flex-col gap-2"
-              ghost-class="bg-gray-200"
-              :animation="200"
-            >
-              <template #item="{ element : section }">
-                <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type)" class="cursor-move border border-gray-300 p-2 rounded-md flex items-center">
-                  <span class="text-sm text-gray-500">⋮⋮</span>
-                  <span class="text-left text-sm ml-2">{{ section.title }}</span>
-                </li>
-              </template>
-            </Draggable>
-          </template>
-        </Card>
+        <div class="sticky top-16">
+          <Card class="mt-4">
+            <template #title> 
+              <div class="flex justify-between">
+                <p>Sections</p>
+                <p>({{ proposalStore.data.sections.length + 1 }})</p>
+              </div> 
+            </template>
+            <template #content>
+              <li class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mb-2 justify-between">
+                  <div>
+                    <span class="text-gray-500 pi pi-lock cursor-not-allowed" style="font-size: 14px;"></span>
+                    <span href="#cover_letter" class="text-left text-sm ml-2 cursor-text">Cover Letter</span>
+                  </div>
+                  <a class="text-sm text-gray-500 cursor-pointer pi pi-eye" href="#cover_letter" style="font-size: 14px;"></a>
+              </li>
+              <Draggable
+                v-model="proposalStore.data.sections"
+                tag="ul"
+                item-key="id"
+                class="flex flex-col gap-2"
+                ghost-class="bg-gray-200"
+                handle=".handle" 
+                :animation="200"
+              >
+                <template #item="{ element : section }">
+                  <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type) && section.title.trim()" class="border border-gray-300 p-2 rounded-md cursor-default flex items-center justify-between">
+                    <div>
+                      <span class="text-sm text-gray-500 handle cursor-move pi pi-bars" style="font-size: 14px;"></span>
+                      <span class="text-left text-sm ml-2 cursor-text">{{ section.title }}</span>
+                    </div>
+                    <a class="text-sm text-gray-500 handle cursor-pointer pi pi-eye" :href="`#section_${section.id}`" style="font-size: 14px;"></a>
+                  </li>
+                </template>
+              </Draggable>
+              <li class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mt-2 justify-between">
+                  <div>
+                    <span class="text-gray-500 pi pi-lock cursor-not-allowed"  style="font-size: 14px;"></span>
+                    <span class="text-left text-sm ml-2 cursor-text">Terms and Conditions</span>
+                  </div>
+                  <a class="text-sm text-gray-500 handle cursor-pointer pi pi-eye" href="#terms_and_conditions" style="font-size: 14px;"></a>
+              </li>
+            </template>
+          </Card>
+          
+          <Card class="mt-4 !cursor-default">
+            <template #title>Totals</template>
+            <template #content>
+              <div
+                v-for="(values, recurrence) in proposalStore.data._totals"
+                :key="recurrence"
+                class="flex items-start justify-between p-1 [&:not(:last-child)]:border-b border-b-gray-400"
+              >
+                <div>
+                  <h3 class="text-lg font-medium capitalize">
+                    {{ recurrence.toLowerCase().replace('_', ' ') }}
+                  </h3>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500">
+                    Total <span class="inline-block w-24">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.total) }}</span>
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    Margin <span class="inline-block w-24">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.margin) }}</span>
+                  </p>
+                </div>
+              </div>
+            </template>
+          </Card>
+        </div>
       </aside>
 
       <!-- Main Section -->
@@ -84,6 +135,7 @@ import Textarea from 'primevue/textarea';
 import OrderList from 'primevue/orderlist';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Badge from 'primevue/badge';
 
 import { GetProposalById, SaveProposal } from '../api/api'
 
@@ -144,6 +196,7 @@ onMounted(async () => {
 
       if (proposal) {
         proposalStore.data = proposal
+        proposalStore.recalculateTotals();
         document.title = `${proposalStore.data.identifier} - ${proposalStore.data.title}`;
         return;
       }
@@ -159,7 +212,7 @@ onUnmounted(() => {
 
 <style>
   .proposal-toolbar {
-    max-width: 1965px;
+    max-width: 1830px;
   }
 
   #proposal-editor .p-toolbar {
@@ -174,7 +227,7 @@ onUnmounted(() => {
 
   .proposal_editor_container {
     display: grid;
-    grid-template-columns: 350px 1600px auto;
+    grid-template-columns: 350px 1430px;
     grid-template-rows: 1fr;
     grid-column-gap: 16px;
   }

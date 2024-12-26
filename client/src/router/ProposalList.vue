@@ -17,7 +17,7 @@
                         </template>
                     </Column>
                     <Column field="title" header="Title"></Column>
-                    <Column field="customer" header="Customer"></Column>
+                    <Column field="customer.name" header="Customer"></Column>
                     <Column field="version" header="Version" class="w-20"></Column>
                     <Column header="Created Date" class="w-44">
                         <template #body="{ data }">

@@ -1,18 +1,20 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import _ from 'lodash';
 import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/products';
 import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION } from '../constants/sections';
 
 export interface Proposal {
     id: number
+    identifier: string
     version: number
     title: string
     description: string
     customer: {
       name: string
     }
-    sections: Section[]
+    sections: Section[],
+    _totals: Record<string, { total: number; margin: number }>;
 }
 
 export interface Section {
@@ -45,6 +47,63 @@ export interface Item {
 
 export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);
+    const changeCount = ref<number>(0);
+    const initData = ref<Proposal | null>(null);
+    const isDraft = ref<boolean>(false);
+
+    watch(data, (newData) => {
+        if (initData.value === null) {
+            initData.value = _.cloneDeep(newData);
+        }
+
+        if (newData) {
+            if (_.isEqual(newData, initData.value)) {
+                document.title = `${newData.identifier} - ${newData.title}`;
+                isDraft.value = false;
+            } else {
+                document.title = `(Draft) ${newData.identifier} - ${newData.title}`;
+                isDraft.value = true;
+            }
+        }
+
+        changeCount.value += 1;
+    }, { deep: true });
+
+    // Proposal Functions
+    function recalculateTotals() {
+        if (data.value && data.value.sections) {
+            const scaleFactor = 1000;
+            const totals: Record<string, { total: number; margin: number }> = {};
+
+            // Loop through sections and accumulate totals and margins
+            data.value.sections.forEach(section => {
+                if (!section.isOptional && section.recurrance) {
+                    if (!totals[section.recurrance]) {
+                        totals[section.recurrance] = { total: 0, margin: 0 };
+                    }
+
+                    const sectionTotals = section.items?.reduce(
+                        (acc, item) => {
+                            if (!item.isOptional) {
+                                acc.total += Math.round(item.subtotal * scaleFactor);
+                                acc.margin += Math.round(item.margin * scaleFactor);
+                            }
+                            return acc;
+                        },
+                        { total: 0, margin: 0 }
+                    ) || { total: 0, margin: 0 };
+
+                    totals[section.recurrance].total += sectionTotals.total;
+                    totals[section.recurrance].margin += sectionTotals.margin;
+                }
+            });
+
+            data.value._totals = Object.fromEntries(
+                Object.entries(totals)
+                    .map(([key, value]) => [key, { total: value.total / scaleFactor, margin: value.margin / scaleFactor }])
+            ) as Record<string, { total: number; margin: number }>;
+        }
+    }    
 
     // Section Functions
     function addSectionToProposal(sectionId: number, sectionType: string) {
@@ -221,18 +280,17 @@ export const useProposalStore = defineStore('proposal', () => {
     }
 
     function recalculateSectionItem(sectionId: number, itemId: number, fieldUpdated: string) {
-        
         if (!data.value) {
             throw new Error('Data is not initialized.');
         }
     
         let newData = _.cloneDeep(data.value);
-
-        const section = newData.sections.find( sec => sec.id === sectionId);
+    
+        const section = newData.sections.find(sec => sec.id === sectionId);
         if (!section) {
             throw new Error(`Section with id ${sectionId} not found in proposal`);
         }
-
+    
         if (!section.items) {
             throw new Error(`Section with id ${sectionId} had no items.`);
         }
@@ -243,25 +301,27 @@ export const useProposalStore = defineStore('proposal', () => {
             throw new Error(`Item with id ${itemId} not found in section '${sectionId}'.`);
         }
     
+        const scaleFactor = 1000;
+    
         switch (fieldUpdated) {
             case 'QTY': {
-                item.subtotal = item.qty * item.price;
-                item.margin = (item.price - item.cost) * item.qty;
+                item.subtotal = Math.round(item.qty * item.price * scaleFactor) / scaleFactor;
+                item.margin = Math.round((item.price - item.cost) * item.qty * scaleFactor) / scaleFactor;
                 break;
             }
             case 'PRICE': {
-                item.subtotal = item.qty * item.price;
-                item.margin = (item.price - item.cost) * item.qty;
+                item.subtotal = Math.round(item.qty * item.price * scaleFactor) / scaleFactor;
+                item.margin = Math.round((item.price - item.cost) * item.qty * scaleFactor) / scaleFactor;
                 break;
             }
             case 'COST': {
-                item.margin = (item.price - item.cost) * item.qty;
+                item.margin = Math.round((item.price - item.cost) * item.qty * scaleFactor) / scaleFactor;
                 break;
             }
             case 'SUB_TOTAL': {
                 if (item.qty !== 0) {
-                    item.price = Number(item.subtotal) / Number(item.qty);
-                    item.margin = Number(item.price - item.cost) * Number(item.qty);
+                    item.price = Math.round((Number(item.subtotal) * scaleFactor) / Number(item.qty)) / scaleFactor;
+                    item.margin = Math.round((Number(item.price - item.cost) * Number(item.qty) * scaleFactor)) / scaleFactor;
                 } else {
                     item.price = 0;
                     item.margin = 0;
@@ -270,8 +330,8 @@ export const useProposalStore = defineStore('proposal', () => {
             }
             case 'MARGIN': {
                 if (item.qty !== 0) {
-                    item.price = item.cost + item.margin / item.qty;
-                    item.subtotal = item.qty * item.price;
+                    item.price = Math.round((item.cost * scaleFactor + (item.margin * scaleFactor) / item.qty)) / scaleFactor;
+                    item.subtotal = Math.round(item.qty * item.price * scaleFactor) / scaleFactor;
                 } else {
                     item.price = item.cost;
                     item.subtotal = 0;
@@ -289,11 +349,17 @@ export const useProposalStore = defineStore('proposal', () => {
         ];
     
         data.value = newData;
-
+    
+        recalculateTotals();
     }
      
     return {
         data,
+        isDraft,
+        changeCount,
+
+        // Proposal Function
+        recalculateTotals,
 
         // Section Functions
         addSectionToProposal,

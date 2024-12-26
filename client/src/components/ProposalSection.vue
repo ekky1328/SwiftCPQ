@@ -6,13 +6,38 @@
         <Card :key="section.id" :class="{ is_product: isProducts(section.type) }">
 
             <template #title>
-                <div class="flex justify-between items-center cursor-auto">
+                <div class="flex justify-between items-center cursor-auto" :id="createSectionId(section)">
                     <div class="section-header-left">
                         <span v-if="!['INFO', 'PRODUCTS'].includes(section.type)">{{ section.title }}</span>
                         <InputText v-if="['INFO', 'PRODUCTS'].includes(section.type)" placeholder="Section Title" class="section-title !px-1 hover:!border-black focus:!border-black" v-model="section.title" size="small" fluid />
                     </div>
                     <div class="section-header-right flex gap-2 justify-between items-center relative">
-                        <SplitButton v-if="['INFO', 'PRODUCTS'].includes(section.type)" label="" icon="pi pi-cog" size="small" :model="sectionProductOptions(section)" @click="() => console.log('Opened Section Settings')" severity="contrast"></SplitButton>
+                        <SplitButton v-if="['INFO', 'PRODUCTS'].includes(section.type)" label="" icon="pi pi-cog" size="small" :model="sectionProductOptions(section)" @click="toggleSectionSettings" severity="contrast"></SplitButton>
+                        <Popover ref="sectionSettings">
+                            <div class="card p-1 flex flex-col gap-2">
+                                <span class="font-medium block">Section Settings</span>
+                                <template v-if="isProducts(section.type)">
+                                    <div class="flex flex-col">
+                                        <label class="text-sm">Section Recurrance</label>
+                                        <Select v-model="section.recurrance" :options="sectionRecurranceOptions" optionLabel="name" optionValue="value" size="small" placeholder="Select a recurrance type" class="w-full md:w-56" />
+                                    </div>
+                                    <div class="flex flex-col gap-2 border rounded-md p-2">
+                                        <div class="flex flex-row justify-between">
+                                            <label class="text-sm">Optional</label>
+                                            <ToggleSwitch v-model="section.isOptional" />    
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <label class="text-sm">Reference Only</label>
+                                            <ToggleSwitch v-model="section.isReference" />  
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <label class="text-sm">Lock Section</label>
+                                            <ToggleSwitch v-model="section.isLocked" />  
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </Popover>
                     </div>
                 </div>
             </template>
@@ -20,98 +45,96 @@
             <template #content>
 
                 <!-- Text Sections -->
-                <Editor v-if="!isProducts(section.type)" v-model="section.description" editor-style="height: 500px"  class="cursor-auto" />
-
+                <Editor v-if="isInfo(section.type)" v-model="section.description" editor-style="max-height: 750px; overflow-y: auto;"  class="cursor-auto" />
+                
                 <!-- Product Section - Products -->
-                <table v-if="isProducts(section.type)" class="table-auto w-full border-collapse border border-gray-300 cursor-auto">
-                    <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
-                    <tr>
-                        <th class="p-2 border border-gray-300 text-center w-10"></th>
-                        <th class="p-2 border border-gray-300">SKU</th>
-                        <th class="p-2 border border-gray-300">Title</th>
-                        <th class="p-2 border border-gray-300 text-right w-20">Qty</th>
-                        <th class="p-2 border border-gray-300 text-right">Cost</th>
-                        <th class="p-2 border border-gray-300 text-right">Price</th>
-                        <th class="p-2 border border-gray-300 text-right">Margin</th>
-                        <th class="p-2 border border-gray-300 text-right">Subtotal</th>
-                    </tr>
-                    </thead>
-                    <Draggable 
-                        tag="tbody" 
-                        v-model="section.items" 
-                        v-bind="dragOptions"  
-                        @start="drag = true" 
-                        @end="drag = false" 
-                        handle=".handle" 
-                        item-key="id" 
-                        :animation="200"
-                    >
-                        <template #item="{ element: item }">
-                            <tr class="product-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
-
-                                <td class="product handle p-2 border border-gray-300 text-center cursor-move text-gray-500 w-10" :class="{ 'bg-gray-200': isComment(item) }" title="Drag to reorder">
-                                    <span class="inline-block handle">⋮⋮</span>
-                                    <div class="product-shortcuts" title="">
-                                        <span class="product-shortcut delete pi pi-trash" title="Delete item" @click="proposalStore.deleteSectionItem(section.id, item.id)"></span>
-                                        <span class="product-shortcut pi pi-clone" title="Duplicate item" @click="proposalStore.duplicateItem(section.id, item)"></span>
-                                    </div>
-                                </td>
-                                <td v-if="!isComment(item)" class="product sku p-2 border border-gray-300">
-                                    <InputText placeholder="Product SKU" v-model="item.sku" size="small" fluid />
-                                </td>
-                                <td v-if="!isComment(item)" class="product title p-2 border border-gray-300">
-                                    <InputText placeholder="Product Title" v-model="item.title" inputClass="w-full title" size="small" fluid />
-
-                                    <Inplace :active="item.description.trim() !== ''">
-                                        <template #display>
-                                            <a>Edit Description</a>
-                                        </template>
-                                        <template #content="{ closeCallback }">
-                                            <Editor placeholder="Description..." v-model="item.description" class="mt-2 description" editorStyle="height: 150px" />
-                                            <a class="description-close" @click="closeCallback">Close Description</a>
-                                        </template>
-                                    </Inplace>
-
-                                </td>
-                                <td v-if="!isComment(item)" class="product qty p-2 border border-gray-300 text-right">
-                                    <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'QTY')" v-model="item.qty" inputClass="text-right" size="small" fluid />
-                                </td>
-                                <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                    <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'COST')" v-model="item.cost" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                </td>
-                                <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                    <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'PRICE')" v-model="item.price" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                </td>
-                                <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                    <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'MARGIN')" v-model="item.margin" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                </td>
-                                <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                    <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL')" v-model="item.subtotal" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                </td>
-
-                                <td v-if="isComment(item)" class="product-comment border border-gray-300 bg-gray-200 text-left" colspan="7">
-                                    <Editor placeholder="Description..." v-model="item.description" />
-                                </td>
-                            </tr>
-                        </template>
-                    </Draggable>
-                </table>
-
-                <div v-if="section.items && section.items.length === 0" class="grid place-content-center p-24">
-                    <h3>No products...</h3>
-                </div>
-
-                <!-- Product Subtotal - Products -->
-                <table v-if="isProducts(section.type)" class="table-auto w-full border-collapse border bg-gray-200">
-                    <tbody>
+                 <template v-if="isProducts(section.type)">
+                    <table class="table-auto w-full border-collapse border border-gray-300 cursor-auto">
+                        <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
                         <tr>
-                            <td class="p-2 pr-3 text-right w-25 font-semibold cursor-auto">
+                            <th class="p-2 border border-gray-300 text-center w-10"></th>
+                            <th class="p-2 border border-gray-300">SKU</th>
+                            <th class="p-2 border border-gray-300">Title</th>
+                            <th class="p-2 product qty border border-gray-300 text-right w-20">Qty</th>
+                            <th class="p-2 product currency border border-gray-300 text-right">Cost</th>
+                            <th class="p-2 product currency border border-gray-300 text-right">Price</th>
+                            <th class="p-2 product currency border border-gray-300 text-right">Margin</th>
+                            <th class="p-2 product currency border border-gray-300 text-right">Subtotal</th>
+                        </tr>
+                        </thead>
+                        <Draggable 
+                            tag="tbody" 
+                            v-model="section.items" 
+                            v-bind="dragOptions"  
+                            @start="drag = true" 
+                            @end="drag = false" 
+                            handle=".handle" 
+                            item-key="id" 
+                            :animation="200"
+                        >
+                            <template #item="{ element: item }">
+                                <tr class="product-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
+
+                                    <td class="product p-2 border border-gray-300 text-center text-gray-500 w-10" :class="{ 'bg-gray-200': isComment(item) }" title="Drag to reorder">
+                                        <span class="inline-block handle cursor-move">⋮⋮</span>
+                                        <div class="product-shortcuts" title="">
+                                            <span class="product-shortcut delete pi pi-trash" title="Delete item" @click="proposalStore.deleteSectionItem(section.id, item.id)"></span>
+                                            <span class="product-shortcut pi pi-clone" title="Duplicate item" @click="proposalStore.duplicateItem(section.id, item)"></span>
+                                        </div>
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product sku p-2 border border-gray-300">
+                                        <InputText placeholder="Product SKU" v-model="item.sku" size="small" fluid />
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product title p-2 border border-gray-300">
+                                        <InputText placeholder="Product Title" v-model="item.title" inputClass="w-full title" size="small" fluid />
+
+                                        <Inplace :active="item.description.trim() !== ''">
+                                            <template #display>
+                                                <a>Edit Description</a>
+                                            </template>
+                                            <template #content="{ closeCallback }">
+                                                <Editor placeholder="Description..." v-model="item.description" class="mt-2 description" editor-style="max-height: 500px; overflow-y: auto;" />
+                                                <a class="description-close" @click="closeCallback">Close Description</a>
+                                            </template>
+                                        </Inplace>
+
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product qty p-2 border border-gray-300 text-right">
+                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'QTY')" v-model="item.qty" inputClass="text-right" size="small" fluid />
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
+                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'COST')" v-model="item.cost" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
+                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'PRICE')" v-model="item.price" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
+                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'MARGIN')" v-model="item.margin" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
+                                    </td>
+                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
+                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL')" v-model="item.subtotal" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
+                                    </td>
+
+                                    <td v-if="isComment(item)" class="product-comment border border-gray-300 bg-gray-200 text-left" colspan="7">
+                                        <Editor placeholder="Description..." v-model="item.description" />
+                                    </td>
+                                </tr>
+                            </template>
+                        </Draggable>
+                        <tr>
+                            <td class="p-2 bg-gray-200" colspan="6"></td>
+                            <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
+                                {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price - c.cost * c.qty), 0)) }}
+                            </td>
+                            <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
                                 {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price * c.qty), 0)) }}
                             </td>
                         </tr>
-                    </tbody>
-                </table>
-
+                    </table>
+                    <div v-if="section.items && section.items.length === 0" class="grid place-content-center p-24">
+                        <h3>No products...</h3>
+                    </div>
+                </template>
             </template>
         </Card>
 
@@ -133,6 +156,8 @@
 
     import Toast from 'primevue/toast';
     import Button from 'primevue/button';
+    import Select from 'primevue/select';
+    import ToggleSwitch from 'primevue/toggleswitch';
     import Card from 'primevue/card';
     import InputNumber from 'primevue/inputnumber';
     import InputText from 'primevue/inputtext';
@@ -144,13 +169,31 @@
     import SpeedDial from 'primevue/speeddial';
     import SplitButton from 'primevue/splitbutton';
     import Inplace from 'primevue/inplace';
+    import Popover from 'primevue/popover';
+
+    import { SECTION_RECURRANCE, SECTION_TYPES } from '../constants/sections';
+    import { PRODUCT_TYPES } from '../constants/products';
 
     const toast = useToast();
     
     const proposalStore = useProposalStore();
 
     const { data : section } = defineProps(['data'])
+
     const targetRow = ref(null);
+
+    const sectionRecurranceOptions = ref([
+        { name: 'One Time', value: 'ONE_TIME' },
+        { name: 'Daily', value: 'DAILY' },
+        { name: 'Monthly', value: 'MONTHLY' },
+        { name: 'Weekly', value: 'WEEKLY' },
+        { name: 'Yearly', value: 'YEARLY' }
+    ]);
+
+    const sectionSettings = ref();
+    const toggleSectionSettings = (event) => {
+        sectionSettings.value.toggle(event);
+    }
 
     const proposalSectionOptions = (sectionId) => [
         {
@@ -225,17 +268,30 @@
         ghostClass: "ghost"
     };
 
+    function isInfo(e_type) {
+        console.log(e_type)
+        return [ SECTION_TYPES.INFO, SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS ].includes(e_type)
+    };
+
     function isProducts(e_type) {
-        return e_type === 'PRODUCTS'
+        return e_type === SECTION_TYPES.PRODUCTS
+    };
+
+    function isTotals(e_type) {
+        return e_type === SECTION_TYPES.TOTALS
     };
 
     function isComment(item) {
-        return item.type === 'COMMENT'
+        return item.type === PRODUCT_TYPES.COMMENT
     };
 
     function setEditRow(item) {
         targetRow.value = item.id;
     };
+
+    function createSectionId(section) {
+        return [SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS].includes(section.type) ? `${section.type.toLowerCase()}` : `section_${section.id}`;
+    }
 
     onMounted(() => {
         if (section.items) {
@@ -371,11 +427,11 @@
     }
 
     .product.qty {
-        max-width: 40px;
+        width: 75px;
     }
 
     .product.currency {
-        width: 150px;
+        width: 125px;
     }
 
     .product-comment textarea {
@@ -449,5 +505,14 @@
     .ghost {
         opacity: 0.25;
         background: #c8ebfb;
+    }
+
+    /* Smooth Scroll */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    :target {
+        scroll-margin-top: 4.5rem;
     }
 </style>

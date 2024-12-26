@@ -33,6 +33,13 @@ import { RouterView } from 'vue-router';
     min-height: 100vh;
   }
 
+  nav {
+    position: sticky;
+    left: 0;
+    top: 0;
+    height: 100vh;
+  }
+
   nav a {
     display: grid;
     place-content: center;
