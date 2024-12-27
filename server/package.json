@@ -1,7 +1,7 @@
 {
-  "name": "express-api-starter-ts",
-  "version": "1.2.0",
-  "description": " A basic starter for an express.js API with Typescript",
+  "name": "swiftcpq_server",
+  "version": "0.0.1",
+  "description": "SwiftCPQ is a fast, open-source quotation/proposal generation tool, designed to streamline the sales process.",
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
@@ -13,12 +13,12 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
-  "author": "CJ R. <cj@null.computer> (https://w3cj.now.sh)",
+  "author": "Christopher Talke Buscaino <chris@talke.dev> (https://talke.dev)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/w3cj/express-api-starter.git"
+    "url": "https://github.com/ekky1328/SwiftCPQ.git"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

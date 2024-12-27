@@ -1,8 +1,13 @@
 {
-  "name": "client",
-  "private": true,
-  "version": "0.0.0",
+  "name": "swiftcpq_client",
+  "description": "SwiftCPQ is a fast, open-source quotation/proposal generation tool, designed to streamline the sales process.",
+  "version": "0.0.1",
   "type": "module",
+  "author": "Christopher Talke Buscaino <chris@talke.dev> (https://talke.dev)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekky1328/SwiftCPQ.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
