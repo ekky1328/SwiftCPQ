@@ -24,6 +24,7 @@ export const DEFAULT_PRODUCT_SECTION = {
     recurrance: SECTION_RECURRANCE.ONE_TIME,
     description: "",
     isOptional: false,
+    isReference: false,
     isLocked: false,
     __block_removal: false,
     items: []
@@ -37,6 +38,7 @@ export const DEFAULT_INFO_SECTION = {
     recurrance: null,
     description: "",
     isOptional: false,
+    isReference: false,
     isLocked: false,
     __block_removal: false
 } as Section;

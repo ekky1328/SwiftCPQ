@@ -23,8 +23,8 @@ RUN npm install
 COPY server/ ./
 RUN npm run build
 
-COPY --from=build /client/dist /server/src/public
+COPY --from=build /client/dist /server/dist/public
 
 EXPOSE 5000
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start:dist"]
