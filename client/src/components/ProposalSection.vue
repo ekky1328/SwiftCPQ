@@ -6,7 +6,13 @@
         <Card :key="section.id" :class="{ is_product: isProducts(section.type) }">
 
             <template #title>
-                <div class="flex justify-between items-center cursor-auto" :id="createSectionId(section)">
+                <div class="grid grid-cols-[25px_1fr_auto] gap-2 items-center cursor-auto" :id="createSectionId(section)">
+                    <div class="cursor-pointer flex justify-center">
+                        <span v-if="section.isLocked" class="pi pi-lock" v-tooltip.top="`Locked`"></span>
+                        <span v-else-if="SECTION_TYPES.INFO === section.type" class="pi pi-file" v-tooltip.top="`Text`"></span>
+                        <span v-else-if="SECTION_RECURRANCE.ONE_TIME === section.recurrance" class="pi pi-tag" v-tooltip.top="`One Time`"></span>
+                        <span v-else class="pi pi-sync" v-tooltip.top="`${capitalize(section.recurrance)}`"></span>
+                    </div>
                     <div class="section-header-left">
                         <span v-if="!['INFO', 'PRODUCTS'].includes(section.type)">{{ section.title }}</span>
                         <InputText v-if="['INFO', 'PRODUCTS'].includes(section.type)" placeholder="Section Title" class="section-title !px-1 hover:!border-black focus:!border-black" v-model="section.title" size="small" fluid />
@@ -120,16 +126,24 @@
                                     </td>
                                 </tr>
                             </template>
+                            <template #footer>
+                                <tr>
+                                    <td class="p-2 bg-gray-200" colspan="4"></td>
+                                    <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Cost Total'">
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.cost * c.qty), 0)) }}
+                                    </td>
+                                    <td class="p-2 pr-3 text-right w-25 bg-gray-200">
+                                        
+                                    </td>
+                                    <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price - c.cost * c.qty), 0)) }}
+                                    </td>
+                                    <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price * c.qty), 0)) }}
+                                    </td>
+                                </tr>
+                            </template>
                         </Draggable>
-                        <tr>
-                            <td class="p-2 bg-gray-200" colspan="6"></td>
-                            <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
-                                {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price - c.cost * c.qty), 0)) }}
-                            </td>
-                            <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
-                                {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price * c.qty), 0)) }}
-                            </td>
-                        </tr>
                     </table>
                     <div v-if="section.items && section.items.length === 0" class="grid place-content-center p-24">
                         <h3>No products...</h3>
@@ -173,6 +187,7 @@
 
     import { SECTION_RECURRANCE, SECTION_TYPES } from '../constants/sections';
     import { PRODUCT_TYPES } from '../constants/products';
+import { capitalize } from 'lodash';
 
     const toast = useToast();
     

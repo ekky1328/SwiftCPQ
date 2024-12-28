@@ -1,6 +1,9 @@
 # Stage 1: Build the Vue 3 app using Vite and compile TypeScript for the server
 FROM node:20 AS build
 
+ARG VITE_IS_DEV_BUILD
+ENV VITE_IS_DEV_BUILD=${VITE_IS_DEV_BUILD}
+
 WORKDIR /client
 
 COPY client/package.json client/package-lock.json ./

@@ -1,4 +1,3 @@
-
 <template>
   <div id="proposal-editor" v-if="proposalStore.data !== null">
 
@@ -95,11 +94,14 @@
                   </h3>
                 </div>
                 <div class="text-right">
-                  <p class="text-sm text-gray-500">
-                    Total <span class="inline-block w-24">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.total) }}</span>
+                  <p class="text-sm text-gray-400">
+                    Cost <span class="inline-block w-24 text-red-500 tabular-nums">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.cost) }}</span>
                   </p>
-                  <p class="text-sm text-gray-500">
-                    Margin <span class="inline-block w-24">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.margin) }}</span>
+                  <p class="text-sm text-gray-400">
+                    Margin <span class="inline-block w-24 text-green-500 tabular-nums">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.margin) }}</span>
+                  </p>
+                  <p class="text-sm text-black">
+                    Total <span class="inline-block w-24 tabular-nums">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.total) }}</span>
                   </p>
                 </div>
               </div>
@@ -180,6 +182,7 @@ function setActiveSection(section) {
 
 async function triggerSaveProposal() {
   await SaveProposal(proposalStore.data);
+  proposalStore.resetDraftStatus();
   toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
 }
 
@@ -195,8 +198,10 @@ onMounted(async () => {
       }
 
       if (proposal) {
-        proposalStore.data = proposal
+        proposalStore.data = proposal;
         proposalStore.recalculateTotals();
+        proposalStore.resetDraftStatus();
+
         document.title = `${proposalStore.data.identifier} - ${proposalStore.data.title}`;
         return;
       }

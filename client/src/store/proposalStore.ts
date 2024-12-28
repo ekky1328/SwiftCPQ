@@ -14,7 +14,7 @@ export interface Proposal {
       name: string
     }
     sections: Section[],
-    _totals: Record<string, { total: number; margin: number }>;
+    _totals: Record<string, { total: number; margin: number, cost: number }>;
 }
 
 export interface Section {
@@ -25,6 +25,7 @@ export interface Section {
     recurrance?: string | null
     description?: string
     isOptional: boolean
+    isReference: boolean
     isLocked: boolean
     __block_removal: boolean
     items?: Item[];
@@ -53,7 +54,7 @@ export const useProposalStore = defineStore('proposal', () => {
 
     watch(data, (newData) => {
         if (initData.value === null) {
-            initData.value = _.cloneDeep(newData);
+            resetDraftStatus();
         }
 
         if (newData) {
@@ -69,17 +70,35 @@ export const useProposalStore = defineStore('proposal', () => {
         changeCount.value += 1;
     }, { deep: true });
 
-    // Proposal Functions
+
+     // ------------------------------
+     //        Proposal Functions
+     // ------------------------------
+
+    /**
+     * Create a snapshot of the current data to compare against later.
+     * - This is used to determine if the proposal has been modified, and is now a draft.
+     */
+    function resetDraftStatus() {
+        initData.value = _.cloneDeep(data.value);
+        isDraft.value = false;
+        changeCount.value = 0;
+    }
+
+    /**
+     * Recalculate the totals for each section in the proposal.
+     * - This is used to update the totals when an item is added, removed, or updated.
+     * - This function should be called after any changes to the proposal data.
+     */
     function recalculateTotals() {
         if (data.value && data.value.sections) {
             const scaleFactor = 1000;
-            const totals: Record<string, { total: number; margin: number }> = {};
+            const totals: Record<string, { total: number; margin: number; cost: number }> = {};
 
-            // Loop through sections and accumulate totals and margins
             data.value.sections.forEach(section => {
-                if (!section.isOptional && section.recurrance) {
+                if (!section.isOptional && !section.isReference && section.recurrance) {
                     if (!totals[section.recurrance]) {
-                        totals[section.recurrance] = { total: 0, margin: 0 };
+                        totals[section.recurrance] = { total: 0, margin: 0, cost: 0 };
                     }
 
                     const sectionTotals = section.items?.reduce(
@@ -87,25 +106,38 @@ export const useProposalStore = defineStore('proposal', () => {
                             if (!item.isOptional) {
                                 acc.total += Math.round(item.subtotal * scaleFactor);
                                 acc.margin += Math.round(item.margin * scaleFactor);
+                                acc.cost += Math.round(item.cost * scaleFactor);
                             }
                             return acc;
                         },
-                        { total: 0, margin: 0 }
-                    ) || { total: 0, margin: 0 };
+                        { total: 0, margin: 0, cost: 0 }
+                    ) || { total: 0, margin: 0, cost: 0 };
 
                     totals[section.recurrance].total += sectionTotals.total;
                     totals[section.recurrance].margin += sectionTotals.margin;
+                    totals[section.recurrance].cost += sectionTotals.cost;
                 }
             });
 
             data.value._totals = Object.fromEntries(
-                Object.entries(totals)
-                    .map(([key, value]) => [key, { total: value.total / scaleFactor, margin: value.margin / scaleFactor }])
-            ) as Record<string, { total: number; margin: number }>;
+                Object.entries(totals).map(([key, value]) => [key, { total: value.total / scaleFactor, margin: value.margin / scaleFactor, cost: value.cost / scaleFactor }])
+            ) as Record<string, { total: number; margin: number; cost: number }>;
         }
     }    
 
-    // Section Functions
+
+     // ------------------------------
+     //        Section Functions
+     // ------------------------------
+
+    /**
+     * Adds a new section to the proposal.
+     * - This uses the sectionId to determine where to insert the new section.
+     * - The sectionType is used to determine which template to use for the new section.
+     * @param sectionId 
+     * @param sectionType 
+     * @returns 
+     */
     function addSectionToProposal(sectionId: number, sectionType: string) {
 
         if (!data.value) {
@@ -141,6 +173,14 @@ export const useProposalStore = defineStore('proposal', () => {
         return;
     }    
 
+    /**
+     * Duplicate a section in the proposal.
+     * - This will create a copy of the section and insert it after the original section.
+     * - The new section will have the same title as the original, with '(Copy)' appended.
+     * - The new section will have a new ID and order.
+     * @param section 
+     * @returns 
+     */
     function duplicateSection(section: Section) {
         if (!data.value) {
             throw new Error('Data is not initialized.');
@@ -170,6 +210,12 @@ export const useProposalStore = defineStore('proposal', () => {
         return;
     }
 
+    /**
+     * Deletes a section from the proposal.
+     * - This will remove the section with the specified sectionId.
+     * @param sectionId 
+     * @returns 
+     */
     function deleteSection(sectionId: number) {
         if (!data.value) {
             throw new Error('Data is not initialized.');
@@ -186,8 +232,19 @@ export const useProposalStore = defineStore('proposal', () => {
         return;
     }
 
-    
-    // Item Functions
+
+     // ------------------------------
+     //        Item Functions
+     // ------------------------------
+
+    /**
+     * Adds a new item to a section in the proposal.
+     * - This uses the sectionId to determine which section to add the item to.
+     * - The itemType is used to determine which template to use for the new item.
+     * @param sectionId 
+     * @param itemType 
+     * @returns 
+     */
     function addItemToSection(sectionId: number, itemType: string) {
         if (!data.value) {
             throw new Error('Data is not initialized.');
@@ -223,6 +280,15 @@ export const useProposalStore = defineStore('proposal', () => {
         return;
     }
 
+    /**
+     * Duplicates an item in a section of the proposal.
+     * - This will create a copy of the item and insert it after the original item.
+     * - The new item will have the same title as the original, with '(Copy)' appended.
+     * - The new item will have a new ID and order.
+     * @param sectionId 
+     * @param item 
+     * @returns 
+     */
     function duplicateItem(sectionId: number, item: Item) {
         if (!data.value) {
             throw new Error('Data is not initialized.');
@@ -257,6 +323,14 @@ export const useProposalStore = defineStore('proposal', () => {
         return;
     }
 
+    /**
+     * Deletes an item from a section in the proposal.
+     * - This will remove the item with the specified itemId from the section with the specified sectionId.
+     * - The order of the remaining items will be recalculated.
+     * @param sectionId 
+     * @param itemId 
+     * @returns 
+     */
     function deleteSectionItem(sectionId: number, itemId: number) {
         if (!data.value) {
             throw new Error('Data is not initialized.');
@@ -279,6 +353,15 @@ export const useProposalStore = defineStore('proposal', () => {
         return;
     }
 
+    /**
+     * Recalculate the values for an item in a section.
+     * - This will update the subtotal and margin for the item based on the field that was updated.
+     * - The fieldUpdated parameter should be one of: 'QTY', 'PRICE', 'COST', 'SUB_TOTAL', 'MARGIN'.
+     * - This function should be called after any changes to the item data.
+     * @param sectionId 
+     * @param itemId 
+     * @param fieldUpdated 
+     */
     function recalculateSectionItem(sectionId: number, itemId: number, fieldUpdated: string) {
         if (!data.value) {
             throw new Error('Data is not initialized.');
@@ -354,11 +437,13 @@ export const useProposalStore = defineStore('proposal', () => {
     }
      
     return {
+        // State
         data,
         isDraft,
         changeCount,
 
-        // Proposal Function
+        // Proposal Functions
+        resetDraftStatus,
         recalculateTotals,
 
         // Section Functions

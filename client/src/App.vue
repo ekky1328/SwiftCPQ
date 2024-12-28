@@ -1,5 +1,8 @@
 
 <template>
+  <div v-if="IS_DEV_BUILD" class="py-2 text-center bg-black text-yellow-200 border-b-4 border-yellow-200">
+    🚧 Beware you are viewing a development build (v0.0.1-alpha); there will be bugs. 🚧
+  </div>
   <main>
     <nav class="bg-white border-r border-r-gray-300">
       <div class="grid place-content-center h-[75px] cursor-default" v-tooltip="'⚡ SwiftCPQ'">
@@ -22,6 +25,11 @@
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
+
+let IS_DEV_BUILD = false;
+if (import.meta.env) {
+  IS_DEV_BUILD = !!import.meta.env.VITE_IS_DEV_BUILD;
+}
 </script>
 
 <style scoped>
