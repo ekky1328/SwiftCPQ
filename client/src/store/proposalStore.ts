@@ -48,6 +48,11 @@ export interface Item {
 
 export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);
+
+    // Calculation Tracking
+    const totalsRecalculated = ref<boolean>(false);
+
+    // Draft/Change Tracking
     const changeCount = ref<number>(0);
     const initData = ref<Proposal | null>(null);
     const isDraft = ref<boolean>(false);
@@ -122,6 +127,11 @@ export const useProposalStore = defineStore('proposal', () => {
             data.value._totals = Object.fromEntries(
                 Object.entries(totals).map(([key, value]) => [key, { total: value.total / scaleFactor, margin: value.margin / scaleFactor, cost: value.cost / scaleFactor }])
             ) as Record<string, { total: number; margin: number; cost: number }>;
+
+            totalsRecalculated.value = true;
+            setTimeout(() => {
+                totalsRecalculated.value = false;
+            }, 500)
         }
     }    
 
@@ -441,6 +451,7 @@ export const useProposalStore = defineStore('proposal', () => {
         data,
         isDraft,
         changeCount,
+        totalsRecalculated,
 
         // Proposal Functions
         resetDraftStatus,

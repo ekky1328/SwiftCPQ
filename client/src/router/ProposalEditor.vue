@@ -80,12 +80,12 @@
             </template>
           </Card>
           
-          <Card class="mt-4 !cursor-default">
+          <Card class="mt-4 !cursor-default" :class="{ 'pulse-animation': proposalStore.totalsRecalculated }">
             <template #title>Totals</template>
             <template #content>
               <div
                 v-for="(values, recurrence) in proposalStore.data._totals"
-                :key="recurrence"
+                :key="proposalStore.changeCount"
                 class="flex items-start justify-between p-1 [&:not(:last-child)]:border-b border-b-gray-400"
               >
                 <div>
@@ -107,6 +107,7 @@
               </div>
             </template>
           </Card>
+
         </div>
       </aside>
 
@@ -284,4 +285,21 @@ onUnmounted(() => {
     background-color: white !important;
     color: black !important;
   }
+
+  .pulse-animation {
+    animation: pulse 500ms ease-out;
+    z-index: 9999;
+  }
+
+  @keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 </style>

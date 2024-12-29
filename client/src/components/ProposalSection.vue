@@ -25,7 +25,16 @@
                                 <template v-if="isProducts(section.type)">
                                     <div class="flex flex-col">
                                         <label class="text-sm">Section Recurrance</label>
-                                        <Select v-model="section.recurrance" :options="sectionRecurranceOptions" optionLabel="name" optionValue="value" size="small" placeholder="Select a recurrance type" class="w-full md:w-56" />
+                                        <Select 
+                                            v-model="section.recurrance" 
+                                            :options="sectionRecurranceOptions" 
+                                            optionLabel="name" 
+                                            optionValue="value" 
+                                            size="small" 
+                                            placeholder="Select a recurrance type" 
+                                            class="w-full md:w-56" 
+                                            @change="proposalStore.recalculateSectionItem(section.id, section.items[0].id, 'QTY')"
+                                        />
                                     </div>
                                     <div class="flex flex-col gap-2 border rounded-md p-2">
                                         <div class="flex flex-row justify-between">
@@ -136,7 +145,7 @@
                                         
                                     </td>
                                     <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price - c.cost * c.qty), 0)) }}
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + ((c.price - c.cost) * c.qty), 0)) }}
                                     </td>
                                     <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
                                         {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price * c.qty), 0)) }}
