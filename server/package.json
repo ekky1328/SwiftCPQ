@@ -6,11 +6,12 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy-templates",
     "start:dist": "node dist/index.js",
     "lint": "eslint --fix src test",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "copy-templates": "copyfiles -u 1 src/data/** dist"
   },
   "keywords": [],
   "author": "Christopher Talke Buscaino <chris@talke.dev> (https://talke.dev)",
@@ -33,6 +34,7 @@
     "@types/node": "^22.7.5",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
+    "copyfiles": "^2.4.1",
     "eslint": "^8.57.0",
     "eslint-config-airbnb-typescript": "^18.0.0",
     "eslint-import-resolver-typescript": "^3.6.3",

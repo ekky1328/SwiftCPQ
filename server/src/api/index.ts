@@ -62,7 +62,7 @@ router.post<{}, MessageResponse>('/proposal/:template_name', (req, res) => {
 
   let allProposals = fs.readdirSync(`${__dirname}/../data/proposals/`);
 
-  template.id = allProposals.length;
+  template.id = allProposals.length + 1;
   template.identifier = `Q-TTC-${10000 + template.id}`
   template.createdOnDate = new Date().toISOString();
   template.modifiedOnDate = new Date().toISOString();

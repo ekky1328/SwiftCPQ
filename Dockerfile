@@ -24,6 +24,7 @@ COPY server/ ./
 RUN npm run build
 
 COPY --from=build /client/dist /server/dist/public
+COPY /server/src/data /server/dist/data
 
 EXPOSE 5000
 
