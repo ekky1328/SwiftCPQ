@@ -1,0 +1,39 @@
+
+<section id="cover-page" class="sheet">
+    <div id="cover-page-content">
+        <div class="text-center">
+
+            <div>
+                <img id="cover-page-logo" src="http://localhost:5000/content/logos/<%= proposal.customerLogo ? proposal.customerLogo : proposal.logo %>">
+                <h1 class="mb-0 font-bold text-lg">
+                    <%= proposal.title %>
+                </h1>
+                <p class="mb-1 mt-[-4px]">
+                    <%= `${proposal.prefix}${proposal.prefix && '-'}` %><%= proposal.identifier %><%= `${proposal.suffix && '-'}${proposal.suffix}` %> v<%= proposal.version %>
+                </p>
+            </div>
+
+            <div>
+                <p class="mb-1 ">
+                    <p class="font-bold">
+                        Created By
+                    </p>
+                    <p class="mt-[-4px]">
+                        <%= proposal.author.firstName %> <%= proposal.author.lastName %>
+                    </p>
+                </p>
+                
+                <p class="mb-1">
+                    <p class="font-bold">
+                        Created For
+                    </p>
+                    <p class="mt-[-4px]">
+                        <%= proposal.customer.name %>
+                    </p>
+                </p>
+
+            </div>
+
+        </div>
+    </div>
+</section>

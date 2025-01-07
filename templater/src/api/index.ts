@@ -7,19 +7,6 @@ const router = express.Router();
 
 /**
  * Method: GET
- * Endpoint: /api/v1/system/core-settings
- * - Gets the system core settings
- */
-router.get<{}, MessageResponse>('/system/core-settings', (req, res) => {
-
-  let raw_data = fs.readFileSync(`${__dirname}/../data/system/core-settings.json`, 'utf-8');
-  let json_data = JSON.parse(raw_data);
-
-  res.json(json_data);
-});
-
-/**
- * Method: GET
  * Endpoint: /api/v1/proposal/
  * - Gets a list of proposals
  */
@@ -52,30 +39,14 @@ router.get<{}, MessageResponse>('/proposal/', (req, res) => {
  * Method: GET
  * Endpoint: /api/v1/proposal/:id
  * - Gets the proposal JSON based on the :id
- * - Optionally includes core settings
  */
 router.get<{}, MessageResponse>('/proposal/:id', (req, res) => {
-
-  let coreSettings;
-  if (req.query.coreSettings) { 
-    let raw_data = fs.readFileSync(`${__dirname}/../data/system/core-settings.json`, 'utf-8');
-    coreSettings = JSON.parse(raw_data);
-  }
 
   let { id } = req.params as { id: number };
   let raw_data = fs.readFileSync(`${__dirname}/../data/proposals/${id}.json`, 'utf-8');
   let json_data = JSON.parse(raw_data);
 
-  if (coreSettings) {
-    res.json({
-      ...coreSettings,
-      ...json_data
-    });
-  } 
-  
-  else {
-    res.json(json_data);
-  }
+  res.json(json_data);
 });
 
 /**

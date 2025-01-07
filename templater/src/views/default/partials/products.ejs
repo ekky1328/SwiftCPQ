@@ -1,0 +1,41 @@
+<section class="products sheet px-8" data-type="products" data-overflow-scan>
+    <%- include('header') %>
+
+    <h3 class="heading font-bold text-lg">
+        <%- section.title %>
+    </h3>
+    <div class="header grid grid-cols-[50px_1fr_75px_100px] bg-primary text-white py-0.5 px-1 font-bold">
+        <div>
+            QTY
+        </div>
+        <div>
+            Description
+        </div>
+        <div class="text-right">
+            Unit Price
+        </div>
+        <div class="text-right">
+            Total Price
+        </div>
+    </div>
+    <div class="content">
+
+        <% let subtotal = 0; %>
+        <% section.items.forEach((item, itemIndex) => { %>
+            <%- include(`item_${item.type.toLowerCase()}`, { item, nextItem: section.items[itemIndex + 1] }) %>
+            <% subtotal += item.price * item.qty; %>
+        <% }) %>
+
+        <div class="flex justify-end w-full border-t border-black">
+            <div class="py-0.5 px-1 font-bold">
+                Subtotal
+            </div>
+            <div class="w-[100px] text-right bg-primary text-white py-0.5 px-1 font-bold">
+                <%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subtotal) %>
+            </div>
+        </div>
+
+    </div>
+
+    <%- include('footer', { page_number }) %>
+</section>

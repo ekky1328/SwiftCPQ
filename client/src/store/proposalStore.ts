@@ -111,7 +111,7 @@ export const useProposalStore = defineStore('proposal', () => {
                             if (!item.isOptional) {
                                 acc.total += Math.round(item.subtotal * scaleFactor);
                                 acc.margin += Math.round(item.margin * scaleFactor);
-                                acc.cost += Math.round(item.cost * scaleFactor);
+                                acc.cost += Math.round(item.qty * (item.cost * scaleFactor));
                             }
                             return acc;
                         },

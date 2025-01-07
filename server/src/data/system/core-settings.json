@@ -1,0 +1,29 @@
+{
+    "prefix" : "S-CPQ",
+    "suffix" : "",
+    "logo" : "default.svg",
+    "currency" : "AUD",
+    "timezone" : "Australia/Sydney",
+    "date_format" : "YYYY-MM-DD",
+    "defaultContactInformation": {
+        "email": "sales@dundermifflin.com",
+        "phone": "1800 984 3672"
+    },
+    "address": {
+        "street": "1725 Slough Avenue",
+        "city": "Scranton",
+        "state": "Pennsylvania",
+        "postcode": "18447",
+        "country": "United States"
+    },
+    "defaultProposalSettings": {
+        "expiry" : 14,
+        "tax" : false,
+        "taxRate" : 10
+    },
+    "theme": {
+        "primary": "#ff822d",
+        "secondary": "#2D7FFF",
+        "accent": "#CC681F"
+    }
+}

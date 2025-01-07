@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",  // Ensure the compiled output goes to 'dist'
+    "sourceMap": true,  // Enable source maps for easier debugging
+    "target": "esnext",  // Target modern JavaScript (can be 'es6' if needed)
+    "module": "commonjs",  // Set module system to CommonJS for Node.js
+    "esModuleInterop": true,  // Allow default imports from non-ESM modules
+    "forceConsistentCasingInFileNames": true,  // Enforce case consistency in file names
+    "noImplicitAny": true,  // Disallow the use of 'any' type
+    "strict": true,  // Enable all strict type-checking options
+    "skipLibCheck": true,  // Skip type-checking of declaration files
+    "baseUrl": ".",  // Set base path for relative imports
+    "paths": {
+      "*": ["node_modules/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",  // Include all TypeScript files in 'src'
+    "test/**/*.ts"   // Optionally include test files
+  ],
+  "exclude": [
+    "node_modules",  // Exclude 'node_modules' from compilation
+    "dist"           // Exclude output folder to prevent TypeScript from compiling it
+  ]
+}

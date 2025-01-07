@@ -1,0 +1,11 @@
+<header class="flex justify-between items-start py-4" data-overflow-locked>
+    <img class="max-w-48" src="http://localhost:5000/content/logos/<%= proposal.logo %>">
+    <div class="text-right">
+        <h3 class="font-bold">
+            <%= proposal.title %>
+        </h3>
+        <p class="mt-[-4px]">
+            <%= `${proposal.prefix}${proposal.prefix && '-'}` %><%= proposal.identifier %><%= `${proposal.suffix && '-'}${proposal.suffix}` %> v<%= proposal.version %>
+        </p>
+    </div>
+</header>

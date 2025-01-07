@@ -1,0 +1,59 @@
+<style>
+    .cover-letter {
+        font-size: 9pt;
+    }
+
+    #cover-letter-body h3 {
+        font-size: 1.15em;
+        font-weight: bold;
+    }
+
+    .cover-letter ul, ol {
+        margin-left: 2.5em;
+    }
+
+    .cover-letter ol li {
+        list-style-type: decimal;
+    }
+
+    .cover-letter ul li {
+        list-style-type: disc;
+    }
+</style>
+
+<section class="cover_letter sheet px-8" data-type="cover_letter" data-overflow-scan>
+    <%- include('header') %>
+
+    <div data-overflow-locked data-overflow-ignore>
+        <h3 class="mb-8 font-bold">
+            RE: <%- proposal.title %>
+        </h3>
+        <div id="cover-letter-header" class="grid grid-cols-2 gap-4">
+            <div>
+                <h3 class="font-bold">Proposer</h3>
+                <p><%- proposal.author.firstName %> <%- proposal.author.lastName %></p>
+                <p><%- proposal.author.email %></p>
+                <p><%- proposal.author.phone %></p>
+                <p><%- proposal.address.street %></p>
+                <p><%- proposal.address.city %>, <%- proposal.address.postcode %>, <%- proposal.address.state %></p>
+            </div>
+            <div>
+                <h3 class="font-bold">Addressee</h3>
+                <p><%- proposal.customer.contact.firstName %> <%- proposal.customer.contact.lastName %></p>
+                <p><%- proposal.customer.email %></p>
+                <p><%- proposal.customer.phone %></p>
+                <p><%- proposal.customer.address.street %></p>
+                <p><%- proposal.customer.address.city %>, <%- proposal.customer.address.postcode %>, <%- proposal.customer.address.state %></p>
+            </div>
+        </div>
+        <p class="mb-2 mt-8">
+            Hello <%- proposal.customer.contact.firstName %> <%- proposal.customer.contact.lastName %>,
+        </p> 
+    </div>
+
+    <div id="cover-letter-body" class="content mt-4">
+        <%- proposal.sections[0].description %>
+    </div>
+
+    <%- include('footer', { page_number : 1 }) %>
+</section>
