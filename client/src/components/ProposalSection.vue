@@ -3,22 +3,24 @@
     <div>
         <Toast position="top-center" />
 
-        <Card :key="section.id" :class="{ is_product: isProducts(section.type) }">
+        <Card :key="section.id" :class="{ is_table: isTableContent(section.type), }">
 
             <template #title>
                 <div class="grid grid-cols-[25px_1fr_auto] gap-2 items-center cursor-auto" :id="createSectionId(section)">
                     <div class="cursor-pointer flex justify-center">
                         <span v-if="section.isLocked" class="pi pi-lock" v-tooltip.top="`Locked`"></span>
                         <span v-else-if="SECTION_TYPES.INFO === section.type" class="pi pi-file" v-tooltip.top="`Text`"></span>
+                        <span v-else-if="SECTION_TYPES.TOTALS === section.type" class="pi pi-dollar" v-tooltip.top="`Totals`"></span>
+                        <span v-else-if="SECTION_TYPES.MILESTONES === section.type" class="pi pi-sort-numeric-down" v-tooltip.top="`Milestones`"></span>
                         <span v-else-if="SECTION_RECURRANCE.ONE_TIME === section.recurrance" class="pi pi-tag" v-tooltip.top="`One Time`"></span>
                         <span v-else class="pi pi-sync" v-tooltip.top="`${capitalize(section.recurrance)}`"></span>
                     </div>
                     <div class="section-header-left">
-                        <span v-if="!['INFO', 'PRODUCTS'].includes(section.type)">{{ section.title }}</span>
-                        <InputText v-if="['INFO', 'PRODUCTS'].includes(section.type)" placeholder="Section Title" class="section-title !px-1 hover:!border-black focus:!border-black" v-model="section.title" size="small" fluid />
+                        <span v-if="![ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)">{{ section.title }}</span>
+                        <InputText v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" placeholder="Section Title" class="section-title !px-1 hover:!border-black focus:!border-black" v-model="section.title" size="small" fluid />
                     </div>
                     <div class="section-header-right flex gap-2 justify-between items-center relative">
-                        <SplitButton v-if="['INFO', 'PRODUCTS'].includes(section.type)" label="" icon="pi pi-cog" size="small" :model="sectionProductOptions(section)" @click="toggleSectionSettings" severity="contrast"></SplitButton>
+                        <SplitButton v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type)" label="" icon="pi pi-cog" size="small" :model="sectionProductOptions(section)" @click="toggleSectionSettings" severity="contrast"></SplitButton>
                         <Popover ref="sectionSettings">
                             <div class="card p-1 flex flex-col gap-2">
                                 <span class="font-medium block">Section Settings</span>
@@ -63,7 +65,7 @@
                 <Editor v-if="isInfo(section.type)" v-model="section.description" editor-style="max-height: 750px; overflow-y: auto;"  class="cursor-auto" />
                 
                 <!-- Product Section - Products -->
-                 <template v-if="isProducts(section.type)">
+                <template v-if="isProducts(section.type)">
                     <table class="table-auto w-full border-collapse border border-gray-300 cursor-auto">
                         <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
                         <tr>
@@ -158,10 +160,67 @@
                         <h3>No products...</h3>
                     </div>
                 </template>
+
+                <!-- Totals Section -->
+                <template v-if="isTotals(section.type)">
+                    <div>
+                        Totals Section
+                    </div>
+                </template>
+
+                <!-- Milestones Section -->
+                <template v-if="isMilestones(section.type)">
+                    <table class="w-full border-collapse border border-gray-300 cursor-auto">
+                        <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
+                            <tr>
+                                <th class="p-2 border border-gray-300 text-center w-10"></th>
+                                <th class="p-2 border border-gray-300">Milestone Details</th>
+                                <th class="p-2 border border-gray-300 text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <Draggable 
+                            tag="tbody" 
+                            v-model="section.milestones" 
+                            v-bind="dragOptions"  
+                            @start="drag = true" 
+                            @end="drag = false" 
+                            handle=".handle" 
+                            item-key="id" 
+                            :animation="200"
+                        >
+                            <template #item="{ element: milestone }">
+                                <tr class="milestone-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
+                                    <td class="p-2 border border-gray-300 text-center text-gray-500 w-10">
+                                        <span class="inline-block handle cursor-move">⋮⋮</span>
+                                    </td>
+                                    <td class="p-2 border border-gray-300">
+                                        <InputText placeholder="Milestone Title" v-model="milestone.title" inputClass="w-full title" size="small" fluid />
+                                        <Editor placeholder="Description..." v-model="milestone.description" class="mt-2 description" editor-style="height: 150px; max-height: 500px; overflow-y: auto;" />
+                                    </td>
+                                    <td class="p-2 border border-gray-300 text-right">
+                                        <InputNumber v-model="milestone.amount" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
+                                    </td>
+                                </tr>
+                            </template>
+                            <template #footer>
+                            <tr>
+                                <td class="p-2 bg-gray-200" colspan="2"></td>
+                                <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Total Amount for Milestones'">
+                                    {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.milestones.reduce((total, milestone) => total + milestone.amount, 0)) }}
+                                </td>
+                            </tr>
+                        </template>
+                        </Draggable>
+                    </table>
+                    <div v-if="section.milestones && section.milestones.length === 0" class="grid place-content-center p-24">
+                        <h3>No milestones...</h3>
+                    </div>
+                </template>
+
             </template>
         </Card>
 
-        <div v-if="['PRODUCTS', 'INFO'].includes(section.type)" class="add-section-container mt-4 w-full flex justify-center items-center relative">
+        <div v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" class="add-section-container mt-4 w-full flex justify-center items-center relative">
             <SpeedDial :model="proposalSectionOptions(section.id)" direction="right" :style="{ position: 'absolute', top: '-15px' }" />
         </div>
         
@@ -235,6 +294,22 @@ import { capitalize } from 'lodash';
                 proposalStore.addSectionToProposal(sectionId, 'INFO', 'AFTER');
                 toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
             }
+        },
+        {
+            label: 'Totals',
+            icon: 'pi pi-dollar',
+            command: () => {
+                proposalStore.addSectionToProposal(sectionId, 'INFO', 'AFTER');
+                toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
+            }
+        },
+        {
+            label: 'Milestones',
+            icon: 'pi pi-sort-numeric-down',
+            command: () => {
+                proposalStore.addSectionToProposal(sectionId, 'INFO', 'AFTER');
+                toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
+            }
         }
     ]
 
@@ -292,8 +367,18 @@ import { capitalize } from 'lodash';
         ghostClass: "ghost"
     };
 
+    // Section Type Comparisons
+    function isTableContent(e_type) {
+        switch(e_type) {
+            case SECTION_TYPES.PRODUCTS:
+            case SECTION_TYPES.MILESTONES:
+                return true
+            default:
+                return false
+        }
+    }
+
     function isInfo(e_type) {
-        console.log(e_type)
         return [ SECTION_TYPES.INFO, SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS ].includes(e_type)
     };
 
@@ -305,6 +390,11 @@ import { capitalize } from 'lodash';
         return e_type === SECTION_TYPES.TOTALS
     };
 
+    function isMilestones(e_type) {
+        return e_type === SECTION_TYPES.MILESTONES;
+    }
+    
+    // Product Type Comparisons
     function isComment(item) {
         return item.type === PRODUCT_TYPES.COMMENT
     };

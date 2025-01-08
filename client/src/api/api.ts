@@ -27,7 +27,7 @@ export async function GetProposals() {
  */
 export async function GetProposalById(id: string) {
     try {
-        const data = await fetch(`${domain}/api/v1/proposal/${id}`);
+        const data = await fetch(`${domain}/api/v1/proposal/${id}?coreSettings=true`);
         if (data.status === 500) {
             throw new Error(await data.text())
         }

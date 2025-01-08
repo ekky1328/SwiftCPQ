@@ -4,47 +4,7 @@ import _ from 'lodash';
 import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/products';
 import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION } from '../constants/sections';
 
-export interface Proposal {
-    id: number
-    identifier: string
-    version: number
-    title: string
-    description: string
-    customer: {
-      name: string
-    }
-    sections: Section[],
-    _totals: Record<string, { total: number; margin: number, cost: number }>;
-}
-
-export interface Section {
-    id: number
-    title: string
-    type: string
-    order: number
-    recurrance?: string | null
-    description?: string
-    isOptional: boolean
-    isReference: boolean
-    isLocked: boolean
-    __block_removal: boolean
-    items?: Item[];
-}
-
-export interface Item {
-    id: number
-    sku?: string | null
-    title: string
-    description: string
-    order: number
-    qty: number
-    cost: number
-    price: number
-    margin: number
-    subtotal: number
-    type: string
-    isOptional: boolean
-}
+import { Item, Proposal, Section} from '../types/Proposal';
 
 export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);

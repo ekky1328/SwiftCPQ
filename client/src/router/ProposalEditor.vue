@@ -3,7 +3,7 @@
 
     <Toolbar class="proposal-toolbar m-2 mt-0 !border-none">
       <template #start> 
-        <h1 class="m-0 text-3xl">{{ proposalStore.data.identifier }}</h1>
+        <h1 class="m-0 text-3xl">{{ concatProposalIdentifier(proposalStore.data) }}</h1>
       </template>
       <template #end> 
         <Badge class="mr-2" v-if="proposalStore.isDraft" value="Changes Detected" severity="warn"></Badge>
@@ -61,7 +61,7 @@
                 :animation="200"
               >
                 <template #item="{ element : section }">
-                  <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type) && section.title.trim()" class="border border-gray-300 p-2 rounded-md cursor-default flex items-center justify-between">
+                  <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES].includes(section.type) && section.title.trim()" class="border border-gray-300 p-2 rounded-md cursor-default flex items-center justify-between">
                     <div>
                       <span class="text-sm text-gray-500 handle cursor-move pi pi-bars" style="font-size: 14px;"></span>
                       <span class="text-left text-sm ml-2 cursor-text">{{ section.title }}</span>
@@ -124,9 +124,10 @@
 <script setup>
 import { useToast } from 'primevue/usetoast';
 import Draggable from "vuedraggable";
+import { cloneDeep } from 'lodash';
 
+import { concatProposalIdentifier } from '../utils/helpers'
 import ProposalSection from '../components/ProposalSection.vue';
-
 import { useProposalStore } from '../store/proposalStore'
 
 import Toast from 'primevue/toast';
@@ -177,12 +178,26 @@ const proposalOptions = [
     }
 ];
 
+
 function setActiveSection(section) {
   activeSection.value = section;
 }
 
+/**
+ * This function takes an array of numbers and returns the sum of all elements.
+ *
+ * @param {number[]} numbers - An array of numbers to be summed.
+ * @returns {number} The sum of all numbers in the array.
+ */
 async function triggerSaveProposal() {
-  await SaveProposal(proposalStore.data);
+
+  const payloadCopy = cloneDeep(proposalStore.data);
+
+  if (payloadCopy._totals) {
+    delete payloadCopy._totals;
+  }
+
+  await SaveProposal(payloadCopy);
   proposalStore.resetDraftStatus();
   toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
 }
@@ -203,7 +218,7 @@ onMounted(async () => {
         proposalStore.recalculateTotals();
         proposalStore.resetDraftStatus();
 
-        document.title = `${proposalStore.data.identifier} - ${proposalStore.data.title}`;
+        document.title = `${concatProposalIdentifier(proposalStore.data)} - ${proposalStore.data.title}`;
         return;
       }
       
@@ -273,7 +288,7 @@ onUnmounted(() => {
     padding: 8px;
   }
 
-  .is_product .p-card-content {
+  .is_table .p-card-content {
     padding: 0;
   }
 

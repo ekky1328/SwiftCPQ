@@ -1,11 +1,12 @@
-import { Section } from "../store/proposalStore"
+import { Section } from "../types/Proposal"
 
 export const SECTION_TYPES = {
     COVER_LETTER: 'COVER_LETTER',
     PRODUCTS: 'PRODUCTS',
     INFO: 'INFO',
-    TERMS_AND_CONDITIONS: 'TERMS_AND_CONDITIONS',
     TOTALS: 'TOTALS',
+    MILESTONES: 'MILESTONES',
+    TERMS_AND_CONDITIONS: 'TERMS_AND_CONDITIONS',
 }
 
 export const SECTION_RECURRANCE = {
@@ -26,7 +27,7 @@ export const DEFAULT_PRODUCT_SECTION = {
     isOptional: false,
     isReference: false,
     isLocked: false,
-    __block_removal: false,
+    blockRemoval: false,
     items: []
 } as Section;
 
@@ -40,5 +41,6 @@ export const DEFAULT_INFO_SECTION = {
     isOptional: false,
     isReference: false,
     isLocked: false,
-    __block_removal: false
+    blockRemoval: false
 } as Section;
+
