@@ -40,7 +40,7 @@
 
 
       <% proposal.sections.forEach( (section, page_number) => { %>
-        <%- include(`partials/${section.type.toLowerCase()}`, { section, page_number }) %>
+        <%- include(`partials/${section.type.toLowerCase()}`, { proposal, section, page_number }) %>
       <% }) %>
 
       <!-- {

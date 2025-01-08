@@ -5,6 +5,7 @@ import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/product
 import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION } from '../constants/sections';
 
 import { Item, Proposal, Section} from '../types/Proposal';
+import { concatProposalIdentifier } from '../utils/helpers';
 
 export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);
@@ -18,17 +19,21 @@ export const useProposalStore = defineStore('proposal', () => {
     const isDraft = ref<boolean>(false);
 
     watch(data, (newData) => {
+        const themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
         if (initData.value === null) {
             resetDraftStatus();
         }
 
         if (newData) {
             if (_.isEqual(newData, initData.value)) {
-                document.title = `${newData.identifier} - ${newData.title}`;
+                document.title = `${concatProposalIdentifier(newData)} - ${newData.title}`;
                 isDraft.value = false;
             } else {
-                document.title = `(Draft) ${newData.identifier} - ${newData.title}`;
+                document.title = `🟠 [Draft] ${concatProposalIdentifier(newData)} - ${newData.title}`;
                 isDraft.value = true;
+                if (themeColorMetaTag) {
+                    themeColorMetaTag.setAttribute('content', '#ff0000'); // Draft color
+                }
             }
         }
 

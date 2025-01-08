@@ -2,8 +2,10 @@ import express from 'express';
 import fs from 'fs';
 
 import MessageResponse from '../interfaces/MessageResponse';
+import { stripBackToProposal } from '../helpers/validators';
 
 const proposalRouter = express.Router();
+
 
 /**
  * Method: GET
@@ -35,6 +37,7 @@ proposalRouter.get<{}, MessageResponse>('/', (req, res) => {
   res.json(all_proposals);
 });
 
+
 /**
  * Method: GET
  * Endpoint: /api/v1/proposal/:id
@@ -65,6 +68,7 @@ proposalRouter.get<{}, MessageResponse>('/:id', (req, res) => {
   }
 });
 
+
 /**
  * Method: POST
  * Endpoint: /api/v1/proposal/:template
@@ -79,12 +83,13 @@ proposalRouter.post<{}, MessageResponse>('/:template_name', (req, res) => {
   let allProposals = fs.readdirSync(`${__dirname}/../data/proposals/`);
 
   template.id = allProposals.length + 1;
-  template.identifier = `Q-TTC-${10000 + template.id}`
+  template.identifier = `${10000 + template.id}`
   template.createdOnDate = new Date().toISOString();
   template.modifiedOnDate = new Date().toISOString();
   
   res.json(template);
 });
+
 
 /**
  * Method: PUT
@@ -96,11 +101,13 @@ proposalRouter.put<{}, MessageResponse>('/:id', (req, res) => {
   let { id } = req.params as { id: number };
   let { payload } = req.body as { payload: any };
 
+  payload = stripBackToProposal(payload);
   payload.modifiedOnDate = new Date().toISOString();
 
   fs.writeFileSync(`${__dirname}/../data/proposals/${id}.json`, JSON.stringify(payload, null, 4), 'utf-8');
   
   res.json(payload);
 });
+
 
 export default proposalRouter;
