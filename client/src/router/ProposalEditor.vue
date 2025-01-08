@@ -193,7 +193,8 @@ async function triggerSaveProposal() {
 
   const payloadCopy = cloneDeep(proposalStore.data);
 
-  if (payloadCopy._totals) {
+  if (payloadCopy._totals && payloadCopy._section_totals) {
+    delete payloadCopy._section_totals
     delete payloadCopy._totals;
   }
 

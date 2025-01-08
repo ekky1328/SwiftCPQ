@@ -1,9 +1,14 @@
 <section class="products sheet px-8" data-type="products" data-overflow-scan>
     <%- include('header') %>
 
-    <h3 class="heading font-bold text-lg">
-        <%- section.title %>
-    </h3>
+    <div class="flex justify-between">
+        <h3 class="heading font-bold text-lg">
+            <%- section.title %>
+        </h3>
+        <div class="capitalize font-bold text-lg">
+            <%- section.recurrance.toLowerCase().replace('_', ' ') %>
+        </div>
+    </div>
     <div class="header grid grid-cols-[50px_1fr_75px_100px] bg-primary text-white py-0.5 px-1 font-bold">
         <div>
             QTY

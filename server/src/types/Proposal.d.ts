@@ -9,6 +9,7 @@ export interface Proposal {
     customer: Customer;
     sections: Section[];
     _totals?: Record<string, { total: number; margin: number; cost: number }>;
+    _section_totals?: Record<string, { title: string, total: number; margin: number; cost: number }[]>;
 }
 
 export interface Section {

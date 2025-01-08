@@ -141,16 +141,16 @@
                                 <tr>
                                     <td class="p-2 bg-gray-200" colspan="4"></td>
                                     <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Cost Total'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.cost * c.qty), 0)) }}
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.cost) }}
                                     </td>
                                     <td class="p-2 pr-3 text-right w-25 bg-gray-200">
                                         
                                     </td>
                                     <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + ((c.price - c.cost) * c.qty), 0)) }}
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.margin) }}
                                     </td>
                                     <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.items.reduce((a, c) => a + (c.price * c.qty), 0)) }}
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.total) }}
                                     </td>
                                 </tr>
                             </template>

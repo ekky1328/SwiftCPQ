@@ -3,6 +3,8 @@ import fs from 'fs';
 
 import MessageResponse from '../interfaces/MessageResponse';
 import { stripBackToProposal } from '../helpers/validators';
+import { Proposal } from '../types/Proposal';
+import { calculateProposalTotals } from '../helpers/calculation';
 
 const proposalRouter = express.Router();
 
@@ -54,17 +56,19 @@ proposalRouter.get<{}, MessageResponse>('/:id', (req, res) => {
 
   let { id } = req.params as { id: number };
   let raw_data = fs.readFileSync(`${__dirname}/../data/proposals/${id}.json`, 'utf-8');
-  let json_data = JSON.parse(raw_data);
+  let json_data = JSON.parse(raw_data) as Proposal;
+
+  let proposal = calculateProposalTotals(json_data);
 
   if (coreSettings) {
     res.json({
       ...coreSettings,
-      ...json_data
+      ...proposal
     });
   } 
   
   else {
-    res.json(json_data);
+    res.json(proposal);
   }
 });
 

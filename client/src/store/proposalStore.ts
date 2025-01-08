@@ -19,7 +19,6 @@ export const useProposalStore = defineStore('proposal', () => {
     const isDraft = ref<boolean>(false);
 
     watch(data, (newData) => {
-        const themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
         if (initData.value === null) {
             resetDraftStatus();
         }
@@ -31,9 +30,6 @@ export const useProposalStore = defineStore('proposal', () => {
             } else {
                 document.title = `🟠 [Draft] ${concatProposalIdentifier(newData)} - ${newData.title}`;
                 isDraft.value = true;
-                if (themeColorMetaTag) {
-                    themeColorMetaTag.setAttribute('content', '#ff0000'); // Draft color
-                }
             }
         }
 
@@ -83,12 +79,32 @@ export const useProposalStore = defineStore('proposal', () => {
                         { total: 0, margin: 0, cost: 0 }
                     ) || { total: 0, margin: 0, cost: 0 };
 
+
+                    delete section._totals;
+                    section._totals = { total: sectionTotals.total / scaleFactor, margin: sectionTotals.margin / scaleFactor, cost: sectionTotals.cost / scaleFactor };
+
+                    if (data.value && !data.value._section_totals) {
+                        
+                        data.value._section_totals = {} as Record<string, { title: string, total: number; margin: number; cost: number }[]>;
+                        if (data.value._section_totals && !data.value._section_totals[section.recurrance]) {
+                            
+                            data.value._section_totals[section.recurrance] = [];
+                            data.value._section_totals[section.recurrance].push({
+                                title: section.title,
+                                ...section._totals
+                            });
+                        }
+                    }
+        
+        
                     totals[section.recurrance].total += sectionTotals.total;
                     totals[section.recurrance].margin += sectionTotals.margin;
                     totals[section.recurrance].cost += sectionTotals.cost;
+
                 }
             });
 
+            delete data.value._totals;
             data.value._totals = Object.fromEntries(
                 Object.entries(totals).map(([key, value]) => [key, { total: value.total / scaleFactor, margin: value.margin / scaleFactor, cost: value.cost / scaleFactor }])
             ) as Record<string, { total: number; margin: number; cost: number }>;
