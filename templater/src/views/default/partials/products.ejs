@@ -25,10 +25,8 @@
     </div>
     <div class="content">
 
-        <% let subtotal = 0; %>
         <% section.items.forEach((item, itemIndex) => { %>
             <%- include(`item_${item.type.toLowerCase()}`, { item, nextItem: section.items[itemIndex + 1] }) %>
-            <% subtotal += item.price * item.qty; %>
         <% }) %>
 
         <div class="flex justify-end w-full border-t border-black">
@@ -36,7 +34,7 @@
                 Subtotal
             </div>
             <div class="w-[100px] text-right bg-primary text-white py-0.5 px-1 font-bold">
-                <%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subtotal) %>
+                <%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.total) %>
             </div>
         </div>
 

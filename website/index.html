@@ -16,6 +16,9 @@
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:site_name" content="SwiftCPQ" />
+    <script src="./jquery.min.js"></script>
+    <link href="./fotorama.css" rel="stylesheet">
+    <script src="./fotorama.js"></script>
 </head>
 <body class="bg-gray-600 font-sans">
 
@@ -70,7 +73,15 @@
             </div>
 
             <div class="max-w-[960px] mx-auto text-center py-6">
-                <h3 class="font-bold mb-3">Like what you are reading?<br/>If you're onboard with my mission, then let me <span class="underline underline-offset-4">let you</span> know when it is ready.</h3>
+                <div class="p-4 rounded-lg bg-gray-100">
+                    <div class="fotorama">
+                        <img src="./1.png" data-caption="2025-01-10 - Alpha Build - Editor Preview">
+                        <img src="./2.png" data-caption="2025-01-10 - Alpha Build - Products Section Editor">
+                        <img src="./3.png" data-caption="2025-01-10 - Alpha Build - Recurring and Optional Sections">
+                        <img src="./4.png" data-caption="2025-01-10 - Alpha Build - PDF Template Preview">
+                    </div>
+                </div>
+                <h3 class="font-bold mb-3 mt-4">Like what you are seeing?<br/>If you're onboard with my mission, then let me <span class="underline underline-offset-4">let you</span> know when it is ready.</h3>
                 <form id="swift-cpq_waitlist" action="https://forms.talke.workers.dev/f/s/swift-cpq_waitlist?redirect=true" method="post">
                     <input id="email" name="email" type="email" placeholder="Sign Up to Stay Updated..." class="p-3 w-2/3 max-w-md border border-gray-300 text-gray-800 rounded-md shadow-sm">
                     <input id="secret" name="secret" type="text" class="hidden" placeholder="Phone Number..." value="da615dd4-a5e2-4cdb-a55d-95a2ffd259b3" required>

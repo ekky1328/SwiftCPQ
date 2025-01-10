@@ -134,3 +134,4 @@ dist
 
 /server/src/data/proposals/*.json
 deploy.sh
+/website/*.zip
