@@ -1,5 +1,5 @@
-import { CoreSettings } from "../types/System";
-import { Proposal } from "../types/Proposal";
+import { CoreSettings } from "../../types/System";
+import { Proposal } from "../../types/Proposal";
 
 export interface ProposalPayload extends Proposal, CoreSettings {}
 

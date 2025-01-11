@@ -1,6 +1,6 @@
-import { Item } from "../types/Proposal";
-import { Section } from "../types/Proposal";
-import { Proposal } from "../types/Proposal";
+import { Item } from "../../types/Proposal";
+import { Section } from "../../types/Proposal";
+import { Proposal } from "../../types/Proposal";
 
 /**
  * Calculate the totals for each section in the proposal.

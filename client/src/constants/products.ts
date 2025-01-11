@@ -1,4 +1,4 @@
-import { Item } from "../store/proposalStore";
+import { Item } from "../types/Proposal";
 
 export const PRODUCT_TYPES = {
     PRODUCT: 'PRODUCT',

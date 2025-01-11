@@ -38,7 +38,7 @@ export interface Item {
     qty: number
     cost: number
     price: number
-    sku?: string
+    sku?: string | null
     type: string
     isOptional: boolean
     margin: number

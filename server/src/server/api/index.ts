@@ -1,5 +1,4 @@
 import express from 'express';
-import fs from 'fs';
 
 import proposalRouter from './proposal';
 import systemRouter from './system';
