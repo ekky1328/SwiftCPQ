@@ -1,5 +1,26 @@
 import { pgEnum } from "drizzle-orm/pg-core";
 
+/**
+ * Tenant Enum
+ */
+export const tenantStatus = pgEnum("tenant_status", [
+    "ACTIVE",
+    "INACTIVE",
+    "SUSPENDED"
+]);
+
+/**
+ * User Enums
+ */
+export const userStatus = pgEnum("user_status", [
+    "ACTIVE",
+    "INACTIVE"
+]);
+
+
+/**
+ * Proposal Enums
+ */
 export const proposalStatus = pgEnum("proposal_status", [
     "DRAFT",
     "IN_REVIEW",

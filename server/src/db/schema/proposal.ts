@@ -1,28 +1,27 @@
-import { pgTable, serial, varchar, text, numeric, boolean, jsonb, timestamp, pgEnum, date } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, numeric, boolean, jsonb, date } from 'drizzle-orm/pg-core';
 import { itemType, proposalStatus, sectionRecurrance, sectionType } from './enums';
-
-const dateDefaults = {
-  createdOnDate: timestamp('created_on_date', { mode: 'date', precision: 3 }).notNull().defaultNow(),
-  modifiedOnDate: timestamp('modified_on_date', { mode: 'date', precision: 3 }).notNull().defaultNow().$onUpdate(() => new Date()),
-}
+import { dateDefaults } from "../index";
+import { user } from './user';
+import { tenant } from './tenant';
 
 export const proposal = pgTable('proposal', {
   id: serial('id').primaryKey(),
+  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
   version: numeric('version').notNull(),
   identifier: varchar('identifier', { length: 5 }).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
   status: proposalStatus().default("DRAFT").notNull(),
 
-  author: jsonb('author'),
-  customer: jsonb('customer'),
+  userId: numeric('user_id').references(() => user.id).notNull(),
+  customerId: jsonb('customer'),
 
   ...dateDefaults
 });
 
-
 export const section = pgTable('section', {
   id: serial('id').primaryKey(),
+  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
   proposalId: numeric('proposal_id').references(() => proposal.id).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   type: sectionType().notNull(),
@@ -39,6 +38,7 @@ export const section = pgTable('section', {
 
 export const item = pgTable('item', {
   id: serial('id').primaryKey(),
+  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
   sectionId: numeric('section_id').references(() => section.id),
   title: varchar('title', { length: 255 }).notNull().default(""),
   description: text('description').notNull(),
@@ -57,6 +57,7 @@ export const item = pgTable('item', {
 
 export const milestone = pgTable('milestone', {
   id: serial('id').primaryKey(),
+  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
   sectionId: numeric('section_id').references(() => section.id),
   title: varchar('title', { length: 255 }),
   description: text('description').notNull().default(""),
