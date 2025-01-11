@@ -1,28 +1,29 @@
-import { pgTable, serial, varchar, text, numeric, boolean, jsonb, date } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, numeric, boolean, date, integer } from 'drizzle-orm/pg-core';
 import { itemType, proposalStatus, sectionRecurrance, sectionType } from './enums';
 import { dateDefaults } from "../index";
 import { user } from './user';
 import { tenant } from './tenant';
+import { customer } from './customer';
 
 export const proposal = pgTable('proposal', {
   id: serial('id').primaryKey(),
-  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
+  tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
   version: numeric('version').notNull(),
   identifier: varchar('identifier', { length: 5 }).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
   status: proposalStatus().default("DRAFT").notNull(),
 
-  userId: numeric('user_id').references(() => user.id).notNull(),
-  customerId: jsonb('customer'),
+  userId: integer('user_id').references(() => user.id).notNull(),
+  customerId: integer('customer_id').references(() => customer.id).notNull(),
 
   ...dateDefaults
 });
 
-export const section = pgTable('section', {
+export const section = pgTable('proposal_section', {
   id: serial('id').primaryKey(),
-  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
-  proposalId: numeric('proposal_id').references(() => proposal.id).notNull(),
+  tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
+  proposalId: integer('proposal_id').references(() => proposal.id).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   type: sectionType().notNull(),
   order: numeric('order').notNull().unique(),
@@ -36,10 +37,10 @@ export const section = pgTable('section', {
   ...dateDefaults
 });
 
-export const item = pgTable('item', {
+export const item = pgTable('proposal_section_item', {
   id: serial('id').primaryKey(),
-  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
-  sectionId: numeric('section_id').references(() => section.id),
+  tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
+  sectionId: integer('section_id').references(() => section.id),
   title: varchar('title', { length: 255 }).notNull().default(""),
   description: text('description').notNull(),
   order: numeric('order').notNull().unique(),
@@ -55,10 +56,10 @@ export const item = pgTable('item', {
   ...dateDefaults
 });
 
-export const milestone = pgTable('milestone', {
+export const milestone = pgTable('proposal_section_milestone', {
   id: serial('id').primaryKey(),
-  tenantId: numeric('tenant_id').references(() => tenant.id).notNull(),
-  sectionId: numeric('section_id').references(() => section.id),
+  tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
+  sectionId: integer('section_id').references(() => section.id),
   title: varchar('title', { length: 255 }),
   description: text('description').notNull().default(""),
   order: numeric('order').notNull().unique(),
