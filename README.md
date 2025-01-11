@@ -92,7 +92,7 @@ If you're a developer, and you would like to help move the project forward, you'
 
 ## 🛠️ Development Environment
 
-`TBC`
+Please see [DEVELOPMENT.md](DEVELOPMENT.md) for instructions
 
 ## 📜 License
 
@@ -102,5 +102,5 @@ SwiftCPQ is licensed under the AGPL-3.0 License. See the [LICENSE](LICENSE) file
 
 **For questions or support**
 - Please open an issue in this repository.
-- Visit our Discord here SwiftCPQ Community Discord
+- Visit our Discord here [SwiftCPQ Community Discord](https://discord.com/invite/zF4kr8hrXs)
 - Contact the maintainer at [chris@talke.dev](mailto:chris@talke.dev).
