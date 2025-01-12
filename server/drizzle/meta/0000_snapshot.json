@@ -1,11 +1,11 @@
 {
-  "id": "2d461434-25de-41ac-b491-436a8fa6cf00",
+  "id": "c4f17b0a-f868-43c7-a584-46680a0b71b4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.customer_contact": {
-      "name": "customer_contact",
+    "public.customer": {
+      "name": "customer",
       "schema": "",
       "columns": {
         "id": {
@@ -20,20 +20,99 @@
           "primaryKey": false,
           "notNull": true
         },
-        "customer_id": {
-          "name": "customer_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location_id": {
-          "name": "location_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "name": {
           "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "primary_customer_contact_id": {
+          "name": "primary_customer_contact_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "primary_customer_location_id": {
+          "name": "primary_customer_location_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_on_date": {
+          "name": "created_on_date",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modified_on_date": {
+          "name": "modified_on_date",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "customer_tenant_id_tenant_id_fk": {
+          "name": "customer_tenant_id_tenant_id_fk",
+          "tableFrom": "customer",
+          "tableTo": "tenant",
+          "columnsFrom": [
+            "tenant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "customer_email_unique": {
+          "name": "customer_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.customer_contact": {
+      "name": "customer_contact",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
@@ -56,12 +135,23 @@
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
+          "notNull": true
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_on_date": {
           "name": "created_on_date",
@@ -122,97 +212,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.customer": {
-      "name": "customer",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "tenant_id": {
-          "name": "tenant_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "primary_contact_id": {
-          "name": "primary_contact_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "primary_location_id": {
-          "name": "primary_location_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_on_date": {
-          "name": "created_on_date",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "modified_on_date": {
-          "name": "modified_on_date",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "customer_tenant_id_tenant_id_fk": {
-          "name": "customer_tenant_id_tenant_id_fk",
-          "tableFrom": "customer",
-          "tableTo": "tenant",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "customer_email_unique": {
-          "name": "customer_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        }
-      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -345,6 +344,18 @@
           "name": "section_id",
           "type": "integer",
           "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sku": {
+          "name": "sku",
+          "type": "varchar(256)",
+          "primaryKey": false,
           "notNull": false
         },
         "title": {
@@ -360,46 +371,34 @@
           "primaryKey": false,
           "notNull": true
         },
-        "order": {
-          "name": "order",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
-        },
         "qty": {
           "name": "qty",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "'0'"
+          "default": 0
         },
         "cost": {
           "name": "cost",
-          "type": "numeric(2, 100)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "price": {
           "name": "price",
-          "type": "numeric(2, 100)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "margin": {
           "name": "margin",
-          "type": "numeric(2, 100)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "subtotal": {
           "name": "subtotal",
-          "type": "numeric(2, 100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sku": {
-          "name": "sku",
-          "type": "varchar(256)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -463,15 +462,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "proposal_section_item_order_unique": {
-          "name": "proposal_section_item_order_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "order"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -513,7 +504,7 @@
         },
         "order": {
           "name": "order",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -525,7 +516,7 @@
         },
         "amount": {
           "name": "amount",
-          "type": "numeric(2, 100)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -574,15 +565,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "proposal_section_milestone_order_unique": {
-          "name": "proposal_section_milestone_order_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "order"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -605,7 +588,7 @@
         },
         "version": {
           "name": "version",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -747,7 +730,7 @@
         },
         "order": {
           "name": "order",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -838,15 +821,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "proposal_section_order_unique": {
-          "name": "proposal_section_order_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "order"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1234,19 +1209,33 @@
           "name": "contact_information",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "proposal_settings": {
           "name": "proposal_settings",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "proposal_settings_default": {
           "name": "proposal_settings_default",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "created_on_date": {
+          "name": "created_on_date",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modified_on_date": {
+          "name": "modified_on_date",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -1319,19 +1308,13 @@
           "primaryKey": false,
           "notNull": false
         },
-        "admin_user_id": {
-          "name": "admin_user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "status": {
           "name": "status",
           "type": "tenant_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'ACTIVE'"
+          "default": "'PENDING'"
         },
         "status_reason": {
           "name": "status_reason",
@@ -1339,6 +1322,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "''"
+        },
+        "admin_user_id": {
+          "name": "admin_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_on_date": {
           "name": "created_on_date",
@@ -1562,10 +1551,10 @@
         },
         "expiry": {
           "name": "expiry",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "'14'"
+          "default": 14
         },
         "tax": {
           "name": "tax",
@@ -1576,10 +1565,10 @@
         },
         "tax_rate": {
           "name": "tax_rate",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "'10'"
+          "default": 10
         },
         "created_on_date": {
           "name": "created_on_date",
@@ -2028,6 +2017,7 @@
       "name": "tenant_status",
       "schema": "public",
       "values": [
+        "PENDING",
         "ACTIVE",
         "INACTIVE",
         "SUSPENDED"

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, boolean, numeric, text, integer } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, boolean, text, integer } from 'drizzle-orm/pg-core';
 
 import { dateDefaults } from '../index';
 import { tenantStatus } from './enums';
@@ -8,11 +8,12 @@ export const tenant = pgTable('tenant', {
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
     domain: varchar('subdomain', { length: 255 }).unique(),
-    adminUserId: integer('admin_user_id').notNull(),
-    status: tenantStatus('status').default("ACTIVE").notNull(),
+    status: tenantStatus('status').default("PENDING").notNull(),
     statusReason: text('status_reason').default('').notNull(),
+    
+    adminUserId: integer('admin_user_id'),
 
-    ...dateDefaults
+    ...dateDefaults 
 });
 
 
@@ -25,9 +26,12 @@ export const settings = pgTable('tenant_settings', {
     currency: varchar('currency', { length: 10 }).notNull().default("USD"),
     timezone: varchar('timezone', { length: 100 }).notNull().default("UTC"),
     dateFormat: varchar('date_format', { length: 20 }).notNull().default("YYYY-MM-DD"),
-    contactInformation: integer('contact_information').references(() => tenantContactInformation.id).notNull(),
-    proposalSettings: integer('proposal_settings').references(() => tenantProposalSettings.id).notNull(),
-    theme: integer('proposal_settings_default').references(() => tenantTheme.id).notNull()
+
+    contactInformation: integer('contact_information').references(() => tenantContactInformation.id),
+    proposalSettings: integer('proposal_settings').references(() => tenantProposalSettings.id),
+    theme: integer('proposal_settings_default').references(() => tenantTheme.id),
+    
+    ...dateDefaults 
 });
 
 
@@ -36,6 +40,7 @@ export const tenantContactInformation = pgTable('tenant_contact_information', {
     tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
     email: varchar('email').notNull(),
     phone: varchar('phone').notNull(),
+    
     addressId: integer('address').references(() => tenantAddressInformation.id).notNull(),
 
     ...dateDefaults,
@@ -59,9 +64,9 @@ export const tenantAddressInformation = pgTable('tenant_address_information', {
 export const tenantProposalSettings = pgTable('tenant_proposal_setting', {
     id: serial('id').primaryKey(),
     tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
-    expiry: numeric('expiry').notNull().default("14"),
+    expiry: integer('expiry').notNull().default(14),
     tax: boolean('tax').notNull().default(true),
-    taxRate: numeric('tax_rate').notNull().default("10"),
+    taxRate: integer('tax_rate').notNull().default(10),
 
     ...dateDefaults,
 });

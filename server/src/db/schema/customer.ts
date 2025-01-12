@@ -8,27 +8,29 @@ export const customer = pgTable('customer', {
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).unique(),
   phone: varchar('phone', { length: 20 }),
-  primaryContactId: integer('primary_contact_id').notNull(),
-  primaryLocationId: integer('primary_location_id').notNull(),
+
+  primaryContactId: integer('primary_customer_contact_id'),
+  primaryLocationId: integer('primary_customer_location_id'),
 
   ...dateDefaults
 });
 
-export const contact = pgTable('customer_contact', {
+export const customerContact = pgTable('customer_contact', {
     id: serial('id').primaryKey(),
-    tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
-    customerId: integer('customer_id').references(() => customer.id).notNull().notNull(),
-    locationId: integer('location_id').references(() => location.id).notNull().notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
+    firstName: varchar('first_name', { length: 255 }).notNull(),
+    lastName: varchar('last_name', { length: 255 }).notNull(),
     email: varchar('email', { length: 255 }).notNull(),
     phone: varchar('phone', { length: 20 }).notNull(),
-    role: varchar('role', { length: 255 }).notNull(),
-    createdAt: timestamp('created_at').defaultNow(),
-
+    title: varchar('role', { length: 255 }).notNull(),
+    
+    tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
+    customerId: integer('customer_id').references(() => customer.id).notNull(),
+    locationId: integer('location_id').references(() => customerLocation.id),
+    
     ...dateDefaults
 });
 
-export const location = pgTable('customer_location', {
+export const customerLocation = pgTable('customer_location', {
   id: serial('id').primaryKey(),
   tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
   customerId: integer('customer_id').references(() => customer.id).notNull().notNull(),

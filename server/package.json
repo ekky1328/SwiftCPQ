@@ -11,7 +11,9 @@
     "start:dist": "node dist/index.js",
     "lint": "eslint --fix src test",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "npx drizzle-kit generate",
+    "db:migrate": "npx drizzle-kit migrate"
   },
   "keywords": [],
   "author": "Christopher Talke Buscaino <chris@talke.dev> (https://talke.dev)",

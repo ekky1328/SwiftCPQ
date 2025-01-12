@@ -2,33 +2,33 @@ CREATE TYPE "public"."item_type" AS ENUM('PRODUCT', 'BUNDLE', 'COMMENT');--> sta
 CREATE TYPE "public"."proposal_status" AS ENUM('DRAFT', 'IN_REVIEW', 'REQUIRES_REVISION', 'SENT', 'VIEWED', 'APPROVED', 'DECLINED', 'EXPIRED', 'CANCELED');--> statement-breakpoint
 CREATE TYPE "public"."section_recurrance" AS ENUM('ONE_TIME', 'DAILY', 'WEEKLY', 'MONTHLY', 'ANNUAL');--> statement-breakpoint
 CREATE TYPE "public"."section_type" AS ENUM('COVER_LETTER', 'PRODUCTS', 'INFO', 'TOTALS', 'MILESTONES', 'TERMS_AND_CONDITIONS');--> statement-breakpoint
-CREATE TYPE "public"."tenant_status" AS ENUM('ACTIVE', 'INACTIVE', 'SUSPENDED');--> statement-breakpoint
+CREATE TYPE "public"."tenant_status" AS ENUM('PENDING', 'ACTIVE', 'INACTIVE', 'SUSPENDED');--> statement-breakpoint
 CREATE TYPE "public"."user_status" AS ENUM('ACTIVE', 'INACTIVE');--> statement-breakpoint
-CREATE TABLE "customer_contact" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"tenant_id" integer NOT NULL,
-	"customer_id" integer NOT NULL,
-	"location_id" integer NOT NULL,
-	"name" varchar(255) NOT NULL,
-	"email" varchar(255) NOT NULL,
-	"phone" varchar(20) NOT NULL,
-	"role" varchar(255) NOT NULL,
-	"created_at" timestamp DEFAULT now(),
-	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "customer" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tenant_id" integer NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"email" varchar(255),
 	"phone" varchar(20),
-	"primary_contact_id" integer NOT NULL,
-	"primary_location_id" integer NOT NULL,
+	"primary_customer_contact_id" integer,
+	"primary_customer_location_id" integer,
 	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
 	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL,
 	CONSTRAINT "customer_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "customer_contact" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"first_name" varchar(255) NOT NULL,
+	"last_name" varchar(255) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"phone" varchar(20) NOT NULL,
+	"role" varchar(255) NOT NULL,
+	"tenant_id" integer NOT NULL,
+	"customer_id" integer NOT NULL,
+	"location_id" integer,
+	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
+	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "customer_location" (
@@ -48,21 +48,20 @@ CREATE TABLE "customer_location" (
 CREATE TABLE "proposal_section_item" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tenant_id" integer NOT NULL,
-	"section_id" integer,
+	"section_id" integer NOT NULL,
+	"order" integer NOT NULL,
+	"sku" varchar(256),
 	"title" varchar(255) DEFAULT '' NOT NULL,
 	"description" text NOT NULL,
-	"order" numeric NOT NULL,
-	"qty" numeric DEFAULT '0' NOT NULL,
-	"cost" numeric(2, 100) NOT NULL,
-	"price" numeric(2, 100) NOT NULL,
-	"margin" numeric(2, 100) NOT NULL,
-	"subtotal" numeric(2, 100) NOT NULL,
-	"sku" varchar(256) NOT NULL,
+	"qty" integer DEFAULT 0 NOT NULL,
+	"cost" integer NOT NULL,
+	"price" integer NOT NULL,
+	"margin" integer NOT NULL,
+	"subtotal" integer NOT NULL,
 	"type" "item_type" DEFAULT 'PRODUCT' NOT NULL,
 	"is_optional" boolean DEFAULT false,
 	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	CONSTRAINT "proposal_section_item_order_unique" UNIQUE("order")
+	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "proposal_section_milestone" (
@@ -71,18 +70,17 @@ CREATE TABLE "proposal_section_milestone" (
 	"section_id" integer,
 	"title" varchar(255),
 	"description" text DEFAULT '' NOT NULL,
-	"order" numeric NOT NULL,
+	"order" integer NOT NULL,
 	"due_date" date,
-	"amount" numeric(2, 100) NOT NULL,
+	"amount" integer NOT NULL,
 	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	CONSTRAINT "proposal_section_milestone_order_unique" UNIQUE("order")
+	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "proposal" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tenant_id" integer NOT NULL,
-	"version" numeric NOT NULL,
+	"version" integer NOT NULL,
 	"identifier" varchar(5) NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"description" text NOT NULL,
@@ -99,7 +97,7 @@ CREATE TABLE "proposal_section" (
 	"proposal_id" integer NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"type" "section_type" NOT NULL,
-	"order" numeric NOT NULL,
+	"order" integer NOT NULL,
 	"recurrance" "section_recurrance",
 	"description" text DEFAULT '' NOT NULL,
 	"is_optional" boolean DEFAULT false NOT NULL,
@@ -107,8 +105,7 @@ CREATE TABLE "proposal_section" (
 	"is_reference" boolean DEFAULT false NOT NULL,
 	"block_removal" boolean DEFAULT false NOT NULL,
 	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL,
-	CONSTRAINT "proposal_section_order_unique" UNIQUE("order")
+	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "tenant_permission" (
@@ -157,18 +154,20 @@ CREATE TABLE "tenant_settings" (
 	"currency" varchar(10) DEFAULT 'USD' NOT NULL,
 	"timezone" varchar(100) DEFAULT 'UTC' NOT NULL,
 	"date_format" varchar(20) DEFAULT 'YYYY-MM-DD' NOT NULL,
-	"contact_information" integer NOT NULL,
-	"proposal_settings" integer NOT NULL,
-	"proposal_settings_default" integer NOT NULL
+	"contact_information" integer,
+	"proposal_settings" integer,
+	"proposal_settings_default" integer,
+	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
+	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "tenant" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"subdomain" varchar(255),
-	"admin_user_id" integer NOT NULL,
-	"status" "tenant_status" DEFAULT 'ACTIVE' NOT NULL,
+	"status" "tenant_status" DEFAULT 'PENDING' NOT NULL,
 	"status_reason" text DEFAULT '' NOT NULL,
+	"admin_user_id" integer,
 	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
 	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL,
 	CONSTRAINT "tenant_subdomain_unique" UNIQUE("subdomain")
@@ -200,9 +199,9 @@ CREATE TABLE "tenant_contact_information" (
 CREATE TABLE "tenant_proposal_setting" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tenant_id" integer NOT NULL,
-	"expiry" numeric DEFAULT '14' NOT NULL,
+	"expiry" integer DEFAULT 14 NOT NULL,
 	"tax" boolean DEFAULT true NOT NULL,
-	"tax_rate" numeric DEFAULT '10' NOT NULL,
+	"tax_rate" integer DEFAULT 10 NOT NULL,
 	"created_on_date" timestamp (3) DEFAULT now() NOT NULL,
 	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
@@ -258,10 +257,10 @@ CREATE TABLE "user_location" (
 	"modified_on_date" timestamp (3) DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "customer" ADD CONSTRAINT "customer_tenant_id_tenant_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenant"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customer_contact" ADD CONSTRAINT "customer_contact_tenant_id_tenant_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenant"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customer_contact" ADD CONSTRAINT "customer_contact_customer_id_customer_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customer"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customer_contact" ADD CONSTRAINT "customer_contact_location_id_customer_location_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."customer_location"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "customer" ADD CONSTRAINT "customer_tenant_id_tenant_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenant"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customer_location" ADD CONSTRAINT "customer_location_tenant_id_tenant_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenant"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customer_location" ADD CONSTRAINT "customer_location_customer_id_customer_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customer"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "proposal_section_item" ADD CONSTRAINT "proposal_section_item_tenant_id_tenant_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenant"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

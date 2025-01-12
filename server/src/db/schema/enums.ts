@@ -4,6 +4,7 @@ import { pgEnum } from "drizzle-orm/pg-core";
  * Tenant Enum
  */
 export const tenantStatus = pgEnum("tenant_status", [
+    "PENDING",
     "ACTIVE",
     "INACTIVE",
     "SUSPENDED"

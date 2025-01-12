@@ -16,6 +16,7 @@
     - [Setup a Postgres Instance](#setup-a-postgres-instance)
     - [Start Local Development](#start-local-development)
     - [Using Docker Compose](#using-docker-compose)
+  - [Migrations](#migrations)
   - [Testing](#testing)
   - [Common Issues and Troubleshooting](#common-issues-and-troubleshooting)
   - [Contributing Guidelines](#contributing-guidelines)
@@ -158,6 +159,20 @@ npm run dev
 ### Using Docker Compose
 
 ... Nothing here yet.
+
+---
+
+## Migrations
+
+This project uses the Drizzle ORM framework for interacting with the database, which also handles migrations.
+
+Please see this documentation for reference: [Migrations with Drizzle Kit](https://orm.drizzle.team/docs/kit-overview)
+
+If you are unfimilar with Drizzle ORM, refer to the [documentation](https://orm.drizzle.team/docs) or watch these videos:
+- [https://www.youtube.com/watch?v=i_mAHOhpBSA](Fireshipo - Drizzle ORM in 100 Seconds)
+- [https://www.youtube.com/watch?v=Hh9xqRWYEJs](SyntaxFM - Drizzle The TypeScript SQL ORM)
+
+If things change with the way we do migrations in this project, it will be documented here.
 
 ---
 
