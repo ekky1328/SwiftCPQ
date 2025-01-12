@@ -1,6 +1,6 @@
 {
-  "id": "7332a21f-587d-4074-a3c3-06df95c251ac",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d377e37f-ea81-48ae-9c02-74ab504c731a",
+  "prevId": "7332a21f-587d-4074-a3c3-06df95c251ac",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -53,14 +53,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -157,14 +157,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -279,14 +279,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -423,14 +423,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -527,14 +527,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -638,14 +638,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -785,14 +785,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -872,14 +872,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -939,14 +939,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1005,14 +1005,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1097,14 +1097,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1237,14 +1237,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1357,14 +1357,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1441,14 +1441,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1513,14 +1513,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1601,14 +1601,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1676,14 +1676,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1780,14 +1780,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1866,14 +1866,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
@@ -1975,14 +1975,14 @@
         },
         "created_on_date": {
           "name": "created_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
         "modified_on_date": {
           "name": "modified_on_date",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"

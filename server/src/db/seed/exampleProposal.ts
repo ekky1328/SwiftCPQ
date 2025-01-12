@@ -69,7 +69,7 @@ export const exampleProposal = {
       {
         title: 'Design and Development',
         type: 'PRODUCTS',
-        order: 2,
+        order: 4,
         recurrance: 'ONE_TIME',
         description: "",
         isOptional: false,

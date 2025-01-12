@@ -2,9 +2,16 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { timestamp } from 'drizzle-orm/pg-core';
 
-export const db = drizzle(process.env.DATABASE_URL!);
+import * as tenantSchema from '../db/schema/tenant';
+import * as userSchema from '../db/schema/user';
+import * as customerSchema from '../db/schema/customer';
+import * as proposalSchema from '../db/schema/proposal';
 
-export const dateDefaults = {
-  createdOnDate: timestamp('created_on_date', { mode: 'date', precision: 3 }).notNull().defaultNow(),
-  modifiedOnDate: timestamp('modified_on_date', { mode: 'date', precision: 3 }).notNull().defaultNow().$onUpdate(() => new Date()),
-}
+export const db = drizzle(process.env.DATABASE_URL!, {
+  schema: {
+    ...tenantSchema,
+    ...userSchema,
+    ...customerSchema,
+    ...proposalSchema,
+  }
+});

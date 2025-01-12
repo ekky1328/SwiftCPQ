@@ -12,7 +12,7 @@ import { customer, customerContact, customerLocation } from '../schema/customer'
 
 import { exampleProposal } from './exampleProposal';
   
-const db = drizzle(process.env.DATABASE_URL!);
+import { db } from '../index';
 
 async function main() {
 
@@ -20,7 +20,6 @@ async function main() {
 
   /** Tenant Creation */
   const tenantData: typeof tenant.$inferInsert = {
-    id: 1,
     name: "Dunder Mifflin",
     domain: "dunder-mifflin",
     status: 'ACTIVE'

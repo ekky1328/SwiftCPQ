@@ -1,39 +1,40 @@
-import { pgTable, serial, varchar, timestamp, integer } from 'drizzle-orm/pg-core';
-import { dateDefaults } from '..';
+import { sql } from 'drizzle-orm';
+import { pgTable, varchar, uuid, timestamp } from 'drizzle-orm/pg-core';
+
 import { tenant } from './tenant';
 
 export const customer = pgTable('customer', {
-  id: serial('id').primaryKey(),
-  tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).unique(),
   phone: varchar('phone', { length: 20 }),
+  
+  tenantId: uuid('tenant_id').references(() => tenant.id).notNull(),
+  primaryContactId: uuid('primary_customer_contact_id'),
+  primaryLocationId: uuid('primary_customer_location_id'),
 
-  primaryContactId: integer('primary_customer_contact_id'),
-  primaryLocationId: integer('primary_customer_location_id'),
-
-  ...dateDefaults
+    createdOnDate: timestamp('created_on_date').notNull().defaultNow(),
+    modifiedOnDate: timestamp('modified_on_date').notNull().defaultNow().$onUpdate(() => new Date())
 });
 
 export const customerContact = pgTable('customer_contact', {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     firstName: varchar('first_name', { length: 255 }).notNull(),
     lastName: varchar('last_name', { length: 255 }).notNull(),
     email: varchar('email', { length: 255 }).notNull(),
     phone: varchar('phone', { length: 20 }).notNull(),
     title: varchar('role', { length: 255 }).notNull(),
     
-    tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
-    customerId: integer('customer_id').references(() => customer.id).notNull(),
-    locationId: integer('location_id').references(() => customerLocation.id),
+    tenantId: uuid('tenant_id').references(() => tenant.id).notNull(),
+    customerId: uuid('customer_id').references(() => customer.id),
+    locationId: uuid('location_id').references(() => customerLocation.id),
     
-    ...dateDefaults
+    createdOnDate: timestamp('created_on_date').notNull().defaultNow(),
+    modifiedOnDate: timestamp('modified_on_date').notNull().defaultNow().$onUpdate(() => new Date())
 });
 
 export const customerLocation = pgTable('customer_location', {
-  id: serial('id').primaryKey(),
-  tenantId: integer('tenant_id').references(() => tenant.id).notNull(),
-  customerId: integer('customer_id').references(() => customer.id).notNull().notNull(),
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   addressLine1: varchar('address_line1', { length: 255 }).notNull(),
   addressLine2: varchar('address_line2', { length: 255 }),
   city: varchar('city', { length: 100 }).notNull(),
@@ -41,5 +42,9 @@ export const customerLocation = pgTable('customer_location', {
   zipCode: varchar('zip_code', { length: 20 }).notNull(),
   country: varchar('country', { length: 100 }).notNull(),
 
-  ...dateDefaults
+  tenantId: uuid('tenant_id').references(() => tenant.id).notNull(),
+  customerId: uuid('customer_id').references(() => customer.id),
+
+    createdOnDate: timestamp('created_on_date').notNull().defaultNow(),
+    modifiedOnDate: timestamp('modified_on_date').notNull().defaultNow().$onUpdate(() => new Date())
 });

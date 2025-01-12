@@ -1,10 +1,16 @@
 import express from 'express';
 import fs from 'fs';
+import { eq } from 'drizzle-orm';
 
 import MessageResponse from '../interfaces/MessageResponse';
 import { stripBackToProposal } from '../helpers/validators';
 import { Proposal } from '../../types/Proposal';
 import { calculateProposalTotals } from '../helpers/calculation';
+
+import { db } from '../../db/index'
+import { proposal } from '../../db/schema/proposal';
+import { user } from '../../db/schema/user';
+import { customer, customerContact } from '../../db/schema/customer';
 
 const proposalRouter = express.Router();
 
@@ -14,29 +20,43 @@ const proposalRouter = express.Router();
  * Endpoint: /api/v1/proposal/
  * - Gets a list of proposals
  */
-proposalRouter.get<{}, MessageResponse>('/', (req, res) => {
+// Helper function to remove specific properties from an object
+const removeProperties = <T>(obj: T, keys: string[]): Partial<T> => {
+  const result = { ...obj };
 
-  let all_proposals = [];
-  let proposal_list = fs.readdirSync(`${__dirname}/../data/proposals/`);
-  for (let i = 0; i < proposal_list.length; i++) {
-    const proposal_filename = proposal_list[i];
+  // @ts-ignore
+  keys.forEach(key => delete result[key]);
+  return result;
+};
 
-    const proposal_raw = fs.readFileSync(`${__dirname}/../data/proposals/${proposal_filename}`, 'utf-8');
-    if (!proposal_raw) {
-      continue;
-    }
+proposalRouter.get<{}, MessageResponse>('/', async (req, res) => {
+  const rawResults = await db
+    .select({ proposal: proposal, user: user, customer: customer, contact: customerContact })
+    .from(proposal)
+    .leftJoin(customer, eq(proposal.customerId, customer.id))
+    .leftJoin(user, eq(proposal.userId, user.id))
+    .leftJoin(customerContact, eq(customer.primaryContactId, customerContact.id));
 
-    const proposal = JSON.parse(proposal_raw);
-    if (!proposal) {
-      continue;
-    }
+  const structuredResults = rawResults.map((row) => {
+      const { proposal, customer, contact, user } = row;
 
-    delete proposal.sections;
+      // Remove unwanted properties
+      const mutableProposal = removeProperties(proposal, ['customerId', 'userId']);
+      const mutableCustomer = removeProperties(customer, ['primaryContactId', 'primaryLocationId']);
+      const contactData = contact ? removeProperties(contact, ['customerId', 'locationId', 'tenantId']) : null;
+      const userData = contact ? removeProperties(user, ['passwordHash']) : null;
 
-    all_proposals.push(proposal)
-  }
+      // Build the nested customer object
+      const nestedCustomer = { ...mutableCustomer, contact: contactData };
 
-  res.json(all_proposals);
+      return {
+        ...mutableProposal,
+        user: userData,
+        customer: nestedCustomer
+      };
+  });
+
+  res.json(structuredResults);
 });
 
 

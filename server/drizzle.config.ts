@@ -7,7 +7,7 @@ export default defineConfig({
   out: './drizzle',
   schema: './src/db/schema',
   dialect: 'postgresql',
-  verbose: process.env.NODE_ENV === 'development', 
+  verbose: true, 
   dbCredentials: {
     url: databaseString,
   },
