@@ -132,6 +132,21 @@ dist
 # Supabase
 **.exe
 
-/server/src/data/proposals/*.json
+# Root Project
 deploy.sh
+
+# Website
 /website/*.zip
+
+# Server: Default content
+!/server/src/content/logos/default.svg
+/server/src/content/logos/**
+
+# Server: File System Data
+/server/src/data/proposals/*.json
+/server/src/data/system/core-settings.json
+
+# Templater: Default Templates
+!/templater/src/views/default/**
+!/templater/src/views/index.ejs
+/templater/src/views/**

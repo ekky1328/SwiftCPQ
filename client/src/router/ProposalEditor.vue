@@ -31,6 +31,10 @@
                 <label for="title">Name</label>
                 <InputText id="title" v-model="proposalStore.data.customer.name" size="small" />
               </div>
+              <div class="flex flex-col">
+                <label for="expiresOnDate">Expiry Date</label>
+                <DatePicker name="expiresOnDate" v-model="proposalStore.data.expiresOnDate" size="small" showIcon dateFormat="yy/mm/dd" fluid />
+              </div>
             </div>
           </template>
         </Card>
@@ -44,13 +48,18 @@
               </div> 
             </template>
             <template #content>
-              <li class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mb-2 justify-between">
+
+              <!-- Cover Letter, cannot be moved -->
+              <li 
+                class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mb-2 justify-between"
+              >
                   <div>
                     <span class="text-gray-500 pi pi-lock cursor-not-allowed" style="font-size: 14px;"></span>
                     <span href="#cover_letter" class="text-left text-sm ml-2 cursor-text">Cover Letter</span>
                   </div>
                   <a class="text-sm text-gray-500 cursor-pointer pi pi-eye" href="#cover_letter" style="font-size: 14px;"></a>
               </li>
+
               <Draggable
                 v-model="proposalStore.data.sections"
                 tag="ul"
@@ -61,7 +70,10 @@
                 :animation="200"
               >
                 <template #item="{ element : section }">
-                  <li v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES].includes(section.type) && section.title.trim()" class="border border-gray-300 p-2 rounded-md cursor-default flex items-center justify-between">
+                  <li 
+                    v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES].includes(section.type) && section.title.trim()" 
+                    class="border border-gray-300 p-2 rounded-md cursor-default flex items-center justify-between"
+                  >
                     <div>
                       <span class="text-sm text-gray-500 handle cursor-move pi pi-bars" style="font-size: 14px;"></span>
                       <span class="text-left text-sm ml-2 cursor-text">{{ section.title }}</span>
@@ -70,7 +82,11 @@
                   </li>
                 </template>
               </Draggable>
-              <li class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mt-2 justify-between">
+
+              <!-- Terms and Conditions, cannot be moved -->
+              <li 
+                class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mt-2 justify-between"
+              >
                   <div>
                     <span class="text-gray-500 pi pi-lock cursor-not-allowed"  style="font-size: 14px;"></span>
                     <span class="text-left text-sm ml-2 cursor-text">Terms and Conditions</span>
@@ -112,7 +128,7 @@
       </aside>
 
       <!-- Main Section -->
-      <section id="section-grid">
+      <section id="section-grid" class="mb-4">
         <ProposalSection v-for="section in proposalStore.data.sections" :key="section.id" :data="section" />
       </section>
     
@@ -140,6 +156,7 @@ import OrderList from 'primevue/orderlist';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Badge from 'primevue/badge';
+import DatePicker from 'primevue/datepicker';
 
 import { GetProposalById, SaveProposal } from '../api/api'
 
@@ -178,11 +195,6 @@ const proposalOptions = [
     }
 ];
 
-
-function setActiveSection(section) {
-  activeSection.value = section;
-}
-
 /**
  * This function takes an array of numbers and returns the sum of all elements.
  *
@@ -203,6 +215,19 @@ async function triggerSaveProposal() {
   toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
 }
 
+// Keyboard Shortcuts
+const handleKeyDown = (event) => {
+    if (event.ctrlKey && event.key === "s") {
+      event.preventDefault();
+      triggerSaveProposal();
+    }
+};
+
+// Focus Handler
+const handleFocus = () => {
+    proposalStore.isTabFocused = !!document.hasFocus();
+};
+
 onMounted(async () => {
 
     if (proposalStore.data === null) {
@@ -218,8 +243,13 @@ onMounted(async () => {
         proposalStore.data = proposal;
         proposalStore.recalculateTotals();
         proposalStore.resetDraftStatus();
-
+        
         document.title = `${concatProposalIdentifier(proposalStore.data)} - ${proposalStore.data.title}`;
+        window.addEventListener("keydown", handleKeyDown);
+
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('blur', handleFocus);
+
         return;
       }
       
@@ -229,6 +259,10 @@ onMounted(async () => {
 
 onUnmounted(() => {
   proposalStore.data = null;
+  window.removeEventListener("keydown", handleKeyDown);
+
+  window.addEventListener('focus', handleFocus);
+  window.addEventListener('blur', handleFocus);
 });
 </script>
 
@@ -256,6 +290,7 @@ onUnmounted(() => {
 
   section#section-grid {
     display: grid;
+    grid-auto-rows: min-content;
     gap: 16px;
   }
 
@@ -289,8 +324,14 @@ onUnmounted(() => {
     padding: 8px;
   }
 
-  .is_table .p-card-content {
+  .is_table .p-card-content,
+  .is_hidden .p-card-content {
     padding: 0;
+  }
+
+  .is_active {
+    transition: 100ms;
+    outline: 3px solid #00000080;
   }
 
   .p-datatable-header-cell {

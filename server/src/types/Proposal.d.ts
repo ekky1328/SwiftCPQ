@@ -9,7 +9,7 @@ export interface Proposal {
     customer: Customer;
     sections: Section[];
     _totals?: Record<string, { total: number; margin: number; cost: number }>;
-    _section_totals?: Record<string, { title: string, total: number; margin: number; cost: number }[]>;
+    _section_totals?: Record<string, { title: string; isOptional: boolean; isReference: boolean; total: number; margin: number; cost: number; }[]>;
 }
 
 export interface Section {
@@ -21,7 +21,7 @@ export interface Section {
     description?: string
     isOptional: boolean
     isLocked: boolean
-    isReference?: boolean
+    isReference: boolean
     blockRemoval: boolean
     items?: Item[]
     milestones?: Milestone[]

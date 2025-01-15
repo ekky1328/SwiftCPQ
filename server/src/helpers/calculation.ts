@@ -15,7 +15,7 @@ export function calculateProposalTotals(proposal: Proposal) {
 
     delete proposal._section_totals;
     proposal.sections.forEach((section: Section) => {
-        if (!section.isOptional && !section.isReference && section.recurrance) {
+        if (section.recurrance) {
             if (!totals[section.recurrance]) {
                 totals[section.recurrance] = { total: 0, margin: 0, cost: 0 };
             }
@@ -37,22 +37,34 @@ export function calculateProposalTotals(proposal: Proposal) {
             section._totals = { total: sectionTotals.total / scaleFactor, margin: sectionTotals.margin / scaleFactor, cost: sectionTotals.cost / scaleFactor };
 
             if (!proposal._section_totals) {
-                proposal._section_totals = {} as Record<string, { title: string, total: number; margin: number; cost: number }[]>;
+                proposal._section_totals = {
+                    ONE_TIME: [],
+                    DAILY: [],
+                    WEEKLY: [],
+                    MONTHLY: [],
+                    ANNUAL: []
+                };
             }
-
+            
             if (!proposal._section_totals[section.recurrance]) {
                 proposal._section_totals[section.recurrance] = [];
             }
-
+            
             proposal._section_totals[section.recurrance].push({
                 title: section.title,
+                isOptional: section.isOptional,
+                isReference: section.isReference,
                 ...section._totals
             });
 
-            totals[section.recurrance].total += sectionTotals.total;
-            totals[section.recurrance].margin += sectionTotals.margin;
-            totals[section.recurrance].cost += sectionTotals.cost;
+            if (!section.isOptional && !section.isReference) {
+                totals[section.recurrance].total += sectionTotals.total;
+                totals[section.recurrance].margin += sectionTotals.margin;
+                totals[section.recurrance].cost += sectionTotals.cost;
+            }
+
         }
+
     });
 
     delete proposal._totals;
@@ -61,5 +73,4 @@ export function calculateProposalTotals(proposal: Proposal) {
     ) as Record<string, { total: number; margin: number; cost: number }>;
 
     return proposal;
-    
 }   

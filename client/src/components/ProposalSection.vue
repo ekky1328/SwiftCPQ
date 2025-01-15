@@ -1,12 +1,22 @@
 <template>
 
-    <div>
-        <Toast position="top-center" />
+    <Toast position="top-center" />
+    <div 
+        @mouseenter="onSectionEnter" 
+        @mouseleave="onSectionLeave"
+    >
 
-        <Card :key="section.id" :class="{ is_table: isTableContent(section.type), }">
+        <Card 
+            :key="section.id" 
+            :class="{ 
+                is_table: isTableContent(section.type), 
+                is_hidden: !sectionVisbility,
+                is_active: sectionIsEntered
+            }"
+        >
 
             <template #title>
-                <div class="grid grid-cols-[25px_1fr_auto] gap-2 items-center cursor-auto" :id="createSectionId(section)">
+                <div class="grid grid-cols-[25px_1fr_auto] gap-1 items-center cursor-auto" :id="createSectionId(section)">
                     <div class="cursor-pointer flex justify-center">
                         <span v-if="section.isLocked" class="pi pi-lock" v-tooltip.top="`Locked`"></span>
                         <span v-else-if="SECTION_TYPES.INFO === section.type" class="pi pi-file" v-tooltip.top="`Text`"></span>
@@ -39,6 +49,12 @@
                                         />
                                     </div>
                                     <div class="flex flex-col gap-2 border rounded-md p-2">
+                                        <div class="flex flex-row justify-between items-center">
+                                            <label class="text-sm">Visibility</label>   
+                                            <ToggleSwitch v-model="sectionVisbility" />
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2 border rounded-md p-2">
                                         <div class="flex flex-row justify-between">
                                             <label class="text-sm">Optional</label>
                                             <ToggleSwitch v-model="section.isOptional" />    
@@ -62,10 +78,10 @@
             <template #content>
 
                 <!-- Text Sections -->
-                <Editor v-if="isInfo(section.type)" v-model="section.description" editor-style="max-height: 750px; overflow-y: auto;"  class="cursor-auto" />
+                <Editor v-if="sectionVisbility && isInfo(section.type)" v-model="section.description" editor-style="max-height: 750px; overflow-y: auto;"  class="cursor-auto" />
                 
                 <!-- Product Section - Products -->
-                <template v-if="isProducts(section.type)">
+                <template v-else-if="sectionVisbility && isProducts(section.type)">
                     <table class="table-auto w-full border-collapse border border-gray-300 cursor-auto">
                         <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
                         <tr>
@@ -92,9 +108,9 @@
                             <template #item="{ element: item }">
                                 <tr class="product-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
 
-                                    <td class="product p-2 border border-gray-300 text-center text-gray-500 w-10" :class="{ 'bg-gray-200': isComment(item) }" title="Drag to reorder">
+                                    <td colspan="1" class="product p-2 border border-gray-300 text-center text-gray-500 w-10" :class="{ 'bg-gray-200': isComment(item) }" title="Drag to reorder">
                                         <span class="inline-block handle cursor-move">⋮⋮</span>
-                                        <div class="product-shortcuts" title="">
+                                        <div class="product-shortcuts">
                                             <span class="product-shortcut delete pi pi-trash" title="Delete item" @click="proposalStore.deleteSectionItem(section.id, item.id)"></span>
                                             <span class="product-shortcut pi pi-clone" title="Duplicate item" @click="proposalStore.duplicateItem(section.id, item)"></span>
                                         </div>
@@ -138,7 +154,20 @@
                                 </tr>
                             </template>
                             <template #footer>
-                                <tr>
+
+                                <tr v-if="section.items && section.items.length === 0">
+                                    <td colspan="7">
+                                        <div class="grid place-content-center text-center py-12 w-full">
+                                            <h3>No products</h3>
+                                            <div class="flex gap-2 pt-2">
+                                                <Button label="Add Product" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)"/>
+                                                <Button label="Add Comment" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.COMMENT)"/>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr v-if="section._totals">
                                     <td class="p-2 bg-gray-200" colspan="4"></td>
                                     <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Cost Total'">
                                         {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.cost) }}
@@ -153,23 +182,18 @@
                                         {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.total) }}
                                     </td>
                                 </tr>
+
                             </template>
                         </Draggable>
                     </table>
-                    <div v-if="section.items && section.items.length === 0" class="grid place-content-center p-24">
-                        <h3>No products...</h3>
-                    </div>
                 </template>
 
                 <!-- Totals Section -->
-                <template v-if="isTotals(section.type)">
-                    <div>
-                        Totals Section
-                    </div>
+                <template v-else-if="sectionVisbility && isTotals(section.type)">
                 </template>
 
                 <!-- Milestones Section -->
-                <template v-if="isMilestones(section.type)">
+                <template v-else-if="sectionVisbility && isMilestones(section.type)">
                     <table class="w-full border-collapse border border-gray-300 cursor-auto">
                         <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
                             <tr>
@@ -221,7 +245,7 @@
         </Card>
 
         <div v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" class="add-section-container mt-4 w-full flex justify-center items-center relative">
-            <SpeedDial :model="proposalSectionOptions(section.id)" direction="right" :style="{ position: 'absolute', top: '-15px' }" />
+            <SpeedDial :model="proposalSectionOptions(section.id)" direction="right" :style="{ position: 'absolute', top: '-7px' }" />
         </div>
         
     </div>
@@ -233,9 +257,8 @@
     import { onMounted, ref } from 'vue';
     import Draggable from "vuedraggable";
     import { useToast } from 'primevue/usetoast';
-
-    import { useProposalStore } from '../store/proposalStore';
-
+    import { capitalize } from 'lodash';
+    
     import Toast from 'primevue/toast';
     import Button from 'primevue/button';
     import Select from 'primevue/select';
@@ -252,10 +275,11 @@
     import SplitButton from 'primevue/splitbutton';
     import Inplace from 'primevue/inplace';
     import Popover from 'primevue/popover';
-
+    import ToggleButton from 'primevue/togglebutton'
+    
+    import { useProposalStore } from '../store/proposalStore';
     import { SECTION_RECURRANCE, SECTION_TYPES } from '../constants/sections';
     import { PRODUCT_TYPES } from '../constants/products';
-import { capitalize } from 'lodash';
 
     const toast = useToast();
     
@@ -268,12 +292,15 @@ import { capitalize } from 'lodash';
     const sectionRecurranceOptions = ref([
         { name: 'One Time', value: 'ONE_TIME' },
         { name: 'Daily', value: 'DAILY' },
-        { name: 'Monthly', value: 'MONTHLY' },
         { name: 'Weekly', value: 'WEEKLY' },
+        { name: 'Monthly', value: 'MONTHLY' },
         { name: 'Yearly', value: 'YEARLY' }
     ]);
 
+    const sectionIsEntered = ref(false);
     const sectionSettings = ref();
+    const sectionVisbility = ref(true);
+
     const toggleSectionSettings = (event) => {
         sectionSettings.value.toggle(event);
     }
@@ -320,16 +347,10 @@ import { capitalize } from 'lodash';
             const product_options = [
                 {
                     label: 'Add Product',
-                    command: () => {
-                        proposalStore.addItemToSection(section.id, 'PRODUCT');
-                        toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added product to section', life: 3000 });
-                    }
+                    command: () => addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)
                 },{
                     label: 'Add Comment',
-                    command: () => {
-                        proposalStore.addItemToSection(section.id, 'COMMENT');
-                        toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added comment to section', life: 3000 });
-                    }
+                    command: () => addItemToSection(section.id, PRODUCT_TYPES.COMMENT)
                 }
             ];
 
@@ -366,6 +387,30 @@ import { capitalize } from 'lodash';
         disabled: false,
         ghostClass: "ghost"
     };
+
+    // Section Actions
+    function addItemToSection(sectionId, itemType) {
+        proposalStore.addItemToSection(sectionId, itemType);
+        switch (itemType) {
+            case PRODUCT_TYPES.PRODUCT:
+                toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added product to section', life: 3000 });
+                break;
+
+            case PRODUCT_TYPES.COMMENT:
+                toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added comment to section', life: 3000 });
+                break;
+            default:
+                break;
+        }
+    }
+
+    function onSectionEnter() {
+      sectionIsEntered.value = true;
+    }
+
+    function onSectionLeave() {
+      sectionIsEntered.value = false;
+    }
 
     // Section Type Comparisons
     function isTableContent(e_type) {
@@ -425,7 +470,7 @@ import { capitalize } from 'lodash';
 
 <style>
     .add-section-container {
-        height: 10px;
+        height: 25px;
     }
 
     .add-section-container:hover {
@@ -562,7 +607,7 @@ import { capitalize } from 'lodash';
         position: absolute;
         top: 0;
         padding-left: 8px !important;
-        right: -40px;
+        right: -42px;
         height: 100%;
     }
 

@@ -10,6 +10,12 @@ import { concatProposalIdentifier } from '../utils/helpers';
 export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);
 
+    // Broadcast Data Relay
+    const tabId = ref<string>(crypto.randomUUID());
+    const lastUpdateByTabId = ref<string>(tabId.value);
+    const isTabFocused = ref(false);
+    const proposalBroadcast = ref<null | BroadcastChannel>(null);
+
     // Calculation Tracking
     const totalsRecalculated = ref<boolean>(false);
 
@@ -18,21 +24,73 @@ export const useProposalStore = defineStore('proposal', () => {
     const initData = ref<Proposal | null>(null);
     const isDraft = ref<boolean>(false);
 
+    /**
+     * Creates a change detection for the proposal data.
+     * - Checks if there is a draft in place.
+     * - Detects if the proposal is currently open on another page, and broadcasts changes between tabs.
+     * - Ensures that updates are only broadcast if the current tab made the change, preventing unnecessary updates from other tabs.
+     */
     watch(data, (newData) => {
-        if (initData.value === null) {
+        if (initData.value === null && newData) {
             resetDraftStatus();
         }
-
+    
         if (newData) {
+
+            if (proposalBroadcast.value === null) {
+
+                // Registering broadcast channel
+                let proposalIdenitifer = `proposal-${newData.id}`;
+                proposalBroadcast.value = new BroadcastChannel(proposalIdenitifer);
+                proposalBroadcast.value.postMessage({
+                    action: 'message',
+                    tabId,
+                    value: `Opened proposal (id: ${proposalIdenitifer}) on another tab.`
+                });
+
+                proposalBroadcast.value.onmessage = (event) => {
+
+                    switch (event.data.action) {
+                        case 'message':
+                            console.log('Broadcast Received:', event.data.value);
+                            break;
+                    
+                        case 'update':
+                            lastUpdateByTabId.value = event.data.tabId;
+                            data.value = JSON.parse(event.data.value);
+                            break;
+
+                        case 'reset_draft_status':
+                            resetDraftStatus();
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                };
+            }
+    
+            if (isTabFocused.value && proposalBroadcast.value) {
+                proposalBroadcast.value.postMessage({
+                    action: 'update',
+                    tabId: tabId.value,
+                    value: JSON.stringify(data.value)
+                });
+            }
+
+
             if (_.isEqual(newData, initData.value)) {
                 document.title = `${concatProposalIdentifier(newData)} - ${newData.title}`;
                 isDraft.value = false;
-            } else {
+            } 
+            
+            else {
                 document.title = `🟠 [Draft] ${concatProposalIdentifier(newData)} - ${newData.title}`;
                 isDraft.value = true;
             }
         }
-
+    
         changeCount.value += 1;
     }, { deep: true });
 
@@ -44,11 +102,17 @@ export const useProposalStore = defineStore('proposal', () => {
     /**
      * Create a snapshot of the current data to compare against later.
      * - This is used to determine if the proposal has been modified, and is now a draft.
+     * - Also broadcasts to other tabs to ensure they know a save occured.
      */
     function resetDraftStatus() {
         initData.value = _.cloneDeep(data.value);
         isDraft.value = false;
         changeCount.value = 0;
+        if (isTabFocused.value && proposalBroadcast.value) {
+            proposalBroadcast.value.postMessage({
+                action: 'reset_draft_status'
+            });
+        }
     }
 
     /**
@@ -62,26 +126,27 @@ export const useProposalStore = defineStore('proposal', () => {
             const totals: Record<string, { total: number; margin: number; cost: number }> = {};
 
             data.value.sections.forEach(section => {
+
+                const sectionTotals = section.items?.reduce(
+                    (acc, item) => {
+                        if (!item.isOptional) {
+                            acc.total += Math.round(item.subtotal * scaleFactor);
+                            acc.margin += Math.round(item.margin * scaleFactor);
+                            acc.cost += Math.round(item.qty * (item.cost * scaleFactor));
+                        }
+                        return acc;
+                    },
+                    { total: 0, margin: 0, cost: 0 }
+                ) || { total: 0, margin: 0, cost: 0 };
+
+                
+                delete section._totals;
+                section._totals = { total: sectionTotals.total / scaleFactor, margin: sectionTotals.margin / scaleFactor, cost: sectionTotals.cost / scaleFactor };
+
                 if (!section.isOptional && !section.isReference && section.recurrance) {
                     if (!totals[section.recurrance]) {
                         totals[section.recurrance] = { total: 0, margin: 0, cost: 0 };
                     }
-
-                    const sectionTotals = section.items?.reduce(
-                        (acc, item) => {
-                            if (!item.isOptional) {
-                                acc.total += Math.round(item.subtotal * scaleFactor);
-                                acc.margin += Math.round(item.margin * scaleFactor);
-                                acc.cost += Math.round(item.qty * (item.cost * scaleFactor));
-                            }
-                            return acc;
-                        },
-                        { total: 0, margin: 0, cost: 0 }
-                    ) || { total: 0, margin: 0, cost: 0 };
-
-
-                    delete section._totals;
-                    section._totals = { total: sectionTotals.total / scaleFactor, margin: sectionTotals.margin / scaleFactor, cost: sectionTotals.cost / scaleFactor };
 
                     if (data.value && !data.value._section_totals) {
                         
@@ -95,7 +160,6 @@ export const useProposalStore = defineStore('proposal', () => {
                             });
                         }
                     }
-        
         
                     totals[section.recurrance].total += sectionTotals.total;
                     totals[section.recurrance].margin += sectionTotals.margin;
@@ -160,6 +224,8 @@ export const useProposalStore = defineStore('proposal', () => {
         sections.forEach((section: any, index: number) => {
             section.order = index + 1;
         });
+
+        recalculateTotals();
     
         return;
     }    
@@ -198,6 +264,8 @@ export const useProposalStore = defineStore('proposal', () => {
             section.order = index + 1;
         });
 
+        recalculateTotals();
+
         return;
     }
 
@@ -219,6 +287,8 @@ export const useProposalStore = defineStore('proposal', () => {
         }
 
         data.value.sections = data.value.sections.filter( sec => sec.id !== sectionId);
+
+        recalculateTotals();
 
         return;
     }
@@ -431,6 +501,7 @@ export const useProposalStore = defineStore('proposal', () => {
         // State
         data,
         isDraft,
+        isTabFocused,
         changeCount,
         totalsRecalculated,
 
