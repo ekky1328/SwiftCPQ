@@ -179,9 +179,18 @@ const proposalOptions = [
         }
     },
     {
-        label: 'View History',
+      label: 'View History',
+      command: () => {
+        toast.add({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
+      }
+    },
+    {
+      separator: true
+    },
+    {
+        label: 'Preview PDF',
         command: () => {
-            toast.add({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
+            window.open(`http://localhost:5005/pdf/${proposalStore.data.selectedTemplate}/${proposalStore.data.id}`)
         }
     },
     {
@@ -278,7 +287,7 @@ onUnmounted(() => {
     border: 2px solid #cdcdcd !important;
     border-radius: 0px 0px 8px 8px !important;
     border-top: 0 !important;
-    z-index: 200;
+    z-index: 40;
   }
 
   .proposal_editor_container {

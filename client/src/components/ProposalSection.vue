@@ -26,11 +26,30 @@
                         <span v-else class="pi pi-sync" v-tooltip.top="`${capitalize(section.recurrance)}`"></span>
                     </div>
                     <div class="section-header-left">
-                        <span v-if="![ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)">{{ section.title }}</span>
-                        <InputText v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" placeholder="Section Title" class="section-title !px-1 hover:!border-black focus:!border-black" v-model="section.title" size="small" fluid />
+                        <span 
+                            v-if="![ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)"
+                        >
+                            {{ section.title }}
+                        </span>
+                        <InputText 
+                            v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" 
+                            placeholder="Section Title" 
+                            class="section-title !px-1 hover:!border-black focus:!border-black" 
+                            v-model="section.title" 
+                            size="small" 
+                            fluid 
+                        />
                     </div>
                     <div class="section-header-right flex gap-2 justify-between items-center relative">
-                        <SplitButton v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS].includes(section.type)" label="" icon="pi pi-cog" size="small" :model="sectionProductOptions(section)" @click="toggleSectionSettings" severity="contrast"></SplitButton>
+                        <SplitButton 
+                            v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES].includes(section.type)" 
+                            label="" 
+                            icon="pi pi-cog" 
+                            size="small" 
+                            :model="sectionProductOptions(section)" 
+                            @click="toggleSectionSettings" 
+                            severity="contrast"
+                        ></SplitButton>
                         <Popover ref="sectionSettings">
                             <div class="card p-1 flex flex-col gap-2">
                                 <span class="font-medium block">Section Settings</span>
@@ -99,8 +118,6 @@
                             tag="tbody" 
                             v-model="section.items" 
                             v-bind="dragOptions"  
-                            @start="drag = true" 
-                            @end="drag = false" 
                             handle=".handle" 
                             item-key="id" 
                             :animation="200"
@@ -189,7 +206,8 @@
                 </template>
 
                 <!-- Totals Section -->
-                <template v-else-if="sectionVisbility && isTotals(section.type)">
+                <!-- <template v-else-if="sectionVisbility && isTotals(section.type)"> -->
+                <template v-else-if="false && isTotals(section.type)">
                 </template>
 
                 <!-- Milestones Section -->
@@ -206,31 +224,40 @@
                             tag="tbody" 
                             v-model="section.milestones" 
                             v-bind="dragOptions"  
-                            @start="drag = true" 
-                            @end="drag = false" 
                             handle=".handle" 
                             item-key="id" 
                             :animation="200"
                         >
                             <template #item="{ element: milestone }">
                                 <tr class="milestone-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
-                                    <td class="p-2 border border-gray-300 text-center text-gray-500 w-10">
+                                    <td class="p-2 border border-gray-300 text-center text-gray-500 w-10 align-top">
                                         <span class="inline-block handle cursor-move">⋮⋮</span>
+                                        <div class="milestone-shortcuts">
+                                            <span class="milestone-shortcut delete pi pi-trash" title="Delete milestone" @click="proposalStore.deleteSectionMilestone(section.id, milestone.id)"></span>
+                                            <span class="milestone-shortcut pi pi-clone" title="Duplicate milestone" @click="proposalStore.duplicateMilestone(section.id, milestone)"></span>
+                                        </div>
                                     </td>
                                     <td class="p-2 border border-gray-300">
                                         <InputText placeholder="Milestone Title" v-model="milestone.title" inputClass="w-full title" size="small" fluid />
                                         <Editor placeholder="Description..." v-model="milestone.description" class="mt-2 description" editor-style="height: 150px; max-height: 500px; overflow-y: auto;" />
                                     </td>
-                                    <td class="p-2 border border-gray-300 text-right">
-                                        <InputNumber v-model="milestone.amount" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
+                                    <td class="p-2 border border-gray-300 text-right align-top">
+                                        <InputNumber @value-change="proposalStore.recalculateMilestones(section.id, section)" v-model="milestone.amount" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
                                     </td>
                                 </tr>
                             </template>
                             <template #footer>
                             <tr>
-                                <td class="p-2 bg-gray-200" colspan="2"></td>
-                                <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Total Amount for Milestones'">
-                                    {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.milestones.reduce((total, milestone) => total + milestone.amount, 0)) }}
+                                <td class="p-2 bg-gray-200" colspan="1"></td>
+                                <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" :class="{ 'text-red-500' : section._milestone_totals.remaining < 0 }">
+                                    <span v-tooltip.top="'Unallocated'">
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._milestone_totals.remaining) }}
+                                    </span>
+                                </td>
+                                <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200">
+                                    <span v-tooltip.top="'Allocated'">
+                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._milestone_totals.allocated) }}
+                                    </span>
                                 </td>
                             </tr>
                         </template>
@@ -252,7 +279,7 @@
 
 </template>
 
-<script setup>
+<script setup lang="ts">
     /* eslint-disable vue/no-use-v-if-with-v-for */
     import { onMounted, ref } from 'vue';
     import Draggable from "vuedraggable";
@@ -266,28 +293,22 @@
     import Card from 'primevue/card';
     import InputNumber from 'primevue/inputnumber';
     import InputText from 'primevue/inputtext';
-    import Textarea from 'primevue/textarea';
-    import OrderList from 'primevue/orderlist';
-    import DataTable from 'primevue/datatable';
-    import Column from 'primevue/column';
     import Editor from 'primevue/editor';
     import SpeedDial from 'primevue/speeddial';
     import SplitButton from 'primevue/splitbutton';
     import Inplace from 'primevue/inplace';
     import Popover from 'primevue/popover';
-    import ToggleButton from 'primevue/togglebutton'
     
     import { useProposalStore } from '../store/proposalStore';
     import { SECTION_RECURRANCE, SECTION_TYPES } from '../constants/sections';
     import { PRODUCT_TYPES } from '../constants/products';
+    import { Item, Section } from '../types/Proposal';
 
     const toast = useToast();
     
     const proposalStore = useProposalStore();
 
     const { data : section } = defineProps(['data'])
-
-    const targetRow = ref(null);
 
     const sectionRecurranceOptions = ref([
         { name: 'One Time', value: 'ONE_TIME' },
@@ -297,20 +318,22 @@
         { name: 'Yearly', value: 'YEARLY' }
     ]);
 
-    const sectionIsEntered = ref(false);
-    const sectionSettings = ref();
-    const sectionVisbility = ref(true);
+    // Custom
+    const sectionIsEntered = ref<boolean>(false);
+    const sectionVisbility = ref<boolean>(true);
 
-    const toggleSectionSettings = (event) => {
+    // PrimeVue
+    const sectionSettings = ref<any>(false);
+    const toggleSectionSettings = (event: any) => {
         sectionSettings.value.toggle(event);
     }
 
-    const proposalSectionOptions = (sectionId) => [
+    const proposalSectionOptions = (sectionId: number) => [
         {
             label: 'Products',
             icon: 'pi pi-box',
             command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'PRODUCT', 'AFTER');
+                proposalStore.addSectionToProposal(sectionId, 'PRODUCT');
                 toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new products section to proposal', life: 3000 });
             }
         },
@@ -318,7 +341,7 @@
             label: 'Info',
             icon: 'pi pi-pen-to-square',
             command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'INFO', 'AFTER');
+                proposalStore.addSectionToProposal(sectionId, 'INFO');
                 toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
             }
         },
@@ -326,7 +349,7 @@
             label: 'Totals',
             icon: 'pi pi-dollar',
             command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'INFO', 'AFTER');
+                proposalStore.addSectionToProposal(sectionId, 'INFO');
                 toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
             }
         },
@@ -334,16 +357,16 @@
             label: 'Milestones',
             icon: 'pi pi-sort-numeric-down',
             command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'INFO', 'AFTER');
+                proposalStore.addSectionToProposal(sectionId, 'INFO');
                 toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
             }
         }
     ]
 
-    const sectionProductOptions = (section) => {
+    const sectionProductOptions = (section : Section) => {
 
-        let options = [];
-        if (section.type === 'PRODUCTS') {
+        let options = [] as any;
+        if (section.type === SECTION_TYPES.PRODUCTS) {
             const product_options = [
                 {
                     label: 'Add Product',
@@ -355,6 +378,17 @@
             ];
 
             options = [ ...options, ...product_options ];  
+        }
+
+        if (section.type === SECTION_TYPES.MILESTONES) {
+            const milestone_options = [
+                {
+                    label: 'Add Milestone',
+                    command: () => addMilestoneToSection(section.id)
+                }
+            ];
+
+            options = [ ...milestone_options ]; 
         }
 
 
@@ -389,7 +423,7 @@
     };
 
     // Section Actions
-    function addItemToSection(sectionId, itemType) {
+    function addItemToSection(sectionId: number, itemType: string) {
         proposalStore.addItemToSection(sectionId, itemType);
         switch (itemType) {
             case PRODUCT_TYPES.PRODUCT:
@@ -404,6 +438,12 @@
         }
     }
 
+    function addMilestoneToSection(sectionId: number) {
+        proposalStore.addMilestoneToSection(sectionId);
+        toast.add({ severity: 'success', summary: 'Added Milestone', detail: 'Added milestone to section', life: 3000 });
+        return;
+    }
+
     function onSectionEnter() {
       sectionIsEntered.value = true;
     }
@@ -413,7 +453,7 @@
     }
 
     // Section Type Comparisons
-    function isTableContent(e_type) {
+    function isTableContent(e_type: string) {
         switch(e_type) {
             case SECTION_TYPES.PRODUCTS:
             case SECTION_TYPES.MILESTONES:
@@ -423,32 +463,28 @@
         }
     }
 
-    function isInfo(e_type) {
+    function isInfo(e_type: string) {
         return [ SECTION_TYPES.INFO, SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS ].includes(e_type)
     };
 
-    function isProducts(e_type) {
+    function isProducts(e_type: string) {
         return e_type === SECTION_TYPES.PRODUCTS
     };
 
-    function isTotals(e_type) {
+    function isTotals(e_type: string) {
         return e_type === SECTION_TYPES.TOTALS
     };
 
-    function isMilestones(e_type) {
+    function isMilestones(e_type: string) {
         return e_type === SECTION_TYPES.MILESTONES;
     }
     
     // Product Type Comparisons
-    function isComment(item) {
+    function isComment(item: Item) {
         return item.type === PRODUCT_TYPES.COMMENT
     };
 
-    function setEditRow(item) {
-        targetRow.value = item.id;
-    };
-
-    function createSectionId(section) {
+    function createSectionId(section: Section) {
         return [SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS].includes(section.type) ? `${section.type.toLowerCase()}` : `section_${section.id}`;
     }
 
@@ -597,7 +633,8 @@
         height: fit-content;
     }
 
-    .product-row .product-shortcuts {
+    .product-row .product-shortcuts,
+    .milestone-row .milestone-shortcuts {
         visibility: hidden;
 
         cursor: auto;
@@ -612,11 +649,14 @@
     }
 
     .product-shortcuts:hover,
-    .product-row:hover .product-shortcuts {
+    .product-row:hover .product-shortcuts,
+    .milestone-shortcuts:hover,
+    .milestone-row:hover .milestone-shortcuts {
         visibility: visible;
     }
 
-    .product-row .product-shortcut {
+    .product-row .product-shortcut,
+    .milestone-row .milestone-shortcut {
         padding: 8px;
         background: white;
         border: 2px solid #cdcdcd;
@@ -625,13 +665,15 @@
         transition: all 200ms;
     }
 
-    .product-shortcuts .product-shortcut:hover {
+    .product-shortcuts .product-shortcut:hover,
+    .milestone-shortcuts .milestone-shortcut:hover {
         border-color: black;
         background-color: black;
         color: white;
     }
 
-    .product-shortcuts .product-shortcut.delete:hover {
+    .product-shortcuts .product-shortcut.delete:hover,
+    .milestone-shortcuts .milestone-shortcut.delete:hover {
         border-color: rgb(143, 0, 0);
         background-color: rgb(143, 0, 0);
     }

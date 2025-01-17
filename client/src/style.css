@@ -5,5 +5,8 @@
 html, body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #fffdfd;
-  overflow-x: clip;
+}
+
+.ql-editor h2 {
+  font-size: 1.3em!important;
 }

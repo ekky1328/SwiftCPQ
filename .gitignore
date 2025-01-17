@@ -143,6 +143,7 @@ deploy.sh
 /server/src/content/logos/**
 
 # Server: File System Data
+/server/src/data/archive/**
 /server/src/data/proposals/*.json
 /server/src/data/system/core-settings.json
 

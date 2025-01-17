@@ -4,7 +4,7 @@
     🚧 Beware you are viewing a development build (v0.0.1-alpha); there will be bugs. 🚧
   </div>
   <main>
-    <nav class="bg-white border-r border-r-gray-300">
+    <nav class="bg-white border-r border-r-gray-300 z-50">
       <div class="grid place-content-center h-[75px] cursor-default" v-tooltip="'⚡ SwiftCPQ'">
         ⚡
       </div>
@@ -17,7 +17,7 @@
         </router-link>
       </div>
     </nav>
-    <div>
+    <div class="z-25">
       <RouterView />
     </div>
   </main>

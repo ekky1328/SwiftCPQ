@@ -2,9 +2,10 @@ import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import _ from 'lodash';
 import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/products';
-import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION } from '../constants/sections';
+import { DEFAULT_MILESTONE } from '../constants/milestone';
+import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION, SECTION_TYPES } from '../constants/sections';
 
-import { Item, Proposal, Section} from '../types/Proposal';
+import { Item, Milestone, Proposal, Section} from '../types/Proposal';
 import { concatProposalIdentifier } from '../utils/helpers';
 
 export const useProposalStore = defineStore('proposal', () => {
@@ -105,9 +106,13 @@ export const useProposalStore = defineStore('proposal', () => {
      * - Also broadcasts to other tabs to ensure they know a save occured.
      */
     function resetDraftStatus() {
-        initData.value = _.cloneDeep(data.value);
-        isDraft.value = false;
-        changeCount.value = 0;
+        if (data.value) {
+            initData.value = _.cloneDeep(data.value);
+            isDraft.value = false;
+            changeCount.value = 0;
+            document.title = `${concatProposalIdentifier(data.value)} - ${data.value.title}`;
+        }
+        
         if (isTabFocused.value && proposalBroadcast.value) {
             proposalBroadcast.value.postMessage({
                 action: 'reset_draft_status'
@@ -143,7 +148,7 @@ export const useProposalStore = defineStore('proposal', () => {
                 delete section._totals;
                 section._totals = { total: sectionTotals.total / scaleFactor, margin: sectionTotals.margin / scaleFactor, cost: sectionTotals.cost / scaleFactor };
 
-                if (!section.isOptional && !section.isReference && section.recurrance) {
+                if (!section.isOptional && section.recurrance) {
                     if (!totals[section.recurrance]) {
                         totals[section.recurrance] = { total: 0, margin: 0, cost: 0 };
                     }
@@ -177,6 +182,12 @@ export const useProposalStore = defineStore('proposal', () => {
             setTimeout(() => {
                 totalsRecalculated.value = false;
             }, 500)
+
+            // If a milestone section has been added, ensure that it is recalculated.
+            const milestoneSection = data.value.sections.find((sec) => sec.type === SECTION_TYPES.MILESTONES);
+            if (milestoneSection) {
+                recalculateMilestones(milestoneSection.id, milestoneSection);
+            }
         }
     }    
 
@@ -329,7 +340,6 @@ export const useProposalStore = defineStore('proposal', () => {
         }
 
         newItemToAdd.id = section.items.length as unknown as number;
-
         const itemToAdd: Item = {
             ...newItemToAdd,
             id: section.items.length,
@@ -496,7 +506,164 @@ export const useProposalStore = defineStore('proposal', () => {
     
         recalculateTotals();
     }
-     
+
+    /**
+     * Adds a new milestone to a section in the proposal.
+     * - This uses the sectionId to determine which section to add the milestone to.
+     * @param sectionId 
+     * @returns 
+     */
+    function addMilestoneToSection(sectionId: number) {
+
+        if (!data.value) {
+            throw new Error('Data is not initialized.');
+        }
+
+        const section = data.value.sections.find((sec) => sec.id === sectionId);
+        if (!section) {
+            throw new Error(`Section with id ${sectionId} not found.`);
+        }
+
+        if (!Array.isArray(section.milestones)) {
+            throw new Error(`Section with id ${sectionId} does not support milestones.`);
+        }
+
+        let newMilestoneToAddToAdd = DEFAULT_MILESTONE;
+
+        newMilestoneToAddToAdd.id = section.milestones.length as unknown as number;
+        const milestoneToAdd: Milestone = {
+            ...newMilestoneToAddToAdd,
+            order: section.milestones.length + 1,
+        } as Milestone;
+
+        section.milestones.push(milestoneToAdd);
+
+        return;
+    }
+
+    /**
+     * Duplicates an item in a section of the proposal.
+     * - This will create a copy of the item and insert it after the original item.
+     * - The new item will have the same title as the original, with '(Copy)' appended.
+     * - The new item will have a new ID and order.
+     * @param sectionId 
+     * @param item 
+     * @returns 
+     */
+    function duplicateMilestone(sectionId: number, milestone: Milestone) {
+        if (!data.value) {
+            throw new Error('Data is not initialized.');
+        }
+    
+        const section = data.value.sections.find((sec: Section) => sec.id === sectionId);
+        if (!section) {
+            throw new Error(`Section with ID ${sectionId} does not exist.`);
+        }
+    
+        let milestones = section.milestones as Milestone[];
+        if (milestones.length === 0) {
+            throw new Error(`Section with ID ${sectionId} has no milestones to duplicate.`);
+        }
+    
+        const milestoneIndex = milestones.findIndex((ms) => ms.id === milestone.id);
+        if (milestoneIndex === -1) {
+            throw new Error(`Milestone to duplicate did not exist in section ${sectionId}.`);
+        }
+    
+        const clonedMilestone = _.cloneDeep(milestone);
+    
+        clonedMilestone.id = milestones.length;
+        clonedMilestone.title = `${milestone.title} (Copy)`;
+    
+        milestones.splice(milestoneIndex + 1, 0, clonedMilestone);
+    
+        milestones.forEach((item: any, index: number) => {
+            item.order = index + 1;
+        });
+    
+        return;
+    }
+
+
+    /**
+     * Deletes an milestone from a section in the proposal.
+     * - This will remove the milestone with the specified milestoneId from the section with the specified sectionId.
+     * - The order of the remaining milestone will be recalculated.
+     * @param sectionId 
+     * @param itemId 
+     * @returns 
+     */
+    function deleteSectionMilestone(sectionId: number, milestoneId: number) {
+        if (!data.value) {
+            throw new Error('Data is not initialized.');
+        }
+
+        const section = data.value.sections.find((sec) => sec.id === sectionId);
+        if (!section) {
+            throw new Error(`Section with id ${sectionId} not found.`);
+        }
+
+        if (!Array.isArray(section.milestones)) {
+            throw new Error(`Section with id ${sectionId} does not support milestones.`);
+        }
+
+        section.milestones = section.milestones.filter( ms => ms.id !== milestoneId).map( (ms, index) => {
+            ms.order = index;
+            return ms;
+        })
+
+        return;
+    }
+
+    /**
+     * Recalculate the values for an item in a section.
+     * - This will update the subtotal and margin for the item based on the field that was updated.
+     * - The fieldUpdated parameter should be one of: 'QTY', 'PRICE', 'COST', 'SUB_TOTAL', 'MARGIN'.
+     * - This function should be called after any changes to the item data.
+     * @param sectionId 
+     * @param itemId 
+     * @param fieldUpdated 
+     */
+    function recalculateMilestones(sectionId: number, milestoneSection: Section) {
+        if (!data.value) {
+            throw new Error('Data is not initialized.');
+        }
+
+        const section = _.cloneDeep(milestoneSection);
+        const sectionIndex = data.value.sections.findIndex(sec => sec.id === section.id);
+        if (!section.milestones) {
+            throw new Error(`Section with id ${sectionId} had no milestones.`);
+        }
+        
+        const scaleFactor = 1000;
+        delete section._milestone_totals;
+        section._milestone_totals = { allocated: 0, remaining: 0 };
+        
+        data.value.sections[sectionIndex] = section;
+        if (!data.value._totals && (data.value._totals && !data.value._totals["ONE_TIME"])) {
+            return;
+        }
+
+        if (data.value._totals) {
+            const { ONE_TIME, YEARLY } = data.value._totals;
+            section._milestone_totals = { allocated: 0, remaining: 0 };
+
+            let milestoneTotal = 0;
+            for (let i = 0; i < section.milestones.length; i++) {
+                const milestone = section.milestones[i];
+                milestoneTotal += Math.round(milestone.amount * scaleFactor);
+            }
+
+            const combinedTotal = ((ONE_TIME?.total || 0) + (YEARLY?.total || 0)) * scaleFactor;
+        
+            section._milestone_totals.allocated = milestoneTotal / scaleFactor;
+            section._milestone_totals.remaining = (combinedTotal - milestoneTotal) / scaleFactor;
+        }
+        
+
+        data.value.sections[sectionIndex] = section;
+    }
+    
     return {
         // State
         data,
@@ -518,6 +685,12 @@ export const useProposalStore = defineStore('proposal', () => {
         addItemToSection,
         duplicateItem,
         deleteSectionItem,
-        recalculateSectionItem
+        recalculateSectionItem,
+
+        // Milestone Functions
+        addMilestoneToSection,
+        duplicateMilestone,
+        deleteSectionMilestone,
+        recalculateMilestones
     };
 });

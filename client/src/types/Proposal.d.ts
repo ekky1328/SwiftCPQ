@@ -28,6 +28,7 @@ export interface Section {
     items?: Item[]
     milestones?: Milestone[]
     _totals?: { total: number; margin: number, cost: number };
+    _milestone_totals?: { allocated: number; remaining: number };
 }
 
 export interface Item {

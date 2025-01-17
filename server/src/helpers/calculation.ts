@@ -57,7 +57,7 @@ export function calculateProposalTotals(proposal: Proposal) {
                 ...section._totals
             });
 
-            if (!section.isOptional && !section.isReference) {
+            if (!section.isOptional) {
                 totals[section.recurrance].total += sectionTotals.total;
                 totals[section.recurrance].margin += sectionTotals.margin;
                 totals[section.recurrance].cost += sectionTotals.cost;
