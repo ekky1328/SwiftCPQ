@@ -7,6 +7,7 @@ export interface CoreSettings {
     dateFormat: string
     contactInformationDefaults: ContactInformationDefaults
     proposalSettingsDefaults: ProposalSettingsDefaults
+    selectedTemplate: string,
     theme: Theme
 }
 

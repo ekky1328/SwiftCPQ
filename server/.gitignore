@@ -73,3 +73,5 @@ typings/
 .serverless
 
 dist
+
+/server/src/data/system/core-settings.json
