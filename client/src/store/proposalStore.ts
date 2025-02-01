@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
-import _ from 'lodash';
+import _, { uniqueId } from 'lodash';
 import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/products';
 import { DEFAULT_MILESTONE } from '../constants/milestone';
 import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION, SECTION_TYPES } from '../constants/sections';
@@ -12,7 +12,7 @@ export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);
 
     // Broadcast Data Relay
-    const tabId = ref<string>(crypto.randomUUID());
+    const tabId = ref<string>(uniqueId());
     const lastUpdateByTabId = ref<string>(tabId.value);
     const isTabFocused = ref(false);
     const proposalBroadcast = ref<null | BroadcastChannel>(null);
