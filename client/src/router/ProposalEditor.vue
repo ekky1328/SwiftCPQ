@@ -276,6 +276,17 @@ onUnmounted(() => {
 </script>
 
 <style>
+  #proposal-editor .p-card-title {
+      background: #083e69;
+      border: none;
+      color: white;
+  }
+
+  #proposal-editor .p-card-body {
+      border: 2px solid #636363;
+      border-radius: 8px;
+  }
+
   .proposal-toolbar {
     max-width: 1830px;
   }
@@ -338,9 +349,13 @@ onUnmounted(() => {
     padding: 0;
   }
 
-  .is_active {
-    transition: 100ms;
-    outline: 3px solid #00000080;
+  #section-grid {
+    box-shadow: 0px 0px 0px #808080;
+  }
+
+  #section-grid .is_active {
+    transition: 200ms;
+    box-shadow: 0px 0px 8px #808080;
   }
 
   .p-datatable-header-cell {

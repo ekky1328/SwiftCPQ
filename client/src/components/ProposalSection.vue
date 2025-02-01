@@ -34,7 +34,7 @@
                         <InputText 
                             v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" 
                             placeholder="Section Title" 
-                            class="section-title !px-1 hover:!border-black focus:!border-black" 
+                            class="section-title !px-1 focus:!border-white" 
                             v-model="section.title" 
                             size="small" 
                             fluid 
@@ -540,14 +540,20 @@
     .section-header-left input.section-title {
         font-size: 20px;
         padding: 0;
-        background-color: #cdcdcd;
-        border-color: #cdcdcd;
+        background-color: #083e69;
+        border-color: #083e69;
+        color: white;
         box-shadow: none;
+    }
+    
+    .section-header-left input.section-title:hover {
+        border-color: #ffffff;
     }
 
     .section-header-left input.section-title:focus {
         font-size: 20px;
         padding: 0;
+        color: #083e69;
         background-color: #ffffff;
     }
 
