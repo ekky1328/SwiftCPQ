@@ -1,4 +1,4 @@
-import { Item } from "../store/proposalStore";
+import { Item } from "../types/Proposal";
 
 export const PRODUCT_TYPES = {
     PRODUCT: 'PRODUCT',
@@ -22,7 +22,7 @@ export const DEFAULT_ITEM_PRODUCT  = {
 
 export const DEFAULT_ITEM_COMMENT = {
     id: 0,
-    sku: null,
+    sku: "",
     title: "",
     description: "",
     order: 0,
