@@ -65,4 +65,17 @@ html, body {
   min-height: 100vh;
   background-color: #ebeef0;
 }
+
+#app .p-editor .ql-toolbar, 
+#app .p-editor .ql-container {
+  border: 1px solid #d1d5db;
+}
+#app .product-comment .p-editor .ql-toolbar, 
+#app .product-comment .p-editor .ql-container {
+  border: 0px solid #636363;
+}
+
+#app .p-editor .ql-toolbar {
+  border-bottom: 0;
+}
 </style>

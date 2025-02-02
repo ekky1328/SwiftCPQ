@@ -283,7 +283,7 @@ onUnmounted(() => {
   }
 
   #proposal-editor .p-card-body {
-      border: 2px solid #636363;
+      border: 1px solid #636363;
       border-radius: 8px;
   }
 
