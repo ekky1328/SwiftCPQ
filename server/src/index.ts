@@ -1,7 +1,14 @@
-import app from './app';
+require('dotenv').config();
 
-const port = process.env.PORT || 5000;
+import startServer from './server';
+import startWorker from './worker';
 
-app.listen(port, () => {
-  console.log(`Listening: http://localhost:${port}`);
-});
+const mode = process.env.MODE || 1;
+
+if (mode === 1) {
+  startServer();
+}
+
+else {
+  startWorker();
+}

@@ -1,0 +1,763 @@
+{
+    "selectedTemplate": "talketechconsulting",
+    "id": 2,
+    "version": 1,
+    "identifier": "10002",
+    "title": "Option 1 - On Premises vPBX Phone System",
+    "description": "This project involves implementing a 3CX Phone System on on-premises hardware with physical handsets, a SIP Trunk with two channels, and a new internet connection to replace the existing Telstra services, enhancing communication and connectivity for the client.",
+    "status": "DRAFT",
+    "author": {
+        "firstName": "Christopher",
+        "lastName": "Talke Buscaino",
+        "email": "chris@talketech.com.au",
+        "phone": "+61-2-7240-6523"
+    },
+    "customer": {
+        "name": "Bananacoast Freight Couriers",
+        "contact": {
+            "firstName": "Robert",
+            "lastName": "Haisman"
+        },
+        "email": "robert.haisman@bananacoastfreightcouriers.com.au",
+        "phone": "+61-2-6652-7670",
+        "address": {
+            "street": "Air Freight Facility 60 Airport Drive",
+            "city": "Coffs Harbour",
+            "state": "NSW",
+            "postcode": "2450",
+            "country": "Australia"
+        }
+    },
+    "sections": [
+        {
+            "id": 1,
+            "title": "Cover Letter",
+            "type": "COVER_LETTER",
+            "order": 1,
+            "recurrance": null,
+            "description": "<p>Enclosed in this proposal, you’ll find a detailed overview of the recommended solution to implement a modern phone system for your office.</p><p><br></p><p>I’ve outlined all the key components, including hardware, software, services, and optional add-ons. Each phase of the project—from procurement to installation—has been carefully detailed, along with associated costs and payment milestones. There’s quite a bit of information here, so please take your time reviewing it, and let me know if anything needs clarification.</p><p><br></p><p>After revisiting the setup, I realized this project will require a bit more time and effort than my initial estimate in 2023. To ensure you have a system that’s reliable and built to last, I’ve decided to include business-grade hardware instead of consumer-grade options. While this approach extends the setup time slightly, it’s a worthwhile investment for a system that will serve your business effectively for the next three to five years.</p><p><br></p><p><strong>Here’s a summary of my recommendations:</strong></p><p>- Switch your internet provider to Exetel Business with a 100/40 Mbps service.</p><p>- Transition your VOIP service from Telstra to Aatrox Communications with two SIP channels.</p><p>- Replace your existing PC with a new device and refurbish the old PC to host the vPBX system.</p><p>- Upgrade your phone system to a single vPBX system hosted on the refurbished PC, replacing the Panasonic system.</p><p>- Replace Telstra-provided networking equipment with network switches that deliver power and internet to desk phones.</p><p>- Implement an automated backup system for the vPBX, with one backup stored locally and another replicated to the cloud.</p><p><br></p><p><strong>Optional Recommendations:</strong></p><p>- Supply and install power protection hardware to safeguard your equipment during power outages or surges.</p><p><br></p><p>I’ve also included a Scope of Works document to provide a clear understanding of what’s involved in implementing this system. I’m confident this solution will meet your needs and deliver excellent value. That said, if you’d like to explore other options to ensure this is the best fit, I completely understand and encourage it.</p><p><br></p><p>As always, if you have any questions or would like to discuss adjustments to the proposal, please don’t hesitate to reach out. I’m more than happy to work with you to ensure everything aligns perfectly with your goals.</p><p><br></p><p>Thank you for trusting me with this project, and again, do not hesitate to reach out if you have any questions.</p>",
+            "isOptional": false,
+            "isLocked": true,
+            "isReference": false,
+            "__block_removal": true,
+            "_totals": {
+                "total": 0,
+                "margin": 0,
+                "cost": 0
+            }
+        },
+        {
+            "id": 11,
+            "title": "Scope Of Works",
+            "type": "INFO",
+            "order": 0,
+            "recurrance": null,
+            "description": "<div class=\"ql-code-block-container\" spellcheck=\"false\"><div class=\"ql-code-block\" data-language=\"plain\">This Scope of Works (SOW) outlines the objectives, deliverables, and approach for the successful execution of the project. It provides a clear framework to define responsibilities, milestones, and expected outcomes, ensuring alignment between all parties and a shared understanding of the project's scope. Please ensure you have a full understanding of what is included, as well as any exclusions, before proceeding with the project to ensure that expectations are clearly set and all requirements are met.</div></div><p><br></p><h2><strong>Objective</strong></h2><p>The objective is to transition the current Telstra Business Internet and Voice services to Exetel and Aatrox Communications. This includes implementing an on-premises 3CX vPBX phone system, upgrading network infrastructure, and ensuring all systems are configured, deployed, and operational.</p><p><br></p><h2><strong>Deliverables &amp; Tasks</strong></h2><p>This section outlines the specific outputs and results that will be provided upon completion of the project. It serves to define the tangible items, services, or milestones that are expected to be delivered, ensuring that all parties have a shared understanding of what will be provided and when.</p><p><br></p><p><u>Business Internet Service &amp; Voice Service</u></p><p>- Transition from Telstra to Exetel Business Internet.</p><p>- Provision and configure Exetel Business - Start Up NBN Plan (100/40 Mbps).</p><p>- Transition from Telstra Business Voice to Aatrox Communications SIP lines.</p><p>- Provision the following Aatrox services: 1x Capped SIP Line for 1 channel and hosting 1 number and 1x Pay-As-You-Go SIP Line for cost-effective call handling.</p><p>- Hosting of five (5) existing numbers: 6652 5061, 6652 7670, 6652 2592, 6658 0610 &amp;amp; 6651 6505.</p><p>- Configure and test all SIP lines with the 3CX phone system.</p><p><br></p><p><u>Replacement Desktop</u></p><p>- Pre-configure replacement workstation and migrate data prior to onsite installation.</p><p>- Onsite installation of replacement workstation, and migration of software.</p><p>- Coordination with user to ensure everything is the same.</p><p>- Take a final backup image of the old device to ensure data is recoverable in the future.</p><p><br></p><p><u>On-Premises vPBX Phone System</u></p><p>- Clean and refurbish old device and reimage machine with 3CX Image.</p><p>- Install and configure 3CX software with proposed 4 Channel Professional License.</p><p>- Configure 3CX features, including Presence. Office 365 and Outlook integration and mobile client access for remote calls.</p><p>- Configure after-hours voicemail system; and out-of-office call re-routing.</p><p>- Preconfigure replacement deskphones and DECT system.</p><p>- Register and configure phones with 3CX system.</p><p>- Test internal calling, and system routing.</p><p>- Install device onsite, and ensure connectivity is working.</p><p>- Overall check of system to ensure full functionality prior to number porting.</p><p><br></p><p><u>Network Infrastructure</u></p><p>- Pre-configure new hardware, which includes the Unifi Express, and Network Switching.</p><p>- Replace existing Telstra Business router and switches with Ubiquiti network hardware:</p><p>- Replace all outdated cabling with CAT6 Ethernet cables.</p><p>- Recable, clean and reorganize network connections for easier maintenance.</p><p>- Setup remote access capabilities for both my use to maintain systems, and for your use to access the network from anywhere.</p><p><br></p><p><u>Disposing Of Old Equipment</u></p><p>- Following cutover to new services, I am also happy to dispose of the old phone system equipment.</p><p><br></p><h2><strong>Exclusions</strong></h2><p>The following items are not included in this scope:</p><p>- Existing Telstra contract cancellation fees (please check with Telstra Business on what may occur).</p><p>- Costs associated with unforeseen structural changes for equipment installation.</p><p>- Advanced customizations beyond the listed 3CX features.</p><p><br></p><h2><strong>Assumptions</strong></h2><p>Existing systems (hardware and infrastructure) are in operational condition and can be repurposed.</p><p>Full access to the site and existing network setup will be provided.</p><p><br></p><h2><strong>Timeline</strong></h2><p>Based on current hardware procurement lead-times, and number porting timeframes, <strong>the end-to-end project timeline is 2-3 weeks following approval. </strong>This can and may be affected by hardware procurement and third-party turn around.</p>",
+            "isOptional": false,
+            "isReference": false,
+            "isLocked": false,
+            "blockRemoval": false,
+            "_totals": {
+                "total": 0,
+                "margin": 0,
+                "cost": 0
+            }
+        },
+        {
+            "id": 2,
+            "title": "Business Internet & VOIP Services",
+            "type": "PRODUCTS",
+            "order": 2,
+            "recurrance": "MONTHLY",
+            "description": "",
+            "isOptional": false,
+            "isLocked": false,
+            "isReference": true,
+            "items": [
+                {
+                    "id": 0,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Business Internet Service</strong></p><p>You are currently using Telstra Business Internet; I recommend switching to <strong>Exetel</strong>.</p><p>- https://business.exetel.com.au/small-business/nbn</p>",
+                    "order": 1,
+                    "qty": 0,
+                    "cost": 20,
+                    "price": 0,
+                    "margin": -20,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 1,
+                    "sku": "EXETEL-BIZ-START-UP",
+                    "title": "Exetel Business - Start Up NBN Plan - Up to 100/40 Mbps",
+                    "description": "<p><strong>This includes the following</strong></p><p>- Unlimited Data.</p><p>- Up to 100/40 Mbps Speeds.</p><p>- 5x Speed Upgrade Days Per Month.</p><p>- Five (5) Minute Support Guarantee.</p><p>- Extended business hours support.</p><p>- 1x Static IP Address (Required for on-premises phone system).</p><p>- No lock-in contract.</p><p><br></p><p><strong>Promo Discount</strong></p><p>- $85.00 Per Month, for the first six (6) months, then $105.00 Per Month ongoing.</p>",
+                    "order": 3,
+                    "qty": 1,
+                    "cost": 85,
+                    "price": 85,
+                    "margin": 0,
+                    "subtotal": 85,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 2,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Business Voice Service</strong></p><p>You are currently using Telstra Business Voice; I recommend switching over to <strong>Aatrox Communications</strong>.</p><p>- https://aatroxcommunications.com.au/pricing/</p>",
+                    "order": 2,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 3,
+                    "sku": "AATROX-CAPPED-SIP",
+                    "title": "Aatrox Communications - Capped - SIP Line",
+                    "description": "<p><strong>This includes the following</strong></p><p>- Provides 1 Channel &amp; Hosts 1 Number</p><p>- Local &amp; National Calls @ $0.00; Local Calls are included within the Capped Call Plans</p><p>- Mobile Calls @ $0.00; Local Calls are included within the Capped Call Plans</p><p>- 13/1300 Calls @ $0.35 Per Call; Untimed, to any 13/1300 number.</p><p>- International Calls @ $0.029 Per Minute; Billed per second with no flagfall or minimum.</p><p>- 1 Month Minimum Contract</p>",
+                    "order": 5,
+                    "qty": 1,
+                    "cost": 45,
+                    "price": 45,
+                    "margin": 0,
+                    "subtotal": 45,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 4,
+                    "sku": "AATROX-PAYG-SIP",
+                    "title": "Aatrox Communications - Pay As You Go - SIP Line",
+                    "description": "<p><strong>This includes the following</strong></p><p>- Provides 1 Channel &amp; Hosts 1 Number</p><p>- Local &amp; National Calls $0.10 Per Call; Untimed to any national or local number in Australia</p><p>- Mobile Calls @ $0.10 Per Minute; Billed per second with no flagfall or minimum.</p><p>- 13/1300 Calls @ $0.35 Per Call; Untimed, to any 13/ 1300 number.</p><p>- International Calls @ $0.029 Per Minute; Billed per second with no flagfall or minimum.</p><p>- 1 Month Minimum Contract</p>",
+                    "order": 4,
+                    "qty": 1,
+                    "cost": 8,
+                    "price": 8,
+                    "margin": 0,
+                    "subtotal": 8,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 6,
+                    "sku": "AATROX-NUMBER-HOSTING",
+                    "title": "Aatrox Communications - Single Number Hosting",
+                    "description": "<p><strong>This covers the following numbers</strong></p><p>- 6652 5061, 6652 7670, 6652 2592, 6658 0610 &amp; 6651 6505</p>",
+                    "order": 7,
+                    "qty": 5,
+                    "cost": 2,
+                    "price": 2,
+                    "margin": 0,
+                    "subtotal": 10,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 5,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Important Notice</strong></p><p>- All services are billed directly to 'Bananacoast Freight Couriers' from the third-party vendor. All monthly service charges will be billed two months in advance. Call usage relevant to your SIP Trunk type will be billed a month in arrears</p>",
+                    "order": 6,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                }
+            ],
+            "__block_removal": false,
+            "_totals": {
+                "total": 148,
+                "margin": 0,
+                "cost": 148
+            }
+        },
+        {
+            "id": 10,
+            "title": "Phone System Software Licensing",
+            "type": "PRODUCTS",
+            "order": 0,
+            "recurrance": "YEARLY",
+            "description": "",
+            "isOptional": false,
+            "isReference": false,
+            "isLocked": false,
+            "blockRemoval": false,
+            "items": [
+                {
+                    "id": 1,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Phone System Software Licensing</strong></p>",
+                    "order": 2,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 2,
+                    "sku": "3CXPSPRO-12M4",
+                    "title": "3CX Licensing - 4 Simultaneous Calls, Professional Edition - Annual License",
+                    "description": "<p><strong>Overview</strong></p><p>- 3CX is an open-standard, software-based IP phone system that works with popular IP Phones and SIP trunks whether on-premise or in the cloud. A complete Unified Communications solution, including web conferencing, presence, softphones, smartphone clients and more – without the cost and management headaches of an ‘old style’ phone system or the limitations of a shared cloud PBX.</p><p><br></p><p><strong>Features</strong></p><p>- Plug and Play Configuration of Phones, Gateways &amp; SIP Trunks</p><p>- Easy, Network-Wide Management of IP Phones &amp; Soft Phones</p><p>- Virtualize with Hyper V and VMware or Install on Existing Server</p><p>- See the Presence of Colleagues</p><p>- Deliver Faxes &amp; Voicemail to Inbox</p><p>- Instant Messaging / Text chat</p><p>- Acclaimed Android and iOS VoIP Clients</p><p>- Use Your Extension From Anywhere</p><p>- Use Inbuilt Softphone to Make and Receive Calls</p><p>- Manage your Calls with the 3CX Switchboard</p><p>- Integrates with Office 365, Google, Outlook &amp; Others!</p><p>- Hassle-Free Web Conferencing with WebRTC</p>",
+                    "order": 0,
+                    "qty": 1,
+                    "cost": 309.09,
+                    "price": 340,
+                    "margin": 40,
+                    "subtotal": 340,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                }
+            ],
+            "_totals": {
+                "total": 340,
+                "margin": 40,
+                "cost": 309.09
+            }
+        },
+        {
+            "id": 3,
+            "title": "Replacement PC, Phone & Networking Hardware",
+            "type": "PRODUCTS",
+            "order": 3,
+            "recurrance": "ONE_TIME",
+            "description": null,
+            "isOptional": false,
+            "isLocked": false,
+            "isReference": false,
+            "items": [
+                {
+                    "id": 1,
+                    "title": "",
+                    "description": "<p><strong>Phone System &amp; PC Hardware</strong></p><p>- This hardware will used to replace the existing Desktop used by (Robert H); the existing system will be cleaned, refurbished and utilised to host the phone system.</p>",
+                    "order": 0,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "sku": null,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 2,
+                    "title": "Lenovo ThinkCentre Tiny Neo 50q Gen 4",
+                    "description": "<p><strong>Specifications</strong></p><p>- Intel Core i5-13420H (8 Cores, 12 Thread) Processor</p><p>- 16 GB DDR4-3200MHz (SODIMM)</p><p>- 512 GB SSD M.2 2280 PCIe Gen4 TLC Opal</p><p>- Intel Wi-Fi 6 AX201 2x2 AX &amp; Bluetooth 5.1</p><p>- Windows 11 Pro 64-bit</p><p>- 3 Year Onsite Warranty</p>",
+                    "order": 1,
+                    "qty": 1,
+                    "cost": 888,
+                    "price": 1250,
+                    "margin": 362,
+                    "subtotal": 1250,
+                    "sku": "12LN0038AU",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 3,
+                    "title": "4Cabling - 1.5m - RJ45 CAT6 Ethernet Network Cable - Blue",
+                    "description": "",
+                    "order": 2,
+                    "qty": 1,
+                    "cost": 4.95,
+                    "price": 8,
+                    "margin": 3.05,
+                    "subtotal": 8,
+                    "sku": "004.002.0004",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 7,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Networking</strong></p><p>- This setup will replace the existing Telstra Business router and network switch in the demountable office. A modern router with firewall protection, remote management, and access features will be installed, along with a central network switch and the desk switch behind the monitor will also be replaced.</p>",
+                    "order": 3,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 14,
+                    "sku": "UX",
+                    "title": "Ubiquiti Networks - Express UX Gateway",
+                    "description": "",
+                    "order": 4,
+                    "qty": 1,
+                    "cost": 239,
+                    "price": 290,
+                    "margin": 51,
+                    "subtotal": 290,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 9,
+                    "sku": "USW-LITE-8-POE",
+                    "title": "Ubiquiti Networks - Managed PoE Gigabit 8 Port Switch",
+                    "description": "",
+                    "order": 5,
+                    "qty": 1,
+                    "cost": 239,
+                    "price": 290,
+                    "margin": 51,
+                    "subtotal": 290,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 8,
+                    "sku": "USW-FLEX-MINI",
+                    "title": "Ubiquiti Networks - Managed PoE Gigabit 5 Port Switch",
+                    "description": "",
+                    "order": 6,
+                    "qty": 1,
+                    "cost": 69,
+                    "price": 85,
+                    "margin": 16,
+                    "subtotal": 85,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 10,
+                    "title": "4Cabling - 1.5m - RJ45 CAT6 Ethernet Network Cable - Blue",
+                    "description": "",
+                    "order": 7,
+                    "qty": 4,
+                    "cost": 5.41,
+                    "price": 8,
+                    "margin": 10.36,
+                    "subtotal": 32,
+                    "sku": "004.002.0004",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 11,
+                    "title": "4Cabling - 1.5m - RJ45 CAT6 Ethernet Network Cable - Red",
+                    "description": "",
+                    "order": 8,
+                    "qty": 1,
+                    "cost": 5.41,
+                    "price": 8,
+                    "margin": 2.59,
+                    "subtotal": 8,
+                    "sku": "004.002.1004",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 4,
+                    "title": "",
+                    "description": "<p><strong>Deskphones</strong></p><p>- This hardware will be used to replace the existing deskphones, plus include an additional DECT Business Phone so you can continue to take calls if you need to walk out into the warehouse.</p>",
+                    "order": 9,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "sku": null,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 5,
+                    "title": "Yealink - Cordless IP - DECT - Business Phone",
+                    "description": "",
+                    "order": 10,
+                    "qty": 1,
+                    "cost": 159,
+                    "price": 250,
+                    "margin": 91,
+                    "subtotal": 250,
+                    "sku": "SIP-W56H",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 6,
+                    "title": "Yealink - Corded IP - Deskphone - Business Phone",
+                    "description": "",
+                    "order": 11,
+                    "qty": 2,
+                    "cost": 159,
+                    "price": 250,
+                    "margin": 182,
+                    "subtotal": 500,
+                    "sku": "SIP-T33G",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 7,
+                    "title": "4Cabling - 0.5m - RJ45 CAT6 Ethernet Network Cable - Yellow",
+                    "description": "",
+                    "order": 12,
+                    "qty": 2,
+                    "cost": 4.95,
+                    "price": 8,
+                    "margin": 6.1,
+                    "subtotal": 16,
+                    "sku": "004.002.6004",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 18,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Estimated Shipping Charges - Multiple Suppliers</strong></p>",
+                    "order": 16,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 12,
+                    "sku": "SHIPPING",
+                    "title": "Multiple Supplier - Shipping Charges",
+                    "description": "",
+                    "order": 17,
+                    "qty": 1,
+                    "cost": 25,
+                    "price": 50,
+                    "margin": 25,
+                    "subtotal": 50,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                }
+            ],
+            "__block_removal": false,
+            "_totals": {
+                "total": 2779,
+                "margin": 800.1,
+                "cost": 1978.9
+            }
+        },
+        {
+            "id": 4,
+            "title": "Professional Services & Fees",
+            "type": "PRODUCTS",
+            "order": 4,
+            "recurrance": "ONE_TIME",
+            "description": null,
+            "isOptional": false,
+            "isLocked": false,
+            "isReference": false,
+            "items": [
+                {
+                    "id": 3,
+                    "title": " (Copy) (Copy)",
+                    "description": "<p><strong>Professional Services</strong></p>",
+                    "order": 1,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "sku": null,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 4,
+                    "title": "Talke Tech Consulting - Professional Services Labour",
+                    "description": "<p><strong>This covers the following</strong></p><p>- Collaborating with third-party technical support to transfer numbers and services.</p><p>- Configuring third-party vendor systems to meet Phone System requirements.</p><p>- Testing and troubleshooting to ensure full compatibility and performance.</p><p>- Set up of new workstation, and transfer of data from old workstation to new.</p><p>- Refurbishing the existing workstation, and deployment of 3CX Phone System.</p><p>- Pre-configuring 3CX system for deployment, ensuring all settings are aligned with organizational needs.</p><p>- Pre-configuring network, wired deskphones and portable phone prior to onsite installation.</p><p>- Setting up network infrastructure to support the 3CX deployment.</p><p>- Performing system tests to ensure functionality and readiness for go-live.</p><p>- Onsite deployment of 3CX system, including hardware and software installation.</p><p>- Configuration of network settings and integration with existing systems.</p><p>- Providing hands-on training to end users on how to effectively use the 3CX system.</p><p>- Offering support during the initial usage phase to address any issues or questions.</p><p>- Documentation.</p><p><br></p><p><strong>Estimated Time:</strong></p><p>20-22 Hours</p>",
+                    "order": 2,
+                    "qty": 1,
+                    "cost": 0,
+                    "price": 2160,
+                    "margin": 2160,
+                    "subtotal": 2160,
+                    "sku": "TTC-0001",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 5,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Third Party Porting Fees</strong></p>",
+                    "order": 4,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 6,
+                    "sku": "AATROX-CATC-PORTING",
+                    "title": "Aatrox Communications - Complex Porting Fee",
+                    "description": "",
+                    "order": 5,
+                    "qty": 1,
+                    "cost": 150,
+                    "price": 200,
+                    "margin": 50,
+                    "subtotal": 200,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                }
+            ],
+            "__block_removal": false,
+            "_totals": {
+                "total": 2360,
+                "margin": 2210,
+                "cost": 150
+            }
+        },
+        {
+            "id": 9,
+            "title": "Ongoing Maintenance & Updates",
+            "type": "PRODUCTS",
+            "order": 0,
+            "recurrance": "MONTHLY",
+            "description": "",
+            "isOptional": false,
+            "isReference": false,
+            "isLocked": false,
+            "blockRemoval": false,
+            "items": [
+                {
+                    "id": 1,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Ongoing Maintenance &amp; Updates</strong></p>",
+                    "order": 2,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 1,
+                    "sku": "TTC-PBX-BASIC",
+                    "title": "vPBX Basic Maintenance Plan",
+                    "description": "<p><strong>Overview</strong></p><p>The Basic Maintenance Plan plan provides essential maintenance for your 3CX phone system, ensuring reliable performance with minimal downtime. This plan includes regular software updates, scheduled backups, and basic monitoring to keep your system running smoothly. It’s designed for small businesses with straightforward requirements, offering peace of mind without unnecessary complexity or cost.</p><p><br></p><p><strong>Key Features:</strong></p><p>- Routine software updates to ensure system stability and security.</p><p>- Scheduled backups to protect your configurations and data.</p><p>- Basic system monitoring to identify potential issues early.</p><p><br></p><p><strong>Ideal For:</strong></p><p>- This plan is ideal for small businesses that want ongoing maintenance and updates for peace-of-mind but does not include remediation labor for broken systems or major issues. Any troubleshooting or repair services can be requested separately at an additional cost.</p>",
+                    "order": 0,
+                    "qty": 1,
+                    "cost": 0,
+                    "price": 50,
+                    "margin": 50,
+                    "subtotal": 50,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 2,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Important Notice</strong></p><p>- Ongoing maintenance &amp; support plans come with no contractual commitment, meaning you can cancel or modify the service at any time without penalty. This flexibility ensures that your business can adjust its support needs as required, without being locked into a long-term agreement.</p>",
+                    "order": 3,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                }
+            ],
+            "_totals": {
+                "total": 50,
+                "margin": 50,
+                "cost": 0
+            }
+        },
+        {
+            "id": 12,
+            "title": "Power Protection Hardware",
+            "type": "PRODUCTS",
+            "order": 0,
+            "recurrance": "ONE_TIME",
+            "description": "",
+            "isOptional": true,
+            "isReference": false,
+            "isLocked": false,
+            "blockRemoval": false,
+            "items": [
+                {
+                    "id": 15,
+                    "sku": null,
+                    "title": "",
+                    "description": "<p><strong>Power Backup &amp; Protection</strong></p><p>- With new network equipment, and critical systems, it is highly recommended to protect new network equipment and critical systems with an Uninterruptible Power Supply (UPS). For a small network setup, a 750VA UPS should provide sufficient protection.</p>",
+                    "order": 13,
+                    "qty": 0,
+                    "cost": 0,
+                    "price": 0,
+                    "margin": 0,
+                    "subtotal": 0,
+                    "type": "COMMENT",
+                    "isOptional": true
+                },
+                {
+                    "id": 16,
+                    "sku": "SMT750IC",
+                    "title": "APC Smart UPS 750VA - Tower - LCD 230V with SmartConnect Port",
+                    "description": "",
+                    "order": 14,
+                    "qty": 1,
+                    "cost": 638,
+                    "price": 875,
+                    "margin": 237,
+                    "subtotal": 875,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 17,
+                    "sku": "011.180.0013",
+                    "title": "4Cabling - 0.5m - IEC C13 10A Power Cable",
+                    "description": "",
+                    "order": 15,
+                    "qty": 4,
+                    "cost": 6.83,
+                    "price": 9.955,
+                    "margin": 12.5,
+                    "subtotal": 39.82,
+                    "type": "PRODUCT",
+                    "isOptional": false
+                },
+                {
+                    "id": 4,
+                    "title": "Talke Tech Consulting - Professional Services Labour",
+                    "description": "<p><strong>This covers the following</strong></p><p>- Setup and pre-configuration of APC Smart UPS</p><p>- Network management installation, and automatic shutdown procedures.</p>",
+                    "order": 3,
+                    "qty": 1,
+                    "cost": 0,
+                    "price": 240,
+                    "margin": 240,
+                    "subtotal": 240,
+                    "sku": "TTC-0001",
+                    "type": "PRODUCT",
+                    "isOptional": false
+                }
+            ],
+            "_totals": {
+                "total": 1154.82,
+                "margin": 489.5,
+                "cost": 665.32
+            }
+        },
+        {
+            "id": 5,
+            "title": "Pricing Summary",
+            "type": "TOTALS",
+            "order": 5,
+            "recurrance": null,
+            "description": "",
+            "isOptional": false,
+            "isLocked": true,
+            "isReference": false,
+            "blockRemoval": false,
+            "_totals": {
+                "total": 0,
+                "margin": 0,
+                "cost": 0
+            }
+        },
+        {
+            "id": 6,
+            "title": "Timeline & Milestone Payments",
+            "type": "MILESTONES",
+            "order": 6,
+            "recurrance": null,
+            "description": "",
+            "isOptional": false,
+            "isLocked": true,
+            "isReference": false,
+            "milestones": [
+                {
+                    "id": 0,
+                    "title": "Phase 1 - Project Approval Deposit & Hardware Procurement",
+                    "description": "<p>This phase includes obtaining formal approval, confirming project scope, budget, and timelines. Once the project is approved, and a deposit invoice has been paid, the necessary hardware, such as phones, systems, and networking equipment, will be ordered and procured. The hardware procurement invoice will cover the cost of the equipment, any associated licenses, shipping, and handling fees. To ensure timely procurement of all required components is essential to avoid delays and guarantee that the system is ready for configuration and installation. This invoice will be issued upon confirmation and approval of this proposal.</p><p><br></p><p><strong>ETC: </strong>Immediately following clearance of payment</p><p><strong>Estimated Invoice Date</strong>: Immediately following written approval</p>",
+                    "order": 1,
+                    "dueDate": "2025-01-15",
+                    "amount": 2500
+                },
+                {
+                    "id": 1,
+                    "title": "Phase 2 - Completion of Workshop Preconfiguration",
+                    "description": "<p>During this phase, the phone system will be preconfigured in a workshop or lab environment. This includes setting up the PBX system, networking equipment, configuring phones, programming extensions, and ensuring compatibility with existing networks. Invoices for this phase may include labor costs for pre-configuration, software installations, and any additional tools or licensing fees for the system. Preconfiguration ensures that the system is ready for deployment and minimizes the risk of issues during the physical installation. All configurations will be tested before moving to the next phase.</p><p><br></p><p><strong>ETC: </strong>1 to 2 weeks following hardware procurement</p><p><strong>Estimated Invoice Date</strong>: 2-3 days after all hardware arrives and has been configured.</p>",
+                    "order": 2,
+                    "dueDate": "2025-02-15",
+                    "amount": 1500
+                },
+                {
+                    "id": 2,
+                    "title": "Phase 3 - Completion of Physical Installation",
+                    "description": "<p>This phase marks the on-site installation of the phone system hardware, including the physical setup of phones, wiring, enclosures, and systems, along with connecting to the company’s network. The phone system will be fully integrated with the organization’s infrastructure. In preparation for cutover, I will ensure that the system is correctly installed and operational, and final adjustments will be made based on the physical environment and requirements.</p><p><br></p><p><strong>ETC: </strong>Installation Date TBC</p><p><strong>Estimated Invoice Date</strong>: Nill Invoice</p>",
+                    "order": 3,
+                    "dueDate": "2025-03-15",
+                    "amount": 0
+                },
+                {
+                    "id": 3,
+                    "title": "Phase 4 - Completion of System Cutover & Project Finalisation",
+                    "description": "<p>The final phase involves the cutover to the new phone system, which includes transferring phone numbers, configuring voicemail, and ensuring all internal and external communication channels are working properly. System testing, user training, and troubleshooting will occur to confirm full functionality. The final invoice for this phase will include any remaining installation labor, system testing, training costs, and project management fees. Once all services are tested and confirmed as working, the project will be finalized. Documentation will be provided, and ongoing support options will be discussed. The project is officially completed when the final invoice is settled, and the system is fully operational.</p><p><br></p><p><strong>ETC: </strong>Installation Date TBC</p><p><strong>Estimated Invoice Date</strong>: Immediately following cutover to new system</p>",
+                    "order": 4,
+                    "dueDate": "2025-03-15",
+                    "amount": 1479
+                }
+            ],
+            "blockRemoval": false,
+            "_totals": {
+                "total": 0,
+                "margin": 0,
+                "cost": 0
+            },
+            "_milestone_totals": {
+                "allocated": 5479,
+                "remaining": 0
+            }
+        },
+        {
+            "id": 7,
+            "title": "Terms and Conditions",
+            "type": "TERMS_AND_CONDITIONS",
+            "order": 7,
+            "recurrance": null,
+            "description": "<p><strong>1. Scope of Work</strong></p><p>The Service Provider will perform the Services as described in the accompanying proposal (\"Proposal\"). Any additional work requested by the Client beyond the agreed scope will require a written change order and may incur additional costs. Any additional work, modifications, or variations shall be subject to the terms of the applicable Australian Consumer Law (ACL).</p><p><br></p><p><strong>2. Project Timeline</strong></p><p>The timeline (if included) for the delivery of the Services is outlined in the Proposal. While the Service Provider will make every effort to meet these timelines, they are estimates and may be adjusted due to unforeseen circumstances. Any changes will be communicated promptly to the Client, with reasonable efforts made to minimize any delays.</p><p><br></p><p><strong>3. Payment Terms</strong></p><p><u>3.1 Fees:</u> Payment terms, including fees, are outlined in the Proposal. All payments are due as specified in the payment schedule.</p><p><u>3.2 Late Payments:</u> Late payments may be subject to a penalty of 2% per month on the outstanding balance, or in accordance with the applicable laws under the Australian Consumer Law (ACL).</p><p><u>3.3 Taxes:</u> The Client is responsible for all applicable taxes, including Goods and Services Tax (GST), unless otherwise specified.</p><p><br></p><p><strong>4. Client Responsibilities</strong></p><p>The Client agrees to provide timely access to relevant personnel, systems, and information required for the execution of the Services. The Client must approve or provide feedback on deliverables within agreed timelines and ensure third-party dependencies (if any) are fulfilled in accordance with the relevant Australian regulations.</p><p><br></p><p><strong>5. Ownership and Intellectual Property</strong></p><p><u>5.1 Deliverables:</u> Upon full payment, ownership of the final deliverables will transfer to the Client. The Service Provider retains the right to use any pre-existing tools, libraries, or frameworks integrated into the deliverables.</p><p><u>5.2 License:</u> Any software, frameworks, or libraries used by the Service Provider that are not custom-built remain the intellectual property of their respective owners.</p><p><u>5.3 Service Provider IP:</u> The Service Provider retains ownership of any proprietary methodologies, templates, or tools used in providing the Services.</p><p><br></p><p><strong>6. Confidentiality</strong></p><p>Both parties agree to maintain the confidentiality of all proprietary and sensitive information shared during the course of the project. Confidential information shall not be disclosed to third parties without prior written consent, except as required by law in New South Wales or Australia.</p><p><br></p><p><strong>7. Limitation of Liability</strong></p><p>The Service Provider’s total liability for any claims related to this Agreement will be limited to the fees paid by the Client for the Services. The Service Provider is not liable for indirect, incidental, or consequential damages arising from the use of deliverables or Services, except where prohibited by applicable laws.</p><p><br></p><p><strong>8. Warranties and Representations</strong></p><p><u>8.1 Service Provider:</u> The Service Provider warrants that the Services will be performed in a professional and workmanlike manner in compliance with Australian industry standards.</p><p><u>8.2 Client:</u> The Client warrants that any materials, content, or data provided for the Services are owned by the Client or that the Client has the necessary rights to use them under Australian copyright law.</p><p><br></p><p><strong>9. Termination</strong></p><p><u>9.1 By Client:</u> The Client may terminate the Agreement with 15 days' written notice. Fees for work completed up to the termination date will be invoiced and must be paid in full.</p><p><u>9.2 By Service Provider:</u> The Service Provider may terminate the Agreement if the Client fails to meet payment or other obligations under this Agreement, with 15 days' written notice.</p><p><br></p><p><br></p><p><strong>10. Force Majeure</strong></p><p>Neither party shall be held liable for delays or failure to fulfill obligations due to causes beyond their reasonable control, including but not limited to natural disasters, strikes, or government regulations, as provided under Australian law.</p><p><br></p><p><strong>11. Dispute Resolution</strong></p><p>Any disputes arising from this Agreement shall first be resolved through good-faith negotiations. If a resolution cannot be reached, disputes will be submitted to binding arbitration under the rules of the Australian Centre for International Commercial Arbitration (ACICA) or other appropriate arbitration body in New South Wales.</p><p><br></p><p><strong>12. Governing Law</strong></p><p>This Agreement is governed by and construed in accordance with the laws of New South Wales, Australia, without regard to its conflict of law principles.</p><p><br></p><p><strong>13. Entire Agreement</strong></p><p>This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements, representations, and understandings.</p><p><br></p><p><strong>14. Amendments</strong></p><p>Any amendments to this Agreement must be made in writing and signed by both parties.</p>",
+            "isOptional": false,
+            "isLocked": true,
+            "isReference": false,
+            "__block_removal": true,
+            "_totals": {
+                "total": 0,
+                "margin": 0,
+                "cost": 0
+            }
+        }
+    ],
+    "createdOnDate": "2024-12-18T02:42:21.939Z",
+    "modifiedOnDate": "2025-01-16T23:22:12.821Z",
+    "expiresOnDate": "2025-02-12T13:00:00.000Z"
+}

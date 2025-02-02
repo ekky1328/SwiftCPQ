@@ -5,13 +5,16 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "nodemon src/index.ts",
+    "dev:server": "cross-env MODE=1 nodemon src/index.ts",
+    "dev:worker": "cross-env MODE=0 nodemon src/index.ts",
     "build": "tsc && npm run copy-templates",
     "start:dist": "node dist/index.js",
     "lint": "eslint --fix src test",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "copy-templates": "copyfiles -u 1 src/data/** dist"
+    "migrate:make": "knex migrate:make",
+    "migrate:up": "knex migrate:latest",
+    "migrate:down": "knex migrate:rollback"
   },
   "keywords": [],
   "author": "Christopher Talke Buscaino <chris@talke.dev> (https://talke.dev)",
@@ -25,7 +28,9 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "helmet": "^8.0.0",
-    "morgan": "^1.10.0"
+    "knex": "^3.1.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -35,6 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
     "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-airbnb-typescript": "^18.0.0",
     "eslint-import-resolver-typescript": "^3.6.3",

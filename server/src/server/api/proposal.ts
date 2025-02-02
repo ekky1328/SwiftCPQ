@@ -3,7 +3,7 @@ import fs from 'fs';
 
 import MessageResponse from '../interfaces/MessageResponse';
 import { stripBackToProposal } from '../helpers/validators';
-import { Proposal } from '../types/Proposal';
+import { Proposal } from '../../types/Proposal';
 import { calculateProposalTotals } from '../helpers/calculation';
 
 const proposalRouter = express.Router();
