@@ -5,7 +5,7 @@ import startWorker from './worker';
 
 const mode = process.env.MODE || 1;
 
-if (mode === 1) {
+if (Number(mode) === 1) {
   startServer();
 }
 
