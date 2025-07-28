@@ -6,35 +6,31 @@
     </h3>
     <% Object.keys(proposal._section_totals).forEach((recurrance) => { %>
 
-        <div class="header grid grid-cols-[1fr_100px] py-0.5 px-1 bg-primary text-white font-bold">
-            <div>
-                Description
-            </div>
-            <div class="text-right">
-                Total
-            </div>
-        </div>
-        <div class="border-b border-black">
-            <% proposal._section_totals[recurrance].forEach(section => { %>
-                <div class="header grid grid-cols-[1fr_100px] py-0.5 px-1">
-                    <div>
-                        <%- section.title %>
-                    </div>
-                    <div class="text-right">
-                        <%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.total) %>
-                    </div>
+        <% if (proposal._section_totals[recurrance].length > 0) { %>
+        
+            <div class="header grid grid-cols-[1fr_100px] py-0.5 px-1 bg-primary text-white font-bold">
+                <div>
+                    Description
                 </div>
-            <% }) %>
-        </div>
-        <div class="header grid grid-cols-[1fr_100px] mb-12">
-            <div class="py-0.5 px-1 font-bold text-right capitalize">
-                <%- recurrance.toLowerCase().replace('_', ' ') %> Total
+                <div class="text-right">
+                    Total
+                </div>
             </div>
-            <div class="w-[100px] text-right bg-primary text-white py-0.5 px-1 font-bold">
-                <%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(proposal._totals[recurrance].total) %>
-            </div>
-        </div>
 
+            <div class="border-b border-black">
+                <% proposal._section_totals[recurrance].forEach(section => { %>
+                    <div class="header grid grid-cols-[1fr_100px] py-0.5 px-1">
+                        <div>
+                            <%- section.title %>
+                        </div>
+                        <div class="text-right">
+                            <%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section.total) %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+
+    <%      }  %>
     <% }) %>
 
     <div class="mt-12 pt-6 absolute bottom-16 left-0 mx-8">

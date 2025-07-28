@@ -154,3 +154,4 @@ templater/src/views/**
 server/src/server/data/system/core-settings.json
 server/src/server/data/proposals/6.json
 server/src/server/content/logos/ttc.svg
+server/src/server/data/proposals/5.json
