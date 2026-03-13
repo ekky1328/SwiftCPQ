@@ -7,8 +7,6 @@ const mode = process.env.MODE || 1;
 
 if (Number(mode) === 1) {
   startServer();
-}
-
-else {
+} else {
   startWorker();
 }

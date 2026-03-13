@@ -1,6 +1,6 @@
 import express from 'express';
-import fs from 'fs';
 
+import db from '../../database/db';
 import MessageResponse from '../interfaces/MessageResponse';
 
 const userRouter = express.Router();
@@ -10,29 +10,34 @@ const userRouter = express.Router();
  * Endpoint: /api/v1/user/
  * - Gets a list of users
  */
-userRouter.get<{}, MessageResponse>('/', (req, res) => {
-
-  let all_users = [];
-  let user_list = fs.readdirSync(`${__dirname}/../data/users/`);
-  for (let i = 0; i < user_list.length; i++) {
-    const user_filename = user_list[i];
-
-    const user_raw = fs.readFileSync(`${__dirname}/../data/users/${user_filename}`, 'utf-8');
-    if (!user_raw) {
-      continue;
+userRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
+  try {
+    const tenant = await db('tenant').where('status', 'ACTIVE').first();
+    if (!tenant) {
+      res.status(404).json({ message: 'No active tenant found' });
+      return;
     }
 
-    const user = JSON.parse(user_raw);
-    if (!user) {
-      continue;
-    }
+    const rows = await db('user')
+      .select(
+        'user.id', 'user.first_name', 'user.last_name', 'user.username',
+        'user_contact.email as contact_email', 'user_contact.phone as contact_phone',
+      )
+      .leftJoin('user_contact', 'user.id', 'user_contact.user_id')
+      .where('user.tenant_id', tenant.id);
 
-    delete user.sections;
+    const users = rows.map((row: Record<string, unknown>) => ({
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: (row.contact_email as string) || (row.username as string),
+      phone: (row.contact_phone as string) || '',
+    }));
 
-    all_users.push(user)
+    res.json(users);
+  } catch (err) {
+    next(err);
   }
-
-  res.json(all_users);
 });
 
 /**
@@ -40,13 +45,34 @@ userRouter.get<{}, MessageResponse>('/', (req, res) => {
  * Endpoint: /api/v1/user/:id
  * - Gets the user JSON based on the :id
  */
-userRouter.get<{}, MessageResponse>('/:id', (req, res) => {
+userRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
 
-  let { id } = req.params as { id: number };
-  let raw_data = fs.readFileSync(`${__dirname}/../data/users/${id}.json`, 'utf-8');
-  let json_data = JSON.parse(raw_data);
+    const row = await db('user')
+      .select(
+        'user.id', 'user.first_name', 'user.last_name', 'user.username',
+        'user_contact.email as contact_email', 'user_contact.phone as contact_phone',
+      )
+      .leftJoin('user_contact', 'user.id', 'user_contact.user_id')
+      .where('user.id', id)
+      .first();
 
-  res.json(json_data);
+    if (!row) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.json({
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: row.contact_email || row.username,
+      phone: row.contact_phone || '',
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default userRouter;

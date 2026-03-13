@@ -15,7 +15,7 @@ const app = express();
 app.use(morgan('dev'));
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 app.use(cors());
 app.use(express.json());
