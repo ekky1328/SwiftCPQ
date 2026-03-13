@@ -497,4 +497,27 @@ proposalRouter.put<{}, MessageResponse>('/:id', async (req, res, next) => {
 });
 
 
+/**
+ * Method: DELETE
+ * Endpoint: /api/v1/proposal/:id
+ * - Deletes a proposal and all its sections, items, and milestones
+ */
+proposalRouter.delete<{}, MessageResponse>('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+
+    const existing = await db('proposal').where('id', id).first();
+    if (!existing) {
+      res.status(404).json({ message: 'Proposal not found' });
+      return;
+    }
+
+    await db('proposal').where('id', id).del();
+    res.json({ message: 'Proposal deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 export default proposalRouter;
