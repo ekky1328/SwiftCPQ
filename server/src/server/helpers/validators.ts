@@ -1,5 +1,5 @@
-import { CoreSettings } from "../../types/System";
-import { Proposal } from "../../types/Proposal";
+import { CoreSettings } from '../../types/System';
+import { Proposal } from '../../types/Proposal';
 
 export interface ProposalPayload extends Proposal, CoreSettings {}
 
@@ -13,23 +13,24 @@ export interface ProposalPayload extends Proposal, CoreSettings {}
  */
 export function stripBackToProposal(proposal: ProposalPayload): Proposal {
 
-    const keysToRemove = [
-        "prefix",
-        "suffix",
-        "logo",
-        "currency",
-        "timezone",
-        "dateFormat",
-        "contactInformationDefaults",
-        "proposalSettingsDefaults",
-        "theme"
-    ] as string[]
+  const keysToRemove = [
+    'prefix',
+    'suffix',
+    'logo',
+    'currency',
+    'timezone',
+    'dateFormat',
+    'contactInformationDefaults',
+    'proposalSettingsDefaults',
+    'selectedTemplate',
+    'theme',
+  ] as string[];
 
-    Object.keys(proposal).forEach(key => {
-        if (keysToRemove.includes(key as string)) {
-            delete (proposal as any)[key];
-        }
-    });
+  Object.keys(proposal).forEach(key => {
+    if (keysToRemove.includes(key as string)) {
+      delete (proposal as any)[key];
+    }
+  });
 
-    return proposal;
-};
+  return proposal;
+}
