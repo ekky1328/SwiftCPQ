@@ -92,7 +92,27 @@ If you're a developer, and you would like to help move the project forward, you'
 
 ## 🛠️ Development Environment
 
-`TBC`
+**Prerequisites:** Node.js v20+, PostgreSQL 15+, Git
+
+```bash
+git clone https://github.com/ekky1328/SwiftCPQ.git
+cd SwiftCPQ
+
+# Server
+cd server && cp .env.sample .env   # edit DATABASE_URL + secrets
+npm install && npm run migrate:up && npm run seed
+npm run dev:server                 # → http://localhost:5000
+
+# Client (new terminal)
+cd client && npm install
+npm run dev                        # → http://localhost:5173
+
+# Templater (new terminal)
+cd templater && cp .env.sample .env
+npm install && npm run dev         # → http://localhost:5005
+```
+
+See [docs/development.md](docs/development.md) for full setup instructions, [docs/deployment.md](docs/deployment.md) for self-hosted/VM deployment, and [docs/deployment-azure.md](docs/deployment-azure.md) for Azure deployment.
 
 ## 📜 License
 
