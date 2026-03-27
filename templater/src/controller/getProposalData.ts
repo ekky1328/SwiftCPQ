@@ -1,21 +1,29 @@
 /**
  * Get Proposal Data from the SwiftCPQ Server
- * @param id 
- * @returns 
+ * @param id
+ * @returns
  */
 export async function getProposalData(id: string) {
   try {
-    
-    const response = await fetch(`http://localhost:5000/api/v1/proposal/${id}?coreSettings=true`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
+    const mainServerUrl = process.env.MAIN_SERVER_URL || 'http://localhost:5000';
+    const serviceToken = process.env.INTERNAL_SERVICE_TOKEN;
+
+    if (!serviceToken) {
+      throw new Error('INTERNAL_SERVICE_TOKEN is not set');
     }
-    
-    const data = await response.json();
-    return data;
-  } 
-  
-  catch (error) {
-    console.error(error)
+
+    const response = await fetch(`${mainServerUrl}/api/v1/proposal/${id}?coreSettings=true`, {
+      headers: {
+        'x-service-token': serviceToken,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch proposal: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
   }
 }

@@ -1,8 +1,45 @@
 <template>
 
     <Toast position="top-center" />
-    <div 
-        @mouseenter="onSectionEnter" 
+
+    <!-- Catalogue picker dialog -->
+    <Dialog v-model:visible="catalogueDialogVisible" header="Add from Catalogue" modal style="width: 640px">
+      <div class="flex flex-col gap-3 pt-1">
+        <IconField>
+          <InputIcon class="pi pi-search" />
+          <InputText v-model="catalogueSearch" placeholder="Search catalogue..." fluid @input="onCatalogueSearch" />
+        </IconField>
+        <DataTable
+          :value="catalogueItems"
+          :loading="catalogueLoading"
+          size="small"
+          striped-rows
+          selection-mode="single"
+          data-key="id"
+          @row-click="onCatalogueRowClick"
+          style="cursor: pointer"
+        >
+          <template #empty><p class="text-center py-6 text-gray-400">No items found.</p></template>
+          <Column field="sku" header="SKU" style="width: 100px" />
+          <Column field="title" header="Title" />
+          <Column field="price" header="Price" style="width: 110px">
+            <template #body="{ data: row }">{{ formatCataloguePrice(row.price) }}</template>
+          </Column>
+          <Column field="type" header="Type" style="width: 90px">
+            <template #body="{ data: row }">
+              <Tag :value="row.type" :severity="row.type === 'PRODUCT' ? 'info' : 'secondary'" />
+            </template>
+          </Column>
+        </DataTable>
+        <p class="text-xs text-gray-400">Click a row to add it to the section.</p>
+      </div>
+      <template #footer>
+        <Button label="Close" severity="secondary" @click="catalogueDialogVisible = false" />
+      </template>
+    </Dialog>
+
+    <div
+        @mouseenter="onSectionEnter"
         @mouseleave="onSectionLeave"
     >
 
@@ -179,6 +216,7 @@
                                             <div class="flex gap-2 pt-2">
                                                 <Button label="Add Product" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)"/>
                                                 <Button label="Add Comment" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.COMMENT)"/>
+                                                <Button label="Add from Catalogue" size="small" severity="secondary" icon="pi pi-database" @click="openCataloguePicker(section.id)"/>
                                             </div>
                                         </div>
                                     </td>
@@ -298,6 +336,14 @@
     import SplitButton from 'primevue/splitbutton';
     import Inplace from 'primevue/inplace';
     import Popover from 'primevue/popover';
+    import Dialog from 'primevue/dialog';
+    import DataTable from 'primevue/datatable';
+    import Column from 'primevue/column';
+    import Tag from 'primevue/tag';
+    import IconField from 'primevue/iconfield';
+    import InputIcon from 'primevue/inputicon';
+
+    import { GetCatalogueItems } from '../api/api';
     
     import { useProposalStore } from '../store/proposalStore';
     import { SECTION_RECURRANCE, SECTION_TYPES } from '../constants/sections';
@@ -326,6 +372,49 @@
     const sectionSettings = ref<any>(false);
     const toggleSectionSettings = (event: any) => {
         sectionSettings.value.toggle(event);
+    }
+
+    // Catalogue picker
+    const catalogueDialogVisible = ref(false);
+    const catalogueItems = ref<any[]>([]);
+    const catalogueLoading = ref(false);
+    const catalogueSearch = ref('');
+    const catalogueTargetSectionId = ref<number | null>(null);
+    let catalogueSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function formatCataloguePrice(value: number) {
+        return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+    }
+
+    async function openCataloguePicker(sectionId: number) {
+        catalogueTargetSectionId.value = sectionId;
+        catalogueSearch.value = '';
+        catalogueDialogVisible.value = true;
+        catalogueLoading.value = true;
+        try {
+            catalogueItems.value = (await GetCatalogueItems()) ?? [];
+        } finally {
+            catalogueLoading.value = false;
+        }
+    }
+
+    function onCatalogueSearch() {
+        if (catalogueSearchTimer) clearTimeout(catalogueSearchTimer);
+        catalogueSearchTimer = setTimeout(async () => {
+            catalogueLoading.value = true;
+            try {
+                catalogueItems.value = (await GetCatalogueItems(catalogueSearch.value)) ?? [];
+            } finally {
+                catalogueLoading.value = false;
+            }
+        }, 300);
+    }
+
+    function onCatalogueRowClick(event: { data: any }) {
+        if (catalogueTargetSectionId.value === null) return;
+        proposalStore.addCatalogueItemToSection(catalogueTargetSectionId.value, event.data);
+        toast.add({ severity: 'success', summary: 'Added', detail: `"${event.data.title}" added to section`, life: 3000 });
+        catalogueDialogVisible.value = false;
     }
 
     const proposalSectionOptions = (sectionId: number) => [
@@ -374,6 +463,9 @@
                 },{
                     label: 'Add Comment',
                     command: () => addItemToSection(section.id, PRODUCT_TYPES.COMMENT)
+                },{
+                    label: 'Add from Catalogue',
+                    command: () => openCataloguePicker(section.id)
                 }
             ];
 

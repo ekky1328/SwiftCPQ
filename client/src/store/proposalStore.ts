@@ -352,6 +352,33 @@ export const useProposalStore = defineStore('proposal', () => {
     }
 
     /**
+     * Adds a catalogue item to a section, pre-filling its fields from the catalogue entry.
+     */
+    function addCatalogueItemToSection(sectionId: number, catalogueItem: Record<string, any>) {
+        if (!data.value) throw new Error('Data is not initialized.');
+
+        const section = data.value.sections.find((sec) => sec.id === sectionId);
+        if (!section) throw new Error(`Section with id ${sectionId} not found.`);
+        if (!Array.isArray(section.items)) throw new Error(`Section ${sectionId} does not support items.`);
+
+        const itemToAdd: Item = {
+            ...DEFAULT_ITEM_PRODUCT,
+            id: section.items.length,
+            order: section.items.length + 1,
+            sku: catalogueItem.sku ?? '',
+            title: catalogueItem.title ?? '',
+            description: catalogueItem.description ?? '',
+            cost: catalogueItem.cost ?? 0,
+            price: catalogueItem.price ?? 0,
+            qty: 1,
+            subtotal: catalogueItem.price ?? 0,
+            type: catalogueItem.type ?? 'PRODUCT',
+        };
+
+        section.items.push(itemToAdd);
+    }
+
+    /**
      * Duplicates an item in a section of the proposal.
      * - This will create a copy of the item and insert it after the original item.
      * - The new item will have the same title as the original, with '(Copy)' appended.
@@ -683,6 +710,7 @@ export const useProposalStore = defineStore('proposal', () => {
         
         // Item Functions
         addItemToSection,
+        addCatalogueItemToSection,
         duplicateItem,
         deleteSectionItem,
         recalculateSectionItem,

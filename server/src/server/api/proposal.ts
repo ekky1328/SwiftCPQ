@@ -520,4 +520,57 @@ proposalRouter.delete<{}, MessageResponse>('/:id', async (req, res, next) => {
 });
 
 
+/**
+ * Method: GET
+ * Endpoint: /api/v1/proposal/:id/pdf
+ * - Generates a PDF for the given proposal and streams it back to the client.
+ *   Requires the user to be authenticated (handled by the router-level requireAuth).
+ *   Proxies through the templater service which renders the EJS template via headless browser.
+ */
+proposalRouter.get<{}, MessageResponse>('/:id/pdf', async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+
+    const proposal = await db('proposal').where('id', id).first();
+    if (!proposal) {
+      res.status(404).json({ message: 'Proposal not found' });
+      return;
+    }
+
+    // Get the selected template from tenant settings
+    const settings = await db('tenant_settings')
+      .where('tenant_id', proposal.tenant_id)
+      .first();
+    const templateId = settings?.selected_template || 'default';
+
+    const templaterUrl = process.env.TEMPLATER_URL || 'http://localhost:5005';
+    const serviceToken = process.env.INTERNAL_SERVICE_TOKEN;
+
+    if (!serviceToken) {
+      res.status(500).json({ message: 'Server misconfiguration: INTERNAL_SERVICE_TOKEN not set' });
+      return;
+    }
+
+    const pdfResponse = await fetch(`${templaterUrl}/download/${templateId}/${id}`, {
+      headers: { 'x-service-token': serviceToken },
+    });
+
+    if (!pdfResponse.ok) {
+      const body = await pdfResponse.text();
+      console.error('Templater error:', body);
+      res.status(502).json({ message: 'PDF generation failed' });
+      return;
+    }
+
+    const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="proposal-${id}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 export default proposalRouter;

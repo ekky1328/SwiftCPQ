@@ -7,6 +7,7 @@ import systemRouter from './system';
 import userRouter from './user';
 import customerRouter from './customer';
 import roleRouter from './role';
+import catalogueRouter from './catalogue';
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use('/system', requireAuth, systemRouter);
 router.use('/user', requireAuth, userRouter);
 router.use('/customer', requireAuth, customerRouter);
 router.use('/role', requireAuth, roleRouter);
+router.use('/catalogue', requireAuth, catalogueRouter);
 
 export default router;

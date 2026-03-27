@@ -4,12 +4,14 @@ import { useAuthStore } from '../store/authStore';
 import Login from './Login.vue'
 import ProposalList from './ProposalList.vue'
 import ProposalEditor from './ProposalEditor.vue'
+import Catalogue from './Catalogue.vue'
 import PageNotFound from './PageNotFound.vue'
 
 const routes = [
     { path: '/login', component: Login, meta: { public: true } },
     { path: '/', component: ProposalList },
     { path: '/proposals/:id', component: ProposalEditor },
+    { path: '/catalogue', component: Catalogue },
     { path: '/:pathMatch(.*)*', component: PageNotFound }
 ]
 

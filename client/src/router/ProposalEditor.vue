@@ -194,6 +194,10 @@ const proposalOptions = [
         }
     },
     {
+        label: 'Download PDF',
+        command: () => downloadPdf()
+    },
+    {
         separator: true
     },
     {
@@ -222,6 +226,30 @@ async function triggerSaveProposal() {
   await SaveProposal(payloadCopy);
   proposalStore.resetDraftStatus();
   toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
+}
+
+async function downloadPdf() {
+  try {
+    const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : '';
+    const response = await fetch(`${domain}/api/v1/proposal/${proposalStore.data.id}/pdf`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      toast.add({ severity: 'error', summary: 'PDF Error', detail: 'Failed to generate PDF', life: 4000 });
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${proposalStore.data.identifier || proposalStore.data.id}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    toast.add({ severity: 'error', summary: 'PDF Error', detail: 'An error occurred generating the PDF', life: 4000 });
+  }
 }
 
 // Keyboard Shortcuts

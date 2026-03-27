@@ -12,7 +12,7 @@
         <router-link to="/" v-tooltip="'Home'">
           <span class="pi pi-home" title="Home"></span>
         </router-link>
-        <router-link to="/catalogue" disabled v-tooltip="'Catalogue'">
+        <router-link to="/catalogue" v-tooltip="'Catalogue'">
           <span class="pi pi-database" title="Catalogue"></span>
         </router-link>
       </div>

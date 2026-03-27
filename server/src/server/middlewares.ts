@@ -12,6 +12,13 @@ declare global {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  // Allow internal service-to-service calls via shared token
+  const serviceToken = req.headers['x-service-token'];
+  if (serviceToken && serviceToken === process.env.INTERNAL_SERVICE_TOKEN) {
+    next();
+    return;
+  }
+
   const token = req.cookies?.access_token;
   if (!token) {
     res.status(401).json({ message: 'Unauthorized' });

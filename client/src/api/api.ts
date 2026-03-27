@@ -69,6 +69,68 @@ export async function CreateNewProposal(proposalTemplate: string = 'default') {
     }
 }
 
+// ─── Catalogue ───────────────────────────────────────────────────────────────
+
+export async function GetCatalogueItems(search?: string) {
+    try {
+        const url = search?.trim()
+            ? `/api/v1/catalogue/?search=${encodeURIComponent(search)}`
+            : '/api/v1/catalogue/';
+        const data = await apiFetch(url);
+        return data.json();
+    } catch (error) {
+        console.error(`There was an error with 'GetCatalogueItems'.`);
+        console.error(error);
+        return null;
+    }
+}
+
+export async function CreateCatalogueItem(item: Record<string, unknown>) {
+    try {
+        const response = await apiFetch('/api/v1/catalogue/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item),
+        });
+        if (!response.ok) return null;
+        return response.json();
+    } catch (error) {
+        console.error(`There was an error with 'CreateCatalogueItem'.`);
+        console.error(error);
+        return null;
+    }
+}
+
+export async function UpdateCatalogueItem(id: string, item: Record<string, unknown>) {
+    try {
+        const response = await apiFetch(`/api/v1/catalogue/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item),
+        });
+        if (!response.ok) return null;
+        return response.json();
+    } catch (error) {
+        console.error(`There was an error with 'UpdateCatalogueItem'.`);
+        console.error(error);
+        return null;
+    }
+}
+
+export async function DeleteCatalogueItem(id: string) {
+    try {
+        const response = await apiFetch(`/api/v1/catalogue/${id}`, { method: 'DELETE' });
+        if (!response.ok) return false;
+        return true;
+    } catch (error) {
+        console.error(`There was an error with 'DeleteCatalogueItem'.`);
+        console.error(error);
+        return false;
+    }
+}
+
+// ─── Proposals ───────────────────────────────────────────────────────────────
+
 /**
  * Saves Proposal data via PUT
  */
