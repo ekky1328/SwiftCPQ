@@ -2,6 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 
 import api from './api';
@@ -11,13 +12,19 @@ require('dotenv').config();
 
 const app = express();
 
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+
 // Middlewares
 app.use(morgan('dev'));
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
-app.use(cors());
+app.use(cors({
+  origin: corsOrigin,
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 

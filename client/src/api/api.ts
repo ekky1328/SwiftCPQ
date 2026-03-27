@@ -1,20 +1,29 @@
 
 const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : '';
 
+async function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
+    const res = await fetch(`${domain}${input}`, {
+        ...init,
+        credentials: 'include',
+    });
+
+    if (res.status === 401) {
+        window.location.href = '/login';
+        return Promise.reject(new Error('Unauthorized'));
+    }
+
+    return res;
+}
+
 /**
  * Gets All Proposals
- * @param id 
- * @returns 
  */
 export async function GetProposals() {
     try {
-        const data = await fetch(`${domain}/api/v1/proposal/`);
-        const body = data.json();
-        return body;
-    } 
-    
-    catch (error) {
-        console.error(`There was an error with 'GetProposals'.`)
+        const data = await apiFetch('/api/v1/proposal/');
+        return data.json();
+    } catch (error) {
+        console.error(`There was an error with 'GetProposals'.`);
         console.error(error);
         return null;
     }
@@ -22,39 +31,29 @@ export async function GetProposals() {
 
 /**
  * Gets Proposal data by id
- * @param id 
- * @returns 
  */
 export async function GetProposalById(id: string) {
     try {
-        const data = await fetch(`${domain}/api/v1/proposal/${id}?coreSettings=true`);
+        const data = await apiFetch(`/api/v1/proposal/${id}?coreSettings=true`);
         if (data.status === 500) {
-            throw new Error(await data.text())
+            throw new Error(await data.text());
         }
-
-        const body = data.json();
-        return body;
-    } 
-    
-    catch (error) {
-        console.error(`There was an error with 'GetProposalById'.`)
+        return data.json();
+    } catch (error) {
+        console.error(`There was an error with 'GetProposalById'.`);
         console.error(error);
-        return { error: true, message: `There was an issue getting data for proposal with id '${id}'.`}
+        return { error: true, message: `There was an issue getting data for proposal with id '${id}'.` };
     }
 }
 
 /**
  * Creates Proposal data via POST
- * @param proposalTemplate The proposal template that will be used to create the new proposal
- * @returns The new proposal or null on error
  */
 export async function CreateNewProposal(proposalTemplate: string = 'default') {
     try {
-        const response = await fetch(`${domain}/api/v1/proposal/${proposalTemplate}`, {
+        const response = await apiFetch(`/api/v1/proposal/${proposalTemplate}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+            headers: { 'Content-Type': 'application/json' },
         });
 
         if (!response.ok) {
@@ -62,11 +61,8 @@ export async function CreateNewProposal(proposalTemplate: string = 'default') {
             return null;
         }
 
-        const newProposal = await response.json();
-        return newProposal;
-    } 
-    
-    catch (error) {
+        return response.json();
+    } catch (error) {
         console.error(`There was an error with 'CreateNewProposal'.`);
         console.error(error);
         return null;
@@ -75,19 +71,13 @@ export async function CreateNewProposal(proposalTemplate: string = 'default') {
 
 /**
  * Saves Proposal data via PUT
- * @param proposal The proposal data to be saved
- * @returns The saved proposal or null on error
  */
 export async function SaveProposal(proposal: any) {
     try {
-        const response = await fetch(`${domain}/api/v1/proposal/${proposal.id}`, {
+        const response = await apiFetch(`/api/v1/proposal/${proposal.id}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                payload: proposal
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payload: proposal }),
         });
 
         if (!response.ok) {
@@ -95,8 +85,7 @@ export async function SaveProposal(proposal: any) {
             return null;
         }
 
-        const savedProposal = await response.json();
-        return savedProposal;
+        return response.json();
     } catch (error) {
         console.error(`There was an error with 'SaveProposal'.`);
         console.error(error);
