@@ -1,599 +1,136 @@
 <template>
 
-    <Toast position="top-center" />
-
-    <!-- Catalogue picker dialog -->
-    <Dialog v-model:visible="catalogueDialogVisible" header="Add from Catalogue" modal style="width: 640px">
-      <div class="flex flex-col gap-3 pt-1">
-        <IconField>
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="catalogueSearch" placeholder="Search catalogue..." fluid @input="onCatalogueSearch" />
-        </IconField>
-        <DataTable
-          :value="catalogueItems"
-          :loading="catalogueLoading"
-          size="small"
-          striped-rows
-          selection-mode="single"
-          data-key="id"
-          @row-click="onCatalogueRowClick"
-          style="cursor: pointer"
-        >
-          <template #empty><p class="text-center py-6 text-gray-400">No items found.</p></template>
-          <Column field="sku" header="SKU" style="width: 100px" />
-          <Column field="title" header="Title" />
-          <Column field="price" header="Price" style="width: 110px">
-            <template #body="{ data: row }">{{ formatCataloguePrice(row.price) }}</template>
-          </Column>
-          <Column field="type" header="Type" style="width: 90px">
-            <template #body="{ data: row }">
-              <Tag :value="row.type" :severity="row.type === 'PRODUCT' ? 'info' : 'secondary'" />
-            </template>
-          </Column>
-        </DataTable>
-        <p class="text-xs text-gray-400">Click a row to add it to the section.</p>
-      </div>
-      <template #footer>
-        <Button label="Close" severity="secondary" @click="catalogueDialogVisible = false" />
-      </template>
-    </Dialog>
+    <CataloguePickerDialog />
 
     <div
         @mouseenter="onSectionEnter"
         @mouseleave="onSectionLeave"
     >
-
-        <Card 
-            :key="section.id" 
-            :class="{ 
-                is_table: isTableContent(section.type), 
+        <Card
+            :key="section.id"
+            :class="{
+                is_table: isTableContent(section.type),
                 is_hidden: !sectionVisbility,
                 is_active: sectionIsEntered
             }"
         >
-
             <template #title>
-                <div class="grid grid-cols-[25px_1fr_auto] gap-1 items-center cursor-auto" :id="createSectionId(section)">
-                    <div class="cursor-pointer flex justify-center">
-                        <span v-if="section.isLocked" class="pi pi-lock" v-tooltip.top="`Locked`"></span>
-                        <span v-else-if="SECTION_TYPES.INFO === section.type" class="pi pi-file" v-tooltip.top="`Text`"></span>
-                        <span v-else-if="SECTION_TYPES.TOTALS === section.type" class="pi pi-dollar" v-tooltip.top="`Totals`"></span>
-                        <span v-else-if="SECTION_TYPES.MILESTONES === section.type" class="pi pi-sort-numeric-down" v-tooltip.top="`Milestones`"></span>
-                        <span v-else-if="SECTION_RECURRANCE.ONE_TIME === section.recurrance" class="pi pi-tag" v-tooltip.top="`One Time`"></span>
-                        <span v-else class="pi pi-sync" v-tooltip.top="`${capitalize(section.recurrance)}`"></span>
-                    </div>
-                    <div class="section-header-left">
-                        <span 
-                            v-if="![ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)"
-                        >
-                            {{ section.title }}
-                        </span>
-                        <InputText 
-                            v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" 
-                            placeholder="Section Title" 
-                            class="section-title !px-1 focus:!border-white" 
-                            v-model="section.title" 
-                            size="small" 
-                            fluid 
-                        />
-                    </div>
-                    <div class="section-header-right flex gap-2 justify-between items-center relative">
-                        <SplitButton 
-                            v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES].includes(section.type)" 
-                            label="" 
-                            icon="pi pi-cog" 
-                            size="small" 
-                            :model="sectionProductOptions(section)" 
-                            @click="toggleSectionSettings" 
-                            severity="contrast"
-                        ></SplitButton>
-                        <Popover ref="sectionSettings">
-                            <div class="card p-1 flex flex-col gap-2">
-                                <span class="font-medium block">Section Settings</span>
-                                <template v-if="isProducts(section.type)">
-                                    <div class="flex flex-col">
-                                        <label class="text-sm">Section Recurrance</label>
-                                        <Select 
-                                            v-model="section.recurrance" 
-                                            :options="sectionRecurranceOptions" 
-                                            optionLabel="name" 
-                                            optionValue="value" 
-                                            size="small" 
-                                            placeholder="Select a recurrance type" 
-                                            class="w-full md:w-56" 
-                                            @change="proposalStore.recalculateSectionItem(section.id, section.items[0].id, 'QTY')"
-                                        />
-                                    </div>
-                                    <div class="flex flex-col gap-2 border rounded-md p-2">
-                                        <div class="flex flex-row justify-between items-center">
-                                            <label class="text-sm">Visibility</label>   
-                                            <ToggleSwitch v-model="sectionVisbility" />
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col gap-2 border rounded-md p-2">
-                                        <div class="flex flex-row justify-between">
-                                            <label class="text-sm">Optional</label>
-                                            <ToggleSwitch v-model="section.isOptional" />    
-                                        </div>
-                                        <div class="flex flex-row justify-between">
-                                            <label class="text-sm">Reference Only</label>
-                                            <ToggleSwitch v-model="section.isReference" />  
-                                        </div>
-                                        <div class="flex flex-row justify-between">
-                                            <label class="text-sm">Lock Section</label>
-                                            <ToggleSwitch v-model="section.isLocked" />  
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </Popover>
-                    </div>
-                </div>
+                <SectionHeader
+                    :section="section"
+                    :visibility="sectionVisbility"
+                    :open-catalogue-picker="openCataloguePicker"
+                    @update:visibility="sectionVisbility = $event"
+                />
             </template>
 
             <template #content>
-
-                <!-- Text Sections -->
-                <Editor v-if="sectionVisbility && isInfo(section.type)" v-model="section.description" editor-style="max-height: 750px; overflow-y: auto;"  class="cursor-auto" />
-                
-                <!-- Product Section - Products -->
-                <template v-else-if="sectionVisbility && isProducts(section.type)">
-                    <table class="table-auto w-full border-collapse border border-gray-300 cursor-auto">
-                        <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
-                        <tr>
-                            <th class="p-2 border border-gray-300 text-center w-10"></th>
-                            <th class="p-2 border border-gray-300">SKU</th>
-                            <th class="p-2 border border-gray-300">Title</th>
-                            <th class="p-2 product qty border border-gray-300 text-right w-20">Qty</th>
-                            <th class="p-2 product currency border border-gray-300 text-right">Cost</th>
-                            <th class="p-2 product currency border border-gray-300 text-right">Price</th>
-                            <th class="p-2 product currency border border-gray-300 text-right">Margin</th>
-                            <th class="p-2 product currency border border-gray-300 text-right">Subtotal</th>
-                        </tr>
-                        </thead>
-                        <Draggable 
-                            tag="tbody" 
-                            v-model="section.items" 
-                            v-bind="dragOptions"  
-                            handle=".handle" 
-                            item-key="id" 
-                            :animation="200"
-                        >
-                            <template #item="{ element: item }">
-                                <tr class="product-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
-
-                                    <td colspan="1" class="product p-2 border border-gray-300 text-center text-gray-500 w-10" :class="{ 'bg-gray-200': isComment(item) }" title="Drag to reorder">
-                                        <span class="inline-block handle cursor-move">⋮⋮</span>
-                                        <div class="product-shortcuts">
-                                            <span class="product-shortcut delete pi pi-trash" title="Delete item" @click="proposalStore.deleteSectionItem(section.id, item.id)"></span>
-                                            <span class="product-shortcut pi pi-clone" title="Duplicate item" @click="proposalStore.duplicateItem(section.id, item)"></span>
-                                        </div>
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product sku p-2 border border-gray-300">
-                                        <InputText placeholder="Product SKU" v-model="item.sku" size="small" fluid />
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product title p-2 border border-gray-300">
-                                        <InputText placeholder="Product Title" v-model="item.title" inputClass="w-full title" size="small" fluid />
-
-                                        <Inplace :active="item.description.trim() !== ''">
-                                            <template #display>
-                                                <a>Edit Description</a>
-                                            </template>
-                                            <template #content="{ closeCallback }">
-                                                <Editor placeholder="Description..." v-model="item.description" class="mt-2 description" editor-style="max-height: 500px; overflow-y: auto;" />
-                                                <a class="description-close" @click="closeCallback">Close Description</a>
-                                            </template>
-                                        </Inplace>
-
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product qty p-2 border border-gray-300 text-right">
-                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'QTY')" v-model="item.qty" inputClass="text-right" size="small" fluid />
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'COST')" v-model="item.cost" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'PRICE')" v-model="item.price" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'MARGIN')" v-model="item.margin" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                    </td>
-                                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL')" v-model="item.subtotal" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                    </td>
-
-                                    <td v-if="isComment(item)" class="product-comment border border-gray-300 bg-gray-200 text-left" colspan="7">
-                                        <Editor placeholder="Description..." v-model="item.description" />
-                                    </td>
-                                </tr>
-                            </template>
-                            <template #footer>
-
-                                <tr v-if="section.items && section.items.length === 0">
-                                    <td colspan="7">
-                                        <div class="grid place-content-center text-center py-12 w-full">
-                                            <h3>No products</h3>
-                                            <div class="flex gap-2 pt-2">
-                                                <Button label="Add Product" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)"/>
-                                                <Button label="Add Comment" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.COMMENT)"/>
-                                                <Button label="Add from Catalogue" size="small" severity="secondary" icon="pi pi-database" @click="openCataloguePicker(section.id)"/>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <tr v-if="section._totals">
-                                    <td class="p-2 bg-gray-200" colspan="4"></td>
-                                    <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Cost Total'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.cost) }}
-                                    </td>
-                                    <td class="p-2 pr-3 text-right w-25 bg-gray-200">
-                                        
-                                    </td>
-                                    <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.margin) }}
-                                    </td>
-                                    <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.total) }}
-                                    </td>
-                                </tr>
-
-                            </template>
-                        </Draggable>
-                    </table>
-                </template>
-
-                <!-- Totals Section -->
-                <!-- <template v-else-if="sectionVisbility && isTotals(section.type)"> -->
-                <template v-else-if="false && isTotals(section.type)">
-                </template>
-
-                <!-- Milestones Section -->
-                <template v-else-if="sectionVisbility && isMilestones(section.type)">
-                    <table class="w-full border-collapse border border-gray-300 cursor-auto">
-                        <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
-                            <tr>
-                                <th class="p-2 border border-gray-300 text-center w-10"></th>
-                                <th class="p-2 border border-gray-300">Milestone Details</th>
-                                <th class="p-2 border border-gray-300 text-right">Amount</th>
-                            </tr>
-                        </thead>
-                        <Draggable 
-                            tag="tbody" 
-                            v-model="section.milestones" 
-                            v-bind="dragOptions"  
-                            handle=".handle" 
-                            item-key="id" 
-                            :animation="200"
-                        >
-                            <template #item="{ element: milestone }">
-                                <tr class="milestone-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
-                                    <td class="p-2 border border-gray-300 text-center text-gray-500 w-10 align-top">
-                                        <span class="inline-block handle cursor-move">⋮⋮</span>
-                                        <div class="milestone-shortcuts">
-                                            <span class="milestone-shortcut delete pi pi-trash" title="Delete milestone" @click="proposalStore.deleteSectionMilestone(section.id, milestone.id)"></span>
-                                            <span class="milestone-shortcut pi pi-clone" title="Duplicate milestone" @click="proposalStore.duplicateMilestone(section.id, milestone)"></span>
-                                        </div>
-                                    </td>
-                                    <td class="p-2 border border-gray-300">
-                                        <InputText placeholder="Milestone Title" v-model="milestone.title" inputClass="w-full title" size="small" fluid />
-                                        <Editor placeholder="Description..." v-model="milestone.description" class="mt-2 description" editor-style="height: 150px; max-height: 500px; overflow-y: auto;" />
-                                    </td>
-                                    <td class="p-2 border border-gray-300 text-right align-top">
-                                        <InputNumber @value-change="proposalStore.recalculateMilestones(section.id, section)" v-model="milestone.amount" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                                    </td>
-                                </tr>
-                            </template>
-                            <template #footer>
-                            <tr>
-                                <td class="p-2 bg-gray-200" colspan="1"></td>
-                                <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" :class="{ 'text-red-500' : section._milestone_totals.remaining < 0 }">
-                                    <span v-tooltip.top="'Unallocated'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._milestone_totals.remaining) }}
-                                    </span>
-                                </td>
-                                <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200">
-                                    <span v-tooltip.top="'Allocated'">
-                                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._milestone_totals.allocated) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </template>
-                        </Draggable>
-                    </table>
-                    <div v-if="section.milestones && section.milestones.length === 0" class="grid place-content-center p-24">
-                        <h3>No milestones...</h3>
-                    </div>
-                </template>
-
+                <component
+                    v-if="sectionVisbility && SECTION_COMPONENT_MAP[section.type]"
+                    :is="SECTION_COMPONENT_MAP[section.type]"
+                    :section="section"
+                    :open-catalogue-picker="openCataloguePicker"
+                />
             </template>
         </Card>
 
         <div v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" class="add-section-container mt-4 w-full flex justify-center items-center relative">
             <SpeedDial :model="proposalSectionOptions(section.id)" direction="right" :style="{ position: 'absolute', top: '-7px' }" />
         </div>
-        
+
     </div>
 
 </template>
 
 <script setup lang="ts">
-    /* eslint-disable vue/no-use-v-if-with-v-for */
-    import { onMounted, ref } from 'vue';
-    import Draggable from "vuedraggable";
-    import { useToast } from 'primevue/usetoast';
-    import { capitalize } from 'lodash';
-    
-    import Toast from 'primevue/toast';
-    import Button from 'primevue/button';
-    import Select from 'primevue/select';
-    import ToggleSwitch from 'primevue/toggleswitch';
-    import Card from 'primevue/card';
-    import InputNumber from 'primevue/inputnumber';
-    import InputText from 'primevue/inputtext';
-    import Editor from 'primevue/editor';
-    import SpeedDial from 'primevue/speeddial';
-    import SplitButton from 'primevue/splitbutton';
-    import Inplace from 'primevue/inplace';
-    import Popover from 'primevue/popover';
-    import Dialog from 'primevue/dialog';
-    import DataTable from 'primevue/datatable';
-    import Column from 'primevue/column';
-    import Tag from 'primevue/tag';
-    import IconField from 'primevue/iconfield';
-    import InputIcon from 'primevue/inputicon';
+import { ref, provide } from 'vue';
+import type { Component } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import Card from 'primevue/card';
+import SpeedDial from 'primevue/speeddial';
 
-    import { GetCatalogueItems } from '../api/api';
-    
-    import { useProposalStore } from '../store/proposalStore';
-    import { SECTION_RECURRANCE, SECTION_TYPES } from '../constants/sections';
-    import { PRODUCT_TYPES } from '../constants/products';
-    import { Item, Section } from '../types/Proposal';
+import { useProposalStore } from '../store/proposalStore';
+import { SECTION_TYPES } from '../constants/sections';
+import { isTableContent } from '../composables/useSectionTypeChecks';
+import { useCataloguePicker } from '../composables/useCataloguePicker';
 
-    const toast = useToast();
-    
-    const proposalStore = useProposalStore();
+import CataloguePickerDialog from './CataloguePickerDialog.vue';
+import SectionHeader from './SectionHeader.vue';
+import SectionInfoEditor from './SectionInfoEditor.vue';
+import SectionProductsTable from './SectionProductsTable.vue';
+import SectionMilestonesTable from './SectionMilestonesTable.vue';
 
-    const { data : section } = defineProps(['data'])
+const SECTION_COMPONENT_MAP: Record<string, Component> = {
+    [SECTION_TYPES.PRODUCTS]: SectionProductsTable,
+    [SECTION_TYPES.MILESTONES]: SectionMilestonesTable,
+    [SECTION_TYPES.INFO]: SectionInfoEditor,
+    [SECTION_TYPES.COVER_LETTER]: SectionInfoEditor,
+    [SECTION_TYPES.TERMS_AND_CONDITIONS]: SectionInfoEditor,
+};
 
-    const sectionRecurranceOptions = ref([
-        { name: 'One Time', value: 'ONE_TIME' },
-        { name: 'Daily', value: 'DAILY' },
-        { name: 'Weekly', value: 'WEEKLY' },
-        { name: 'Monthly', value: 'MONTHLY' },
-        { name: 'Yearly', value: 'YEARLY' }
-    ]);
+const toast = useToast();
+const proposalStore = useProposalStore();
 
-    // Custom
-    const sectionIsEntered = ref<boolean>(false);
-    const sectionVisbility = ref<boolean>(true);
+const { data: section } = defineProps(['data']);
 
-    // PrimeVue
-    const sectionSettings = ref<any>(false);
-    const toggleSectionSettings = (event: any) => {
-        sectionSettings.value.toggle(event);
-    }
+const sectionIsEntered = ref<boolean>(false);
+const sectionVisbility = ref<boolean>(true);
 
-    // Catalogue picker
-    const catalogueDialogVisible = ref(false);
-    const catalogueItems = ref<any[]>([]);
-    const catalogueLoading = ref(false);
-    const catalogueSearch = ref('');
-    const catalogueTargetSectionId = ref<number | null>(null);
-    let catalogueSearchTimer: ReturnType<typeof setTimeout> | null = null;
+const {
+    catalogueDialogVisible,
+    catalogueItems,
+    catalogueLoading,
+    catalogueSearch,
+    openCataloguePicker,
+    onCatalogueSearch,
+    onCatalogueRowClick,
+    formatCataloguePrice,
+} = useCataloguePicker();
 
-    function formatCataloguePrice(value: number) {
-        return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
-    }
+provide('catalogueDialogVisible', catalogueDialogVisible);
+provide('catalogueItems', catalogueItems);
+provide('catalogueLoading', catalogueLoading);
+provide('catalogueSearch', catalogueSearch);
+provide('onCatalogueSearch', onCatalogueSearch);
+provide('onCatalogueRowClick', onCatalogueRowClick);
+provide('formatCataloguePrice', formatCataloguePrice);
 
-    async function openCataloguePicker(sectionId: number) {
-        catalogueTargetSectionId.value = sectionId;
-        catalogueSearch.value = '';
-        catalogueDialogVisible.value = true;
-        catalogueLoading.value = true;
-        try {
-            catalogueItems.value = (await GetCatalogueItems()) ?? [];
-        } finally {
-            catalogueLoading.value = false;
+const proposalSectionOptions = (sectionId: number) => [
+    {
+        label: 'Products',
+        icon: 'pi pi-box',
+        command: () => {
+            proposalStore.addSectionToProposal(sectionId, 'PRODUCT');
+            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new products section to proposal', life: 3000 });
+        }
+    },
+    {
+        label: 'Info',
+        icon: 'pi pi-pen-to-square',
+        command: () => {
+            proposalStore.addSectionToProposal(sectionId, 'INFO');
+            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
+        }
+    },
+    {
+        label: 'Totals',
+        icon: 'pi pi-dollar',
+        command: () => {
+            proposalStore.addSectionToProposal(sectionId, 'INFO');
+            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
+        }
+    },
+    {
+        label: 'Milestones',
+        icon: 'pi pi-sort-numeric-down',
+        command: () => {
+            proposalStore.addSectionToProposal(sectionId, 'INFO');
+            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
         }
     }
+];
 
-    function onCatalogueSearch() {
-        if (catalogueSearchTimer) clearTimeout(catalogueSearchTimer);
-        catalogueSearchTimer = setTimeout(async () => {
-            catalogueLoading.value = true;
-            try {
-                catalogueItems.value = (await GetCatalogueItems(catalogueSearch.value)) ?? [];
-            } finally {
-                catalogueLoading.value = false;
-            }
-        }, 300);
-    }
-
-    function onCatalogueRowClick(event: { data: any }) {
-        if (catalogueTargetSectionId.value === null) return;
-        proposalStore.addCatalogueItemToSection(catalogueTargetSectionId.value, event.data);
-        toast.add({ severity: 'success', summary: 'Added', detail: `"${event.data.title}" added to section`, life: 3000 });
-        catalogueDialogVisible.value = false;
-    }
-
-    const proposalSectionOptions = (sectionId: number) => [
-        {
-            label: 'Products',
-            icon: 'pi pi-box',
-            command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'PRODUCT');
-                toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new products section to proposal', life: 3000 });
-            }
-        },
-        {
-            label: 'Info',
-            icon: 'pi pi-pen-to-square',
-            command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'INFO');
-                toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
-            }
-        },
-        {
-            label: 'Totals',
-            icon: 'pi pi-dollar',
-            command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'INFO');
-                toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
-            }
-        },
-        {
-            label: 'Milestones',
-            icon: 'pi pi-sort-numeric-down',
-            command: () => {
-                proposalStore.addSectionToProposal(sectionId, 'INFO');
-                toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
-            }
-        }
-    ]
-
-    const sectionProductOptions = (section : Section) => {
-
-        let options = [] as any;
-        if (section.type === SECTION_TYPES.PRODUCTS) {
-            const product_options = [
-                {
-                    label: 'Add Product',
-                    command: () => addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)
-                },{
-                    label: 'Add Comment',
-                    command: () => addItemToSection(section.id, PRODUCT_TYPES.COMMENT)
-                },{
-                    label: 'Add from Catalogue',
-                    command: () => openCataloguePicker(section.id)
-                }
-            ];
-
-            options = [ ...options, ...product_options ];  
-        }
-
-        if (section.type === SECTION_TYPES.MILESTONES) {
-            const milestone_options = [
-                {
-                    label: 'Add Milestone',
-                    command: () => addMilestoneToSection(section.id)
-                }
-            ];
-
-            options = [ ...milestone_options ]; 
-        }
-
-
-        let default_options = [{
-                label: 'Duplicate',
-                command: () => {
-                    proposalStore.duplicateSection(section);
-                    toast.add({ severity: 'success', summary: 'Duplicated Section', detail: 'Section has been duplicated', life: 3000 });
-                }
-            },
-            {
-                separator: true
-            },
-            {
-                label: 'Delete',
-                command: () => {
-                    proposalStore.deleteSection(section.id);
-                    toast.add({ severity: 'error', summary: 'Deleted Section', detail: 'Section has been deleted', life: 5000 });
-                }
-        }];
-
-        options = [ ...options, ...default_options]; 
-
-        return options;
-    }
-
-    const dragOptions = {
-        animation: 200,
-        group: "description",
-        disabled: false,
-        ghostClass: "ghost"
-    };
-
-    // Section Actions
-    function addItemToSection(sectionId: number, itemType: string) {
-        proposalStore.addItemToSection(sectionId, itemType);
-        switch (itemType) {
-            case PRODUCT_TYPES.PRODUCT:
-                toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added product to section', life: 3000 });
-                break;
-
-            case PRODUCT_TYPES.COMMENT:
-                toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added comment to section', life: 3000 });
-                break;
-            default:
-                break;
-        }
-    }
-
-    function addMilestoneToSection(sectionId: number) {
-        proposalStore.addMilestoneToSection(sectionId);
-        toast.add({ severity: 'success', summary: 'Added Milestone', detail: 'Added milestone to section', life: 3000 });
-        return;
-    }
-
-    function onSectionEnter() {
-      sectionIsEntered.value = true;
-    }
-
-    function onSectionLeave() {
-      sectionIsEntered.value = false;
-    }
-
-    // Section Type Comparisons
-    function isTableContent(e_type: string) {
-        switch(e_type) {
-            case SECTION_TYPES.PRODUCTS:
-            case SECTION_TYPES.MILESTONES:
-                return true
-            default:
-                return false
-        }
-    }
-
-    function isInfo(e_type: string) {
-        return [ SECTION_TYPES.INFO, SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS ].includes(e_type)
-    };
-
-    function isProducts(e_type: string) {
-        return e_type === SECTION_TYPES.PRODUCTS
-    };
-
-    function isTotals(e_type: string) {
-        return e_type === SECTION_TYPES.TOTALS
-    };
-
-    function isMilestones(e_type: string) {
-        return e_type === SECTION_TYPES.MILESTONES;
-    }
-    
-    // Product Type Comparisons
-    function isComment(item: Item) {
-        return item.type === PRODUCT_TYPES.COMMENT
-    };
-
-    function createSectionId(section: Section) {
-        return [SECTION_TYPES.COVER_LETTER, SECTION_TYPES.TERMS_AND_CONDITIONS].includes(section.type) ? `${section.type.toLowerCase()}` : `section_${section.id}`;
-    }
-
-    onMounted(() => {
-        if (section.items) {
-            for (let i = 0; i < section.items.length; i++) {
-                const item = section.items[i];
-                if (!item.margin) {
-                    item.margin = item.price - item.cost;
-                }
-
-                if (!item.subtotal) {
-                    item.subtotal = item.price * item.qty;
-                }
-            }
-        }
-    });
+function onSectionEnter() { sectionIsEntered.value = true; }
+function onSectionLeave() { sectionIsEntered.value = false; }
 </script>
 
 <style>
@@ -604,21 +141,6 @@
     .add-section-container:hover {
         opacity: 1;
         transition: all 500ms;
-    }
-
-    .add-section {
-        position: relative;
-        height: 25px;
-        width: 25px;
-        text-align: center;
-        background-color: black;
-    }
-
-    .add-section span {
-        color: white;
-        position: absolute;
-        top: 6px;
-        left: 5.5px;
     }
 
     .section-header-left {
@@ -637,7 +159,7 @@
         color: white;
         box-shadow: none;
     }
-    
+
     .section-header-left input.section-title:hover {
         border-color: #ffffff;
     }
@@ -647,22 +169,6 @@
         padding: 0;
         color: #083e69;
         background-color: #ffffff;
-    }
-
-    /* Prime Vue */
-    .product-comment .p-editor-toolbar.ql-toolbar,
-    .product .description .p-editor-toolbar.ql-toolbar {
-        display: none !important;
-    }
-
-    .product .description .p-editor-content {
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 6px !important;
-        overflow: hidden;
-    }
-
-    .product-comment .ql-editor {
-        background: #e5e7eb !important;;
     }
 
     .add-section-container .p-speeddial-open .p-speeddial-list {
@@ -685,112 +191,10 @@
         border-color: black !important;
     }
 
-    .product.title .p-inplace-content {
-        position: relative;
-    }
-
-    .product.title .p-inplace-display {
-        opacity: 0.5;
-        background: none;
-        padding: 0;
-        font-size: 12px;
-        text-decoration: underline;
-    }
-
-    .product.title .p-inplace-display:hover {
-        opacity: 1;
-    }
-    
-    /* Product Styling */
-    .product {
-        vertical-align: top;
-    }
-
-    .product.handle {
-        max-width: 12px;
-    }
-
-    .product.sku {
-        width: 150px;
-        max-width: 200px;
-    }
-
-    .product.title {
-        max-width: auto;
-    }
-
-    .product.qty {
-        width: 75px;
-    }
-
-    .product.currency {
-        width: 125px;
-    }
-
-    .product-comment textarea {
-        height: fit-content;
-    }
-
-    .product-row .product-shortcuts,
-    .milestone-row .milestone-shortcuts {
-        visibility: hidden;
-
-        cursor: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        position: absolute;
-        top: 0;
-        padding-left: 8px !important;
-        right: -42px;
-        height: 100%;
-    }
-
-    .product-shortcuts:hover,
-    .product-row:hover .product-shortcuts,
-    .milestone-shortcuts:hover,
-    .milestone-row:hover .milestone-shortcuts {
-        visibility: visible;
-    }
-
-    .product-row .product-shortcut,
-    .milestone-row .milestone-shortcut {
-        padding: 8px;
-        background: white;
-        border: 2px solid #cdcdcd;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 200ms;
-    }
-
-    .product-shortcuts .product-shortcut:hover,
-    .milestone-shortcuts .milestone-shortcut:hover {
-        border-color: black;
-        background-color: black;
-        color: white;
-    }
-
-    .product-shortcuts .product-shortcut.delete:hover,
-    .milestone-shortcuts .milestone-shortcut.delete:hover {
-        border-color: rgb(143, 0, 0);
-        background-color: rgb(143, 0, 0);
-    }
-
-    .product.title .description-close {
-        opacity: 0.5;
-        font-size: 12px;
-        text-decoration: underline;
-        background: white;
-    }
-
-    .product.title .description-close:hover {
-        opacity: 1;
-    }
-    
     /* Vue Draggable */
-    .reorder {
-        width: 15px;
-        padding-right: 4px !important;
+    .ghost {
+        opacity: 0.25;
+        background: #c8ebfb;
     }
 
     .flip-list-move {
@@ -799,11 +203,6 @@
 
     .no-move {
         transition: transform 0s;
-    }
-
-    .ghost {
-        opacity: 0.25;
-        background: #c8ebfb;
     }
 
     /* Smooth Scroll */

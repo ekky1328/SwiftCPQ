@@ -1,6 +1,8 @@
 <template>
   <div id="proposal-editor" v-if="proposalStore.data !== null">
 
+    <Toast position="top-center" />
+
     <!-- Version History Dialog -->
     <Dialog
       v-model:visible="showVersionHistory"
