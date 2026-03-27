@@ -132,6 +132,51 @@ export async function DeleteCatalogueItem(id: string) {
 // ─── Proposals ───────────────────────────────────────────────────────────────
 
 /**
+ * Gets the full snapshot for a single version, transformed to API format.
+ */
+export async function GetProposalVersion(proposalId: string, versionId: string) {
+    try {
+        const data = await apiFetch(`/api/v1/proposal/${proposalId}/versions/${versionId}`);
+        return data.json();
+    } catch (error) {
+        console.error(`There was an error with 'GetProposalVersion'.`);
+        console.error(error);
+        return null;
+    }
+}
+
+/**
+ * Gets the version history list for a proposal (metadata only, no snapshots).
+ */
+export async function GetProposalVersions(proposalId: string) {
+    try {
+        const data = await apiFetch(`/api/v1/proposal/${proposalId}/versions`);
+        return data.json();
+    } catch (error) {
+        console.error(`There was an error with 'GetProposalVersions'.`);
+        console.error(error);
+        return null;
+    }
+}
+
+/**
+ * Reverts a proposal to a previously saved version.
+ */
+export async function RevertProposalVersion(proposalId: string, versionId: string) {
+    try {
+        const response = await apiFetch(`/api/v1/proposal/${proposalId}/revert/${versionId}`, {
+            method: 'POST',
+        });
+        if (!response.ok) return null;
+        return response.json();
+    } catch (error) {
+        console.error(`There was an error with 'RevertProposalVersion'.`);
+        console.error(error);
+        return null;
+    }
+}
+
+/**
  * Saves Proposal data via PUT
  */
 export async function SaveProposal(proposal: any) {

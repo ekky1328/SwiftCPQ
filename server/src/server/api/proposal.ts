@@ -421,9 +421,29 @@ proposalRouter.put<{}, MessageResponse>('/:id', async (req, res, next) => {
 
     const tenantId = existing.tenant_id;
 
-    // Update the proposal record
+    // Snapshot the current state before overwriting
+    const currentSections = await db('proposal_section').where('proposal_id', id).orderBy('order');
+    const snapshotSections = [];
+    for (const sec of currentSections) {
+      const items = await db('proposal_section_item').where('section_id', sec.id).orderBy('order');
+      const milestones = await db('proposal_section_milestone').where('section_id', sec.id).orderBy('order');
+      snapshotSections.push({ ...sec, items, milestones });
+    }
+    await db('proposal_version').insert({
+      proposal_id: id,
+      tenant_id: tenantId,
+      version: existing.version,
+      snapshot: JSON.stringify({
+        title: existing.title,
+        description: existing.description,
+        status: existing.status,
+        sections: snapshotSections,
+      }),
+    });
+
+    // Update the proposal record — version is auto-incremented server-side
     await db('proposal').where('id', id).update({
-      version: payload.version,
+      version: existing.version + 1,
       identifier: payload.identifier,
       title: payload.title,
       description: payload.description,
@@ -567,6 +587,202 @@ proposalRouter.get<{}, MessageResponse>('/:id/pdf', async (req, res, next) => {
     res.setHeader('Content-Disposition', `attachment; filename="proposal-${id}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length);
     res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Method: GET
+ * Endpoint: /api/v1/proposal/:id/versions/:versionId
+ * - Returns the full snapshot of a single version, transformed to the standard API format.
+ */
+proposalRouter.get<{}, MessageResponse>('/:id/versions/:versionId', async (req, res, next) => {
+  try {
+    const { id, versionId } = req.params as { id: string; versionId: string };
+
+    const versionRow = await db('proposal_version')
+      .where('id', versionId)
+      .where('proposal_id', id)
+      .first();
+
+    if (!versionRow) {
+      res.status(404).json({ message: 'Version not found' });
+      return;
+    }
+
+    const snapshot = typeof versionRow.snapshot === 'string'
+      ? JSON.parse(versionRow.snapshot)
+      : versionRow.snapshot;
+
+    const sections = (snapshot.sections || []).map((sec: Record<string, unknown>) => ({
+      ...mapSectionFromDb(sec),
+      items: ((sec.items as Record<string, unknown>[]) || []).map(mapItemFromDb),
+      milestones: ((sec.milestones as Record<string, unknown>[]) || []).map(mapMilestoneFromDb),
+    }));
+
+    res.json({
+      id: versionRow.id,
+      version: versionRow.version,
+      createdOnDate: versionRow.created_on_date,
+      title: snapshot.title,
+      description: snapshot.description,
+      status: snapshot.status,
+      sections,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Method: GET
+ * Endpoint: /api/v1/proposal/:id/versions
+ * - Returns metadata for all saved versions of a proposal, newest first.
+ */
+proposalRouter.get<{}, MessageResponse>('/:id/versions', async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+
+    const existing = await db('proposal').where('id', id).first();
+    if (!existing) {
+      res.status(404).json({ message: 'Proposal not found' });
+      return;
+    }
+
+    const versions = await db('proposal_version')
+      .where('proposal_id', id)
+      .select('id', 'version', 'created_on_date')
+      .orderBy('version', 'desc');
+
+    res.json(versions.map((v: Record<string, unknown>) => ({
+      id: v.id,
+      version: v.version,
+      createdOnDate: v.created_on_date,
+    })));
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Method: POST
+ * Endpoint: /api/v1/proposal/:id/revert/:versionId
+ * - Restores a proposal to a previously snapshotted version.
+ *   Snapshots the current state first so the revert itself is undoable.
+ */
+proposalRouter.post<{}, MessageResponse>('/:id/revert/:versionId', async (req, res, next) => {
+  try {
+    const { id, versionId } = req.params as { id: string; versionId: string };
+
+    const existing = await db('proposal').where('id', id).first();
+    if (!existing) {
+      res.status(404).json({ message: 'Proposal not found' });
+      return;
+    }
+
+    const versionRow = await db('proposal_version')
+      .where('id', versionId)
+      .where('proposal_id', id)
+      .first();
+    if (!versionRow) {
+      res.status(404).json({ message: 'Version not found' });
+      return;
+    }
+
+    const tenantId = existing.tenant_id;
+
+    // Snapshot current state so the revert is undoable
+    const currentSections = await db('proposal_section').where('proposal_id', id).orderBy('order');
+    const snapshotSections = [];
+    for (const sec of currentSections) {
+      const items = await db('proposal_section_item').where('section_id', sec.id).orderBy('order');
+      const milestones = await db('proposal_section_milestone').where('section_id', sec.id).orderBy('order');
+      snapshotSections.push({ ...sec, items, milestones });
+    }
+    await db('proposal_version').insert({
+      proposal_id: id,
+      tenant_id: tenantId,
+      version: existing.version,
+      snapshot: JSON.stringify({
+        title: existing.title,
+        description: existing.description,
+        status: existing.status,
+        sections: snapshotSections,
+      }),
+    });
+
+    // Parse snapshot (Postgres may return it already as an object)
+    const snapshot = typeof versionRow.snapshot === 'string'
+      ? JSON.parse(versionRow.snapshot)
+      : versionRow.snapshot;
+
+    // Restore proposal fields
+    await db('proposal').where('id', id).update({
+      version: existing.version + 1,
+      title: snapshot.title,
+      description: snapshot.description,
+      status: snapshot.status,
+    });
+
+    // Restore sections, items, milestones from snapshot
+    await db('proposal_section').where('proposal_id', id).del();
+
+    for (const sectionData of snapshot.sections) {
+      const [{ id: sectionId }] = await db('proposal_section').insert({
+        tenant_id: tenantId,
+        proposal_id: id,
+        title: sectionData.title,
+        type: sectionData.type,
+        order: sectionData.order,
+        recurrence: sectionData.recurrence || null,
+        description: sectionData.description || '',
+        is_optional: sectionData.is_optional || false,
+        is_locked: sectionData.is_locked || false,
+        is_reference: sectionData.is_reference || false,
+        block_removal: sectionData.block_removal || false,
+      }).returning('id');
+
+      if (sectionData.items?.length > 0) {
+        await db('proposal_section_item').insert(
+          sectionData.items.map((item: Record<string, unknown>) => ({
+            tenant_id: tenantId,
+            section_id: sectionId,
+            order: item.order,
+            sku: item.sku || null,
+            title: item.title || '',
+            description: item.description || '',
+            qty: item.qty || 0,
+            cost: item.cost || 0,
+            price: item.price || 0,
+            margin: item.margin || 0,
+            subtotal: item.subtotal || 0,
+            type: item.type || 'PRODUCT',
+            is_optional: item.is_optional || false,
+          })),
+        );
+      }
+
+      if (sectionData.milestones?.length > 0) {
+        await db('proposal_section_milestone').insert(
+          sectionData.milestones.map((ms: Record<string, unknown>) => ({
+            tenant_id: tenantId,
+            section_id: sectionId,
+            title: ms.title || '',
+            description: ms.description || '',
+            order: ms.order,
+            due_date: ms.due_date || null,
+            amount: ms.amount || 0,
+          })),
+        );
+      }
+    }
+
+    const updatedProposal = await fetchProposalById(id);
+    res.json(updatedProposal as Proposal);
   } catch (err) {
     next(err);
   }

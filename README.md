@@ -4,9 +4,9 @@ SwiftCPQ is an open-source proposal and quote generator designed to streamline t
 
 ---
 
-## 🎉 Features
+## Features
 
-### 🔵 MVP Release
+### MVP Release
 - **Intuitive Editor**  
   Create stunning, professional quotes effortlessly with an editor that's as simple as it is powerful. Built with a battle-tested UX, our editor ensures you can craft polished proposals quickly, with no learning curve. Impress clients with every quote, all while saving time.
 
@@ -25,7 +25,7 @@ SwiftCPQ is an open-source proposal and quote generator designed to streamline t
 - **PDF Templates**  
   Generate stunning PDF proposals with ease, choosing from designed standard templates or creating fully customized ones that reflect your brand identity. Whether you need a quick quote or a fully branded proposal, our flexible PDF templates have you covered.
 
-### 🟡 Roadmapped Features
+### Roadmapped Features
 - **Quote Approval Workflow**  
   An approval process for quotes, ensuring that sales managers or technical staff can review and approve proposals before they are sent to clients for enhanced accuracy and consistency.
 
@@ -68,7 +68,7 @@ I'm focused on building MVP Release features first, so we have solid groundwork 
 
 ---
 
-## 💁🏾‍♂️ Contributing
+## Contributing
 
 If you're a developer, and you would like to help move the project forward, you're welcome to contribute!
 
@@ -90,7 +90,7 @@ If you're a developer, and you would like to help move the project forward, you'
 
 5. Open a Pull Request detailing your changes.
 
-## 🛠️ Development Environment
+## Development Environment
 
 **Prerequisites:** Node.js v20+, PostgreSQL 15+, Git
 
@@ -112,13 +112,15 @@ cd templater && cp .env.sample .env
 npm install && npm run dev         # → http://localhost:5005
 ```
 
-See [docs/development.md](docs/development.md) for full setup instructions, [docs/deployment.md](docs/deployment.md) for self-hosted/VM deployment, and [docs/deployment-azure.md](docs/deployment-azure.md) for Azure deployment.
+## Deployment
 
-## 📜 License
+See [docs/development.md](docs/development.md) for full setup instructions for self-hosted/VM deployment, and [docs/deployment-azure.md](docs/deployment-azure.md) for Azure deployment.
+
+## License
 
 SwiftCPQ is licensed under the AGPL-3.0 License. See the [LICENSE](LICENSE) file for more information.
 
-## ✉️ Contact
+## Contact
 
 **For questions or support**
 - Please open an issue in this repository.

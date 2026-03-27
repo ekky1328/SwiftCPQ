@@ -1,6 +1,81 @@
 <template>
   <div id="proposal-editor" v-if="proposalStore.data !== null">
 
+    <!-- Version History Dialog -->
+    <Dialog
+      v-model:visible="showVersionHistory"
+      :header="previewVersion ? `v${previewVersion.version} — ${new Date(previewVersion.createdOnDate).toLocaleString()}` : 'Version History'"
+      :style="{ width: '620px' }"
+      modal
+      @hide="previewVersion = null"
+    >
+      <!-- List view -->
+      <template v-if="!previewVersion">
+        <p v-if="versions.length === 0" class="text-gray-500 text-sm">No saved versions yet. Versions are created each time you save.</p>
+        <DataTable v-else :value="versions" size="small">
+          <Column field="version" header="Version" style="width: 80px">
+            <template #body="{ data }">
+              <span class="font-mono">v{{ data.version }}</span>
+            </template>
+          </Column>
+          <Column field="createdOnDate" header="Saved At">
+            <template #body="{ data }">
+              {{ new Date(data.createdOnDate).toLocaleString() }}
+            </template>
+          </Column>
+          <Column header="" style="width: 150px">
+            <template #body="{ data }">
+              <div class="flex gap-1">
+                <Button label="View" size="small" severity="secondary" :loading="previewLoading === data.id" @click="loadPreview(data)" />
+                <Button label="Restore" size="small" severity="warn" @click="confirmRevert(data)" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+
+      <!-- Preview view -->
+      <template v-else>
+        <div class="flex items-center gap-2 mb-4">
+          <Button icon="pi pi-arrow-left" label="Back to list" text size="small" @click="previewVersion = null" />
+        </div>
+
+        <div class="flex flex-col gap-3 mb-4 p-3 bg-gray-50 rounded border">
+          <div>
+            <p class="text-xs text-gray-500 mb-1">Title</p>
+            <p class="font-medium">{{ previewVersion.title || '(untitled)' }}</p>
+          </div>
+          <div v-if="previewVersion.description">
+            <p class="text-xs text-gray-500 mb-1">Description</p>
+            <p class="text-sm">{{ previewVersion.description }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 mb-1">Status</p>
+            <Tag :value="previewVersion.status" />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 mb-4 max-h-64 overflow-y-auto">
+          <div v-for="section in previewVersion.sections" :key="section.id" class="border rounded p-2">
+            <p class="text-sm font-medium">{{ section.title }} <span class="text-xs text-gray-400 font-normal ml-1">{{ section.type }}</span></p>
+            <ul v-if="section.items?.length" class="mt-1 ml-2 space-y-0.5">
+              <li v-for="item in section.items" :key="item.id" class="flex justify-between text-xs text-gray-600">
+                <span>{{ item.title || '(unnamed)' }}</span>
+                <span class="tabular-nums">{{ item.qty }}× {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.price) }}</span>
+              </li>
+            </ul>
+            <p v-else-if="section.type === 'PRODUCTS'" class="text-xs text-gray-400 mt-1 ml-2">No items</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <Button label="Restore this version" icon="pi pi-history" severity="warn" @click="confirmRevert(previewVersion)" />
+        </div>
+      </template>
+    </Dialog>
+
+    <ConfirmDialog />
+
     <Toolbar class="proposal-toolbar m-2 mt-0 !border-none">
       <template #start> 
         <h1 class="m-0 text-3xl">{{ concatProposalIdentifier(proposalStore.data) }}</h1>
@@ -158,7 +233,13 @@ import Column from 'primevue/column';
 import Badge from 'primevue/badge';
 import DatePicker from 'primevue/datepicker';
 
-import { GetProposalById, SaveProposal } from '../api/api'
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
+import ConfirmDialog from 'primevue/confirmdialog';
+import { useConfirm } from 'primevue/useconfirm';
+
+import { GetProposalById, SaveProposal, GetProposalVersions, GetProposalVersion, RevertProposalVersion } from '../api/api'
 
 import { onMounted, onUnmounted, ref } from 'vue'
 import { SECTION_TYPES } from '../constants/sections';
@@ -167,9 +248,15 @@ import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const confirm = useConfirm();
 
 const proposalStore = useProposalStore();
 const activeSection = ref(null);
+
+const showVersionHistory = ref(false);
+const versions = ref([]);
+const previewVersion = ref(null);
+const previewLoading = ref(null);
 
 const proposalOptions = [
     {
@@ -180,9 +267,7 @@ const proposalOptions = [
     },
     {
       label: 'View History',
-      command: () => {
-        toast.add({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
-      }
+      command: () => loadVersionHistory(),
     },
     {
       separator: true
@@ -226,6 +311,44 @@ async function triggerSaveProposal() {
   await SaveProposal(payloadCopy);
   proposalStore.resetDraftStatus();
   toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
+}
+
+async function loadVersionHistory() {
+  versions.value = [];
+  previewVersion.value = null;
+  showVersionHistory.value = true;
+  const result = await GetProposalVersions(proposalStore.data.id);
+  if (result) versions.value = result;
+}
+
+async function loadPreview(versionEntry) {
+  previewLoading.value = versionEntry.id;
+  const result = await GetProposalVersion(proposalStore.data.id, versionEntry.id);
+  previewLoading.value = null;
+  if (result) previewVersion.value = result;
+}
+
+function confirmRevert(versionEntry) {
+  confirm.require({
+    message: `Restore the proposal to v${versionEntry.version}? Your current state will be saved as a new version first.`,
+    header: 'Restore Version',
+    icon: 'pi pi-history',
+    acceptLabel: 'Restore',
+    rejectLabel: 'Cancel',
+    accept: async () => {
+      const restored = await RevertProposalVersion(proposalStore.data.id, versionEntry.id);
+      if (restored) {
+        proposalStore.data = restored;
+        proposalStore.recalculateTotals();
+        proposalStore.resetDraftStatus();
+        previewVersion.value = null;
+        showVersionHistory.value = false;
+        toast.add({ severity: 'success', summary: 'Restored', detail: `Proposal restored to v${versionEntry.version}`, life: 3000 });
+      } else {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to restore version', life: 3000 });
+      }
+    },
+  });
 }
 
 async function downloadPdf() {
