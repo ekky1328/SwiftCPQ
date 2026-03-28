@@ -11,7 +11,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@primevue/themes": "^4.2.4",
@@ -29,12 +31,16 @@
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vitest/coverage-v8": "^2.1.9",
+    "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",
+    "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "~5.6.2",
     "vite": "^6.0.1",
     "vite-plugin-html": "^3.2.2",
+    "vitest": "^2.1.9",
     "vue-tsc": "^2.1.10"
   }
 }

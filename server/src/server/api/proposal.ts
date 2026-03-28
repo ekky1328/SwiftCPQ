@@ -62,7 +62,7 @@ async function getDefaultTenantId(): Promise<string> {
 /**
  * Maps a database section row to a Section object with camelCase keys.
  */
-function mapSectionFromDb(row: Record<string, unknown>): Section {
+export function mapSectionFromDb(row: Record<string, unknown>): Section {
   return {
     id: row.id as number,
     title: row.title as string,
@@ -81,7 +81,7 @@ function mapSectionFromDb(row: Record<string, unknown>): Section {
 /**
  * Maps a database item row to an Item object with camelCase keys and dollar values.
  */
-function mapItemFromDb(row: Record<string, unknown>): Item {
+export function mapItemFromDb(row: Record<string, unknown>): Item {
   return {
     id: row.id as number,
     title: row.title as string,
@@ -102,7 +102,7 @@ function mapItemFromDb(row: Record<string, unknown>): Item {
 /**
  * Maps a database milestone row to a Milestone object with camelCase keys and dollar values.
  */
-function mapMilestoneFromDb(row: Record<string, unknown>): Milestone {
+export function mapMilestoneFromDb(row: Record<string, unknown>): Milestone {
   return {
     id: row.id as number,
     title: row.title as string,
