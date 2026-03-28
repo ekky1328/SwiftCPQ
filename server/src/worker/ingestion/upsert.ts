@@ -24,7 +24,12 @@ export async function batchUpsert(
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
 
-    await db.transaction(async (trx) => {
+    // Return batch counts from the transaction to avoid referencing outer
+    // variables inside a loop callback (no-loop-func).
+    const batchResult = await db.transaction(async (trx) => {
+      let batchInserted = 0;
+      let batchUpdated = 0;
+
       for (const row of batch) {
         const result = await trx.raw(
           `INSERT INTO vendor_inventory (tenant_id, vendor_id, catalogue_item_id, vendor_sku, stock_level, cost_price, last_synced_at, is_active)
@@ -41,12 +46,17 @@ export async function batchUpsert(
         );
 
         if (result.rows[0]?.is_insert) {
-          inserted++;
+          batchInserted++;
         } else {
-          updated++;
+          batchUpdated++;
         }
       }
+
+      return { batchInserted, batchUpdated };
     });
+
+    inserted += batchResult.batchInserted;
+    updated += batchResult.batchUpdated;
   }
 
   return { inserted, updated };
