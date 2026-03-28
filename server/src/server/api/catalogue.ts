@@ -4,6 +4,18 @@ import db from '../../database/db';
 import MessageResponse from '../interfaces/MessageResponse';
 import { fromCents, toCents } from '../helpers/money';
 
+function formatVendorInventory(row: Record<string, any>) {
+  return {
+    vendorId: row.vendor_id,
+    vendorName: row.vendor_name,
+    vendorCode: row.vendor_code,
+    vendorSku: row.vendor_sku,
+    stockLevel: row.stock_level,
+    costPrice: fromCents(row.cost_price),
+    lastSyncedAt: row.last_synced_at,
+  };
+}
+
 const catalogueRouter = express.Router();
 
 function formatItem(row: Record<string, any>) {
@@ -49,6 +61,42 @@ catalogueRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
     }
 
     const rows = await query;
+
+    const includeVendors = req.query.includeVendors === 'true';
+
+    if (includeVendors && rows.length > 0) {
+      const itemIds = rows.map((r: any) => r.id);
+      const vendorRows = await db('vendor_inventory')
+        .select(
+          'vendor_inventory.catalogue_item_id',
+          'vendor_inventory.vendor_id',
+          'vendor.name as vendor_name',
+          'vendor.code as vendor_code',
+          'vendor_inventory.vendor_sku',
+          'vendor_inventory.stock_level',
+          'vendor_inventory.cost_price',
+          'vendor_inventory.last_synced_at',
+        )
+        .join('vendor', 'vendor_inventory.vendor_id', 'vendor.id')
+        .whereIn('vendor_inventory.catalogue_item_id', itemIds)
+        .where('vendor_inventory.is_active', true)
+        .where('vendor.is_active', true)
+        .orderBy('vendor.name', 'asc');
+
+      const inventoryByItem = new Map<string, any[]>();
+      for (const vr of vendorRows) {
+        const list = inventoryByItem.get(vr.catalogue_item_id) || [];
+        list.push(formatVendorInventory(vr));
+        inventoryByItem.set(vr.catalogue_item_id, list);
+      }
+
+      res.json(rows.map((r: any) => ({
+        ...formatItem(r),
+        vendorInventory: inventoryByItem.get(r.id) || [],
+      })));
+      return;
+    }
+
     res.json(rows.map(formatItem));
   } catch (err) {
     next(err);
@@ -66,7 +114,27 @@ catalogueRouter.get<{ id: string }, MessageResponse>('/:id', async (req, res, ne
 
     if (!row) { res.status(404).json({ message: 'Catalogue item not found' }); return; }
 
-    res.json(formatItem(row));
+    // Fetch vendor inventory for this item
+    const vendorInventory = await db('vendor_inventory')
+      .select(
+        'vendor_inventory.vendor_id',
+        'vendor.name as vendor_name',
+        'vendor.code as vendor_code',
+        'vendor_inventory.vendor_sku',
+        'vendor_inventory.stock_level',
+        'vendor_inventory.cost_price',
+        'vendor_inventory.last_synced_at',
+      )
+      .join('vendor', 'vendor_inventory.vendor_id', 'vendor.id')
+      .where('vendor_inventory.catalogue_item_id', id)
+      .where('vendor_inventory.is_active', true)
+      .where('vendor.is_active', true)
+      .orderBy('vendor.name', 'asc');
+
+    res.json({
+      ...formatItem(row),
+      vendorInventory: vendorInventory.map(formatVendorInventory),
+    });
   } catch (err) {
     next(err);
   }

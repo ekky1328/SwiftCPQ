@@ -48,6 +48,7 @@ systemRouter.get<{}, MessageResponse>('/core-settings', async (req, res, next) =
       timezone: settings.timezone,
       dateFormat: settings.date_format,
       selectedTemplate: settings.selected_template,
+      staleInventoryDays: settings.stale_inventory_days ?? 28,
       contactInformationDefaults: {
         email: contact?.email || '',
         phone: contact?.phone || '',
@@ -111,6 +112,9 @@ systemRouter.put<{}, MessageResponse>('/core-settings', async (req, res, next) =
     if (timezone !== undefined) settingsUpdate.timezone = timezone;
     if (dateFormat !== undefined) settingsUpdate.date_format = dateFormat;
     if (selectedTemplate !== undefined) settingsUpdate.selected_template = selectedTemplate;
+
+    const { staleInventoryDays } = req.body;
+    if (staleInventoryDays !== undefined) settingsUpdate.stale_inventory_days = staleInventoryDays;
 
     if (Object.keys(settingsUpdate).length > 0) {
       await db('tenant_settings').where('id', settings.id).update(settingsUpdate);
@@ -191,6 +195,7 @@ systemRouter.put<{}, MessageResponse>('/core-settings', async (req, res, next) =
       timezone: updatedSettings.timezone,
       dateFormat: updatedSettings.date_format,
       selectedTemplate: updatedSettings.selected_template,
+      staleInventoryDays: updatedSettings.stale_inventory_days ?? 28,
       contactInformationDefaults: {
         email: updatedContact?.email || '',
         phone: updatedContact?.phone || '',

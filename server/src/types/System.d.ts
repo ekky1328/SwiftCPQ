@@ -8,6 +8,7 @@ export interface CoreSettings {
   contactInformationDefaults: ContactInformationDefaults
   proposalSettingsDefaults: ProposalSettingsDefaults
   selectedTemplate: string,
+  staleInventoryDays: number,
   theme: Theme
 }
 
