@@ -1,13 +1,14 @@
 # Production Deployment (Self-Hosted / VM)
 
-SwiftCPQ ships as two Docker containers:
+SwiftCPQ ships as three Docker containers:
 
 | Container | Built from | Serves |
 |-----------|-----------|--------|
-| `swiftcpq` | `Dockerfile` (root) | Express API + built Vue SPA on port 5000 |
-| `swiftcpq-templater` | `templater/Dockerfile` | PDF generation microservice on port 5005 |
+| `swiftcpq` | `.docker/Dockerfile` | Express API + built Vue SPA on port 5000 |
+| `swiftcpq-worker` | `.docker/Dockerfile.worker` | Background/ingestion worker (no HTTP, `MODE=0`) |
+| `swiftcpq-templater` | `.docker/Dockerfile.templater` | PDF generation microservice on port 5005 |
 
-The main container builds the Vue client and bundles it as static files served by Express, so you only need one public-facing port.
+The main container builds the Vue client and bundles it as static files served by Express, so you only need one public-facing port. The worker container runs the same server codebase in `MODE=0` — no HTTP server, no frontend — and is used to offload background work.
 
 > For deploying to Azure, see [../azure/deployment-azure.md](../azure/deployment-azure.md).
 
@@ -82,7 +83,7 @@ services:
   swiftcpq:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: .docker/Dockerfile
     container_name: swiftcpq
     env_file: server/.env
     ports:
@@ -91,16 +92,24 @@ services:
       - ./data:/server/dist/data
     restart: unless-stopped
 
+  swiftcpq-worker:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.worker
+    container_name: swiftcpq-worker
+    env_file: server/.env
+    restart: unless-stopped
+
   swiftcpq-templater:
     build:
-      context: ./templater
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: .docker/Dockerfile.templater
     container_name: swiftcpq-templater
     env_file: templater/.env
     restart: unless-stopped
 ```
 
-> The templater is not exposed externally — it communicates with the main container over the Docker network.
+> Neither the worker nor the templater are exposed externally — they communicate with the main container over the Docker network.
 
 Build and start:
 
@@ -146,47 +155,19 @@ You'll need to deploy the templater container separately, or extend the script t
 
 ---
 
-## 4. Templater Dockerfile
+## 4. Building Individual Images
 
-The `templater/` directory does not currently ship a `Dockerfile`. Create one:
-
-```dockerfile
-FROM node:20-slim
-
-# Chromium dependencies for Puppeteer
-RUN apt-get update && apt-get install -y \
-    chromium \
-    fonts-liberation \
-    libgbm-dev \
-    libxss1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
-COPY . .
-RUN npm run build
-
-EXPOSE 5005
-CMD ["npm", "run", "start:dist"]
-```
-
-Build and run:
+All Dockerfiles live in `.docker/` and use the repo root as their build context.
 
 ```bash
-docker build -t swiftcpq-templater ./templater
-docker run -d \
-  --name swiftcpq-templater \
-  --env-file templater/.env \
-  --restart unless-stopped \
-  swiftcpq-templater
+# Main app
+docker build -f .docker/Dockerfile -t swiftcpq .
+
+# Worker
+docker build -f .docker/Dockerfile.worker -t swiftcpq-worker .
+
+# Templater
+docker build -f .docker/Dockerfile.templater -t swiftcpq-templater .
 ```
 
 ---

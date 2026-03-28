@@ -192,7 +192,8 @@ SwiftCPQ/
 │           ├── helpers/      # JWT, cookies, passwords
 │           └── middlewares.ts
 ├── templater/       # PDF microservice (Express, Puppeteer, EJS)
-├── Dockerfile       # Production build (server + client)
+├── .docker/
+│   └── Dockerfile   # Production build (server + client)
 └── deploy.sh        # Example SSH deploy script
 ```
 

@@ -247,7 +247,19 @@ stages:
               containerRegistry: SwiftCPQ-ACR
               repository: swiftcpq
               command: buildAndPush
-              Dockerfile: Dockerfile
+              Dockerfile: .docker/Dockerfile
+              buildContext: .
+              tags: |
+                $(IMAGE_TAG)
+                latest
+
+          - task: Docker@2
+            displayName: Build and push worker
+            inputs:
+              containerRegistry: SwiftCPQ-ACR
+              repository: swiftcpq-worker
+              command: buildAndPush
+              Dockerfile: .docker/Dockerfile.worker
               buildContext: .
               tags: |
                 $(IMAGE_TAG)
@@ -259,8 +271,8 @@ stages:
               containerRegistry: SwiftCPQ-ACR
               repository: swiftcpq-templater
               command: buildAndPush
-              Dockerfile: templater/Dockerfile
-              buildContext: templater
+              Dockerfile: .docker/Dockerfile.templater
+              buildContext: .
               tags: |
                 $(IMAGE_TAG)
                 latest

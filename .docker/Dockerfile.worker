@@ -1,0 +1,17 @@
+# Worker mode - runs the server process with MODE=0 (no HTTP server, no frontend)
+# Used to offload background work from the main app.
+FROM node:20 AS production
+
+WORKDIR /server
+
+COPY server/package.json server/package-lock.json ./
+RUN npm install
+
+COPY server/ ./
+RUN npm run build
+
+COPY /server/src/data /server/dist/data
+
+ENV MODE=0
+
+CMD ["npm", "run", "start:dist"]
