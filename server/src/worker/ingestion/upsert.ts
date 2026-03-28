@@ -9,13 +9,13 @@ export interface UpsertResult {
 }
 
 /**
- * Batch upserts resolved rows into vendor_inventory.
+ * Batch upserts resolved rows into supplier_inventory.
  * Uses INSERT ... ON CONFLICT to update existing records.
  * Reactivates soft-deleted inventory rows on re-import.
  */
 export async function batchUpsert(
   tenantId: string,
-  vendorId: string,
+  supplierId: string,
   rows: ResolvedRow[],
 ): Promise<UpsertResult> {
   let inserted = 0;
@@ -32,17 +32,17 @@ export async function batchUpsert(
 
       for (const row of batch) {
         const result = await trx.raw(
-          `INSERT INTO vendor_inventory (tenant_id, vendor_id, catalogue_item_id, vendor_sku, stock_level, cost_price, last_synced_at, is_active)
+          `INSERT INTO supplier_inventory (tenant_id, supplier_id, catalogue_item_id, supplier_sku, stock_level, cost_price, last_synced_at, is_active)
            VALUES (?, ?, ?, ?, ?, ?, NOW(), TRUE)
-           ON CONFLICT (tenant_id, vendor_id, catalogue_item_id)
+           ON CONFLICT (tenant_id, supplier_id, catalogue_item_id)
            DO UPDATE SET
-             vendor_sku = EXCLUDED.vendor_sku,
+             supplier_sku = EXCLUDED.supplier_sku,
              stock_level = EXCLUDED.stock_level,
              cost_price = EXCLUDED.cost_price,
              last_synced_at = NOW(),
              is_active = TRUE
            RETURNING (xmax = 0) AS is_insert`,
-          [tenantId, vendorId, row.catalogueItemId, row.vendorSku, row.stockLevel, row.costPrice],
+          [tenantId, supplierId, row.catalogueItemId, row.supplierSku, row.stockLevel, row.costPrice],
         );
 
         if (result.rows[0]?.is_insert) {

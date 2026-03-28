@@ -7,6 +7,6 @@ export const PERMISSIONS = {
   ROLES_MANAGE: 'roles.manage',
   USERS_MANAGE: 'users.manage',
   SYSTEM_MANAGE: 'system.manage',
-  VENDOR_MANAGE: 'vendor.manage',
+  SUPPLIER_MANAGE: 'supplier.manage',
   INGESTION_MANAGE: 'ingestion.manage',
 } as const;

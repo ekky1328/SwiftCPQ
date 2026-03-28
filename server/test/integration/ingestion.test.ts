@@ -13,7 +13,7 @@ import {
 let tenant: TestTenant;
 let user: TestUser;
 let cookies: string[];
-let vendorId: string;
+let supplierId: string;
 
 const SAMPLE_CSV = `sku,stock,cost\nSKU-001,10,19.99\nSKU-002,5,9.99\n`;
 
@@ -23,30 +23,30 @@ beforeAll(async () => {
   user = await createTestUser(tenant.id, { isSuperAdmin: true });
   cookies = await loginAs(app, user.username, user.password);
 
-  // Create a vendor for the tenant
-  const [result] = await db('vendor').insert({
+  // Create a supplier for the tenant
+  const [result] = await db('supplier').insert({
     id: uuidv4(),
     tenant_id: tenant.id,
-    name: 'Test Vendor',
-    code: 'TSTVND',
+    name: 'Test Supplier',
+    code: 'TSTSUP',
     is_active: true,
   }).returning('id');
-  vendorId = result.id ?? result;
+  supplierId = result.id ?? result;
 }, 60000);
 
 afterAll(async () => {
   await db('ingestion_job').where('tenant_id', tenant.id).delete();
-  await db('vendor').where('id', vendorId).delete();
+  await db('supplier').where('id', supplierId).delete();
   await db('user_refresh_token').where('tenant_id', tenant.id).delete();
   await db('user').where('tenant_id', tenant.id).delete();
   await db('tenant').where('id', tenant.id).delete();
   await db.destroy();
 });
 
-describe('POST /api/v1/ingestion/:vendorId', () => {
+describe('POST /api/v1/ingestion/:supplierId', () => {
   it('returns 202 with a jobId when given a valid CSV', async () => {
     const res = await request(app)
-      .post(`/api/v1/ingestion/${vendorId}`)
+      .post(`/api/v1/ingestion/${supplierId}`)
       .set('Cookie', cookies)
       .set('Content-Type', 'text/csv')
       .send(SAMPLE_CSV);
@@ -56,7 +56,7 @@ describe('POST /api/v1/ingestion/:vendorId', () => {
     expect(res.body.status).toBeDefined();
   });
 
-  it('returns 404 for an unknown vendorId', async () => {
+  it('returns 404 for an unknown supplierId', async () => {
     const res = await request(app)
       .post(`/api/v1/ingestion/${uuidv4()}`)
       .set('Cookie', cookies)
@@ -68,7 +68,7 @@ describe('POST /api/v1/ingestion/:vendorId', () => {
 
   it('returns 400 for an empty CSV body', async () => {
     const res = await request(app)
-      .post(`/api/v1/ingestion/${vendorId}`)
+      .post(`/api/v1/ingestion/${supplierId}`)
       .set('Cookie', cookies)
       .set('Content-Type', 'text/csv')
       .send('');
@@ -78,7 +78,7 @@ describe('POST /api/v1/ingestion/:vendorId', () => {
 
   it('returns 401 without authentication', async () => {
     const res = await request(app)
-      .post(`/api/v1/ingestion/${vendorId}`)
+      .post(`/api/v1/ingestion/${supplierId}`)
       .set('Content-Type', 'text/csv')
       .send(SAMPLE_CSV);
 
@@ -91,7 +91,7 @@ describe('GET /api/v1/ingestion/:jobId/status', () => {
 
   beforeAll(async () => {
     const res = await request(app)
-      .post(`/api/v1/ingestion/${vendorId}`)
+      .post(`/api/v1/ingestion/${supplierId}`)
       .set('Cookie', cookies)
       .set('Content-Type', 'text/csv')
       .send(SAMPLE_CSV);
@@ -106,7 +106,7 @@ describe('GET /api/v1/ingestion/:jobId/status', () => {
     expect(res.status).toBe(200);
     expect(res.body.jobId).toBe(jobId);
     expect(res.body.status).toBeDefined();
-    expect(res.body.vendorId).toBe(vendorId);
+    expect(res.body.supplierId).toBe(supplierId);
   });
 
   it('returns 404 for an unknown job id', async () => {

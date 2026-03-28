@@ -1,9 +1,9 @@
 import { parseCsv } from '../../../src/worker/ingestion/csv-parser';
-import type { ColumnMapping } from '../../../src/types/Vendor';
+import type { ColumnMapping } from '../../../src/types/Supplier';
 
 const DEFAULT_MAPPING: ColumnMapping = {
   sku: 'sku',
-  vendor_sku: 'vendor_sku',
+  supplier_sku: 'supplier_sku',
   stock_level: 'stock',
   cost_price: 'cost',
 };
@@ -14,13 +14,13 @@ function toBuffer(csv: string): Buffer {
 
 describe('parseCsv', () => {
   it('parses a standard CSV with header row', () => {
-    const csv = `sku,vendor_sku,stock,cost\nSKU-001,VSKU-1,10,19.99\n`;
+    const csv = `sku,supplier_sku,stock,cost\nSKU-001,SSKU-1,10,19.99\n`;
     const { rows, errors } = parseCsv(toBuffer(csv), DEFAULT_MAPPING, ',', true);
 
     expect(errors).toHaveLength(0);
     expect(rows).toHaveLength(1);
     expect(rows[0].sku).toBe('SKU-001');
-    expect(rows[0].vendorSku).toBe('VSKU-1');
+    expect(rows[0].supplierSku).toBe('SSKU-1');
     expect(rows[0].stockLevel).toBe(10);
     expect(rows[0].costPrice).toBe(1999); // toCents(19.99)
   });
@@ -97,16 +97,16 @@ describe('parseCsv', () => {
     expect(rows[0].sku).toBe('SKU-001');
   });
 
-  it('uses empty string for vendorSku when vendor_sku mapping is absent', () => {
-    const mappingNoVendorSku: ColumnMapping = {
+  it('uses empty string for supplierSku when supplier_sku mapping is absent', () => {
+    const mappingNoSupplierSku: ColumnMapping = {
       sku: 'sku',
       stock_level: 'stock',
       cost_price: 'cost',
     };
     const csv = `sku,stock,cost\nSKU-001,1,5.00\n`;
-    const { rows } = parseCsv(toBuffer(csv), mappingNoVendorSku, ',', true);
+    const { rows } = parseCsv(toBuffer(csv), mappingNoSupplierSku, ',', true);
 
-    expect(rows[0].vendorSku).toBe('');
+    expect(rows[0].supplierSku).toBe('');
   });
 
   it('handles multiple rows correctly', () => {

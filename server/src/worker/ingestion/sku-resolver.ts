@@ -1,9 +1,9 @@
 import db from '../../database/db';
-import type { ParsedRow } from '../../types/Vendor';
+import type { ParsedRow } from '../../types/Supplier';
 
 export interface ResolvedRow {
   catalogueItemId: string;
-  vendorSku: string;
+  supplierSku: string;
   stockLevel: number;
   costPrice: number;
   wasCreated: boolean;
@@ -13,7 +13,7 @@ export interface ResolvedRow {
  * Resolves a parsed CSV row to a catalogue_item_id.
  *
  * Resolution order:
- * 1. Check vendor_sku_mapping for an explicit alias
+ * 1. Check supplier_sku_mapping for an explicit alias
  * 2. Match against catalogue_item.sku within the tenant
  * 3. Auto-create a new catalogue_item if no match found
  *
@@ -21,21 +21,21 @@ export interface ResolvedRow {
  */
 export async function resolveRow(
   tenantId: string,
-  vendorId: string,
+  supplierId: string,
   row: ParsedRow,
 ): Promise<{ resolved: ResolvedRow } | { error: string }> {
 
-  const mapping = await db('vendor_sku_mapping')
+  const mapping = await db('supplier_sku_mapping')
     .where('tenant_id', tenantId)
-    .where('vendor_id', vendorId)
-    .where('vendor_sku', row.sku)
+    .where('supplier_id', supplierId)
+    .where('supplier_sku', row.sku)
     .first();
 
   if (mapping) {
     return {
       resolved: {
         catalogueItemId: mapping.catalogue_item_id,
-        vendorSku: row.vendorSku || row.sku,
+        supplierSku: row.supplierSku || row.sku,
         stockLevel: row.stockLevel,
         costPrice: row.costPrice,
         wasCreated: false,
@@ -58,7 +58,7 @@ export async function resolveRow(
     return {
       resolved: {
         catalogueItemId: catalogueItem.id,
-        vendorSku: row.vendorSku || row.sku,
+        supplierSku: row.supplierSku || row.sku,
         stockLevel: row.stockLevel,
         costPrice: row.costPrice,
         wasCreated: false,
@@ -80,7 +80,7 @@ export async function resolveRow(
     return {
       resolved: {
         catalogueItemId: newItem.id,
-        vendorSku: row.vendorSku || row.sku,
+        supplierSku: row.supplierSku || row.sku,
         stockLevel: row.stockLevel,
         costPrice: row.costPrice,
         wasCreated: true,

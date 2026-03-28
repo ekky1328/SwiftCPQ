@@ -28,11 +28,11 @@ async function processJobs() {
   let job = await claimNextJob();
 
   while (job) {
-    console.log(`[worker] processing ingestion job ${job.id} for vendor ${job.vendor_id}`);
+    console.log(`[worker] processing ingestion job ${job.id} for supplier ${job.supplier_id}`);
 
     try {
       const csvBuffer = Buffer.isBuffer(job.csv_data) ? job.csv_data : Buffer.from(job.csv_data);
-      const result = await runIngestion(job.tenant_id, job.vendor_id, csvBuffer);
+      const result = await runIngestion(job.tenant_id, job.supplier_id, csvBuffer);
 
       await db('ingestion_job')
         .where('id', job.id)

@@ -8,7 +8,7 @@ const importTemplateRouter = express.Router();
 function formatTemplate(row: Record<string, any>) {
   return {
     id: row.id,
-    vendorId: row.vendor_id,
+    supplierId: row.supplier_id,
     name: row.name,
     columnMapping: row.column_mapping,
     delimiter: row.delimiter,
@@ -21,7 +21,7 @@ function formatTemplate(row: Record<string, any>) {
 
 /**
  * GET /api/v1/import-template
- * Lists all active import templates for the tenant. Supports ?vendorId= filter.
+ * Lists all active import templates for the tenant. Supports ?supplierId= filter.
  */
 importTemplateRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
   try {
@@ -33,9 +33,9 @@ importTemplateRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
       .where('is_active', true)
       .orderBy('name', 'asc');
 
-    const vendorId = req.query.vendorId as string | undefined;
-    if (vendorId) {
-      query = query.where('vendor_id', vendorId);
+    const supplierId = req.query.supplierId as string | undefined;
+    if (supplierId) {
+      query = query.where('supplier_id', supplierId);
     }
 
     const rows = await query;
@@ -69,7 +69,7 @@ importTemplateRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
     const tenantId = req.user?.tenantId;
     if (!tenantId) { res.status(401).json({ message: 'Unauthorized' }); return; }
 
-    const { vendorId, name, columnMapping, delimiter, hasHeaderRow } = req.body;
+    const { supplierId, name, columnMapping, delimiter, hasHeaderRow } = req.body;
 
     if (!name?.trim()) {
       res.status(400).json({ message: 'Name is required' });
@@ -83,7 +83,7 @@ importTemplateRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
 
     const [row] = await db('import_template').insert({
       tenant_id: tenantId,
-      vendor_id: vendorId || null,
+      supplier_id: supplierId || null,
       name: name.trim(),
       column_mapping: JSON.stringify(columnMapping),
       delimiter: delimiter ?? ',',
@@ -105,10 +105,10 @@ importTemplateRouter.put<{ id: string }, MessageResponse>('/:id', async (req, re
     const existing = await db('import_template').where('id', id).first();
     if (!existing) { res.status(404).json({ message: 'Import template not found' }); return; }
 
-    const { vendorId, name, columnMapping, delimiter, hasHeaderRow, isActive } = req.body;
+    const { supplierId, name, columnMapping, delimiter, hasHeaderRow, isActive } = req.body;
 
     const update: Record<string, unknown> = {};
-    if (vendorId !== undefined) update.vendor_id = vendorId || null;
+    if (supplierId !== undefined) update.supplier_id = supplierId || null;
     if (name !== undefined) update.name = name.trim();
     if (columnMapping !== undefined) update.column_mapping = JSON.stringify(columnMapping);
     if (delimiter !== undefined) update.delimiter = delimiter;

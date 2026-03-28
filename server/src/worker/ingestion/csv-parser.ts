@@ -1,9 +1,9 @@
 import { parse } from 'csv-parse/sync';
 import { toCents } from '../../server/helpers/money';
-import type { ColumnMapping, ParsedRow } from '../../types/Vendor';
+import type { ColumnMapping, ParsedRow } from '../../types/Supplier';
 
 /**
- * Parses a CSV buffer using a column mapping to translate vendor headers into canonical fields.
+ * Parses a CSV buffer using a column mapping to translate supplier headers into canonical fields.
  * Returns an array of parsed rows. Rows missing a SKU value are skipped.
  */
 export function parseCsv(
@@ -41,11 +41,11 @@ export function parseCsv(
     const stockLevelRaw = record[mapping.stock_level];
     const stockLevel = stockLevelRaw ? parseInt(stockLevelRaw, 10) || 0 : 0;
 
-    const vendorSku = mapping.vendor_sku ? (record[mapping.vendor_sku]?.trim() ?? '') : '';
+    const supplierSku = mapping.supplier_sku ? (record[mapping.supplier_sku]?.trim() ?? '') : '';
 
     const parsed: ParsedRow = {
       sku: skuValue.trim(),
-      vendorSku,
+      supplierSku,
       stockLevel,
       costPrice,
     };

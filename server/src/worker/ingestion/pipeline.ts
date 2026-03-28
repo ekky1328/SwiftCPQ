@@ -1,4 +1,4 @@
-import type { IngestionResult } from '../../types/Vendor';
+import type { IngestionResult } from '../../types/Supplier';
 import { resolveTemplate } from './template-resolver';
 import { parseCsv } from './csv-parser';
 import { resolveRow } from './sku-resolver';
@@ -7,18 +7,18 @@ import type { ResolvedRow } from './sku-resolver';
 
 /**
  * Runs the full ingestion pipeline:
- * 1. Resolve import template for the vendor
+ * 1. Resolve import template for the supplier
  * 2. Parse CSV using the template's column mapping
  * 3. Resolve each row's SKU to a catalogue item (alias → match → auto-create)
- * 4. Batch upsert into vendor_inventory
+ * 4. Batch upsert into supplier_inventory
  */
 export async function runIngestion(
   tenantId: string,
-  vendorId: string,
+  supplierId: string,
   csvBuffer: Buffer,
 ): Promise<IngestionResult> {
   // 1. Resolve template
-  const template = await resolveTemplate(tenantId, vendorId);
+  const template = await resolveTemplate(tenantId, supplierId);
 
   // 2. Parse CSV
   const { rows: parsedRows, errors } = parseCsv(
@@ -37,7 +37,7 @@ export async function runIngestion(
   let created = 0;
 
   for (const row of parsedRows) {
-    const result = await resolveRow(tenantId, vendorId, row);
+    const result = await resolveRow(tenantId, supplierId, row);
 
     if ('error' in result) {
       errors.push(result.error);
@@ -56,7 +56,7 @@ export async function runIngestion(
   }
 
   // 4. Batch upsert
-  const { inserted, updated } = await batchUpsert(tenantId, vendorId, resolvedRows);
+  const { inserted, updated } = await batchUpsert(tenantId, supplierId, resolvedRows);
 
   return { inserted, updated, created, errors };
 }
