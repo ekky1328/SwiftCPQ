@@ -15,6 +15,23 @@
         <router-link to="/catalogue" v-tooltip="'Catalogue'">
           <span class="pi pi-database" title="Catalogue"></span>
         </router-link>
+        <router-link to="/customers" v-tooltip="'Customers'">
+          <span class="pi pi-building" title="Customers"></span>
+        </router-link>
+        <template v-if="auth.user.isSuperAdmin">
+          <router-link to="/suppliers" v-tooltip="'Suppliers'">
+            <span class="pi pi-truck" title="Suppliers"></span>
+          </router-link>
+          <router-link to="/users" v-tooltip="'Users'">
+            <span class="pi pi-users" title="Users"></span>
+          </router-link>
+          <router-link to="/roles" v-tooltip="'Roles'">
+            <span class="pi pi-shield" title="Roles"></span>
+          </router-link>
+          <router-link to="/settings" v-tooltip="'Settings'">
+            <span class="pi pi-cog" title="Settings"></span>
+          </router-link>
+        </template>
       </div>
       <div class="nav-footer">
         <button

@@ -12,6 +12,11 @@ const routes = [
     { path: '/', component: ProposalList },
     { path: '/proposals/:id', component: ProposalEditor },
     { path: '/catalogue', component: Catalogue },
+    { path: '/customers', component: () => import('./Customers.vue') },
+    { path: '/suppliers', component: () => import('./Suppliers.vue') },
+    { path: '/users', component: () => import('./Users.vue') },
+    { path: '/roles', component: () => import('./Roles.vue') },
+    { path: '/settings', component: () => import('./Settings.vue') },
     { path: '/:pathMatch(.*)*', component: PageNotFound }
 ]
 
