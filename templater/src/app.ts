@@ -1,9 +1,8 @@
-import express, { Response } from 'express';
+import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
-import ejs from 'ejs';
 import fs from 'fs';
 
 import api from './api';

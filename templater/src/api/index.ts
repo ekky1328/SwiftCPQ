@@ -12,27 +12,27 @@ const router = express.Router();
  */
 router.get<{}, MessageResponse>('/proposal/', (req, res) => {
 
-  let all_proposals = [];
-  let proposal_list = fs.readdirSync(`${__dirname}/../data/proposals/`);
-  for (let i = 0; i < proposal_list.length; i++) {
-    const proposal_filename = proposal_list[i];
+  let allProposals = [];
+  let proposalList = fs.readdirSync(`${__dirname}/../data/proposals/`);
+  for (let i = 0; i < proposalList.length; i++) {
+    const proposalFilename = proposalList[i];
 
-    const proposal_raw = fs.readFileSync(`${__dirname}/../data/proposals/${proposal_filename}`, 'utf-8');
-    if (!proposal_raw) {
+    const proposalRaw = fs.readFileSync(`${__dirname}/../data/proposals/${proposalFilename}`, 'utf-8');
+    if (!proposalRaw) {
       continue;
     }
 
-    const proposal = JSON.parse(proposal_raw);
+    const proposal = JSON.parse(proposalRaw);
     if (!proposal) {
       continue;
     }
 
     delete proposal.sections;
 
-    all_proposals.push(proposal)
+    allProposals.push(proposal)
   }
 
-  res.json(all_proposals);
+  res.json(allProposals);
 });
 
 /**
@@ -43,10 +43,10 @@ router.get<{}, MessageResponse>('/proposal/', (req, res) => {
 router.get<{}, MessageResponse>('/proposal/:id', (req, res) => {
 
   let { id } = req.params as { id: number };
-  let raw_data = fs.readFileSync(`${__dirname}/../data/proposals/${id}.json`, 'utf-8');
-  let json_data = JSON.parse(raw_data);
+  let rawData = fs.readFileSync(`${__dirname}/../data/proposals/${id}.json`, 'utf-8');
+  let jsonData = JSON.parse(rawData);
 
-  res.json(json_data);
+  res.json(jsonData);
 });
 
 /**
@@ -54,11 +54,11 @@ router.get<{}, MessageResponse>('/proposal/:id', (req, res) => {
  * Endpoint: /api/v1/proposal/:template
  * - Creates a blank proposal using template
  */
-router.post<{}, MessageResponse>('/proposal/:template_name', (req, res) => {
+router.post<{}, MessageResponse>('/proposal/:templateName', (req, res) => {
 
-  let { template_name } = req.params as { template_name: string } || 'default';
-  let template_raw = fs.readFileSync(`${__dirname}/../data/templates/proposals/${template_name}.json`, 'utf-8');
-  let template = JSON.parse(template_raw);
+  let { templateName } = req.params as { templateName: string } || 'default';
+  let templateRaw = fs.readFileSync(`${__dirname}/../data/templates/proposals/${templateName}.json`, 'utf-8');
+  let template = JSON.parse(templateRaw);
 
   let allProposals = fs.readdirSync(`${__dirname}/../data/proposals/`);
 

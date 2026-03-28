@@ -1,14 +1,9 @@
 import request from 'supertest';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'crypto';
 import db from '../../src/database/db';
 import app from './helpers/testApp';
-import {
-  createTestTenant,
-  createTestUser,
-  loginAs,
-  type TestUser,
-  type TestTenant,
-} from './helpers/auth.helper';
+import { createTestTenant, createTestUser, loginAs } from './helpers/auth.helper';
+import { type TestUser, type TestTenant } from './helpers/auth.helper';
 
 let tenant: TestTenant;
 let user: TestUser;
