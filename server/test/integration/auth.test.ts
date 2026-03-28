@@ -42,7 +42,7 @@ describe('POST /api/v1/auth/login', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Login successful');
 
-    const cookies = res.headers['set-cookie'] as string[];
+    const cookies = res.headers['set-cookie'] as unknown as string[];
     expect(cookies).toBeDefined();
     expect(cookies.some((c: string) => c.startsWith('access_token='))).toBe(true);
     expect(cookies.some((c: string) => c.startsWith('refresh_token='))).toBe(true);
@@ -104,7 +104,7 @@ describe('POST /api/v1/auth/logout', () => {
     expect(res.body.message).toBe('Logged out');
 
     // Cookies should be cleared (expired)
-    const setCookies = res.headers['set-cookie'] as string[];
+    const setCookies = res.headers['set-cookie'] as unknown as string[];
     expect(setCookies.some((c: string) => c.includes('access_token=;'))).toBe(true);
   }, 30000);
 });
@@ -120,7 +120,7 @@ describe('POST /api/v1/auth/refresh', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Token refreshed');
 
-    const newCookies = res.headers['set-cookie'] as string[];
+    const newCookies = res.headers['set-cookie'] as unknown as string[];
     expect(newCookies.some((c: string) => c.startsWith('access_token='))).toBe(true);
   }, 30000);
 

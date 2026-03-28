@@ -75,7 +75,7 @@ export async function loginAs(
     throw new Error(`Login failed with status ${response.status}: ${JSON.stringify(response.body)}`);
   }
 
-  return response.headers['set-cookie'] as string[];
+  return response.headers['set-cookie'] as unknown as string[];
 }
 
 /**
