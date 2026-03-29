@@ -177,7 +177,6 @@ CREATE TRIGGER tenant_proposal_setting_modified_on_date_trigger
     FOR EACH ROW
     EXECUTE FUNCTION update_modified_on_date();
 
--- stale_inventory_days baked in (was added via ALTER TABLE in a later migration)
 CREATE TABLE tenant_settings (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         prefix VARCHAR(50) NOT NULL DEFAULT 'S-CPQ',
@@ -232,8 +231,6 @@ CREATE TRIGGER tenant_role_permission_modified_on_date_trigger
 
 --
 -- USER TABLES
--- auth_provider, external_id, and password_hash DEFAULT '' baked in
--- (were added via ALTER TABLE in a later migration)
 --
 
 CREATE TABLE "user" (
@@ -258,7 +255,6 @@ CREATE TRIGGER user_modified_on_date_trigger
     FOR EACH ROW
     EXECUTE FUNCTION update_modified_on_date();
 
--- Refresh token storage for logout/revocation
 CREATE TABLE user_refresh_token (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
@@ -467,7 +463,6 @@ CREATE INDEX proposal_version_proposal_id_idx ON proposal_version (proposal_id);
 
 --
 -- CATALOGUE TABLE
--- Unique SKU index baked in (was added via separate statement in a later migration)
 --
 
 CREATE TABLE catalogue_item (
@@ -595,7 +590,6 @@ CREATE INDEX ingestion_job_pending_idx ON ingestion_job (status, created_on_date
 
 --
 -- DEFERRED CONSTRAINTS
--- Circular FK references that could not be defined inline above
 --
 
 ALTER TABLE "user" ADD CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(id);
@@ -622,6 +616,6 @@ ALTER TABLE proposal ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES "us
 ALTER TABLE proposal ADD CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES customer(id);
 
 ALTER TABLE proposal_section ADD CONSTRAINT fk_section_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(id);
--- ON DELETE CASCADE baked in (was originally missing, added via a later migration)
+
 ALTER TABLE proposal_section ADD CONSTRAINT fk_section_proposal FOREIGN KEY (proposal_id) REFERENCES proposal(id) ON DELETE CASCADE;
 ALTER TABLE proposal_section ADD CONSTRAINT proposal_section_order_unique UNIQUE (proposal_id, "order");
