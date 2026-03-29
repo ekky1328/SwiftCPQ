@@ -8,6 +8,7 @@ These Bicep templates provision the full SwiftCPQ Azure infrastructure in a sing
 - Container Apps managed environment
 - PostgreSQL Flexible Server + database + firewall rule
 - `swiftcpq` container app (public ingress)
+- `swiftcpq-worker` container app (no ingress — background job processor)
 - `swiftcpq-templater` container app (internal ingress only)
 
 ---
@@ -38,6 +39,9 @@ param containerAppEnvName string = 'swiftcpq-env'
 
 @description('Name of the main SwiftCPQ container app')
 param mainAppName string = 'swiftcpq'
+
+@description('Name of the worker container app')
+param workerAppName string = 'swiftcpq-worker'
 
 @description('Name of the templater container app')
 param templaterAppName string = 'swiftcpq-templater'
@@ -193,6 +197,40 @@ resource templater 'Microsoft.App/containerApps@2024-03-01' = {
   dependsOn: [acrPullAssignment]
 }
 
+// --- Worker (no ingress) ------------------------------------------------------
+resource worker 'Microsoft.App/containerApps@2024-03-01' = {
+  name: workerAppName
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: { '${identity.id}': {} }
+  }
+  properties: {
+    managedEnvironmentId: env.id
+    configuration: {
+      registries: [{ server: acr.properties.loginServer, identity: identity.id }]
+      secrets: [
+        { name: 'database-url', value: databaseUrl }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'worker'
+          image: '${acr.properties.loginServer}/swiftcpq-worker:latest'
+          resources: { cpu: json('0.5'), memory: '1Gi' }
+          env: [
+            { name: 'NODE_ENV', value: 'production' }
+            { name: 'DATABASE_URL', secretRef: 'database-url' }
+          ]
+        }
+      ]
+      scale: { minReplicas: 1, maxReplicas: 1 }
+    }
+  }
+  dependsOn: [acrPullAssignment]
+}
+
 // --- Main App (public) --------------------------------------------------------
 resource mainApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: mainAppName
@@ -238,7 +276,7 @@ resource mainApp 'Microsoft.App/containerApps@2024-03-01' = {
       scale: { minReplicas: 1, maxReplicas: 3 }
     }
   }
-  dependsOn: [acrPullAssignment, templater]
+  dependsOn: [acrPullAssignment, templater, worker]
 }
 
 // --- Outputs ------------------------------------------------------------------
@@ -360,10 +398,12 @@ ACR=$(az deployment group show \
 az acr login --name swiftcpqregistry
 
 docker build -t $ACR/swiftcpq:latest . && docker push $ACR/swiftcpq:latest
+docker build -f .docker/Dockerfile.worker -t $ACR/swiftcpq-worker:latest . && docker push $ACR/swiftcpq-worker:latest
 docker build -t $ACR/swiftcpq-templater:latest ./templater && docker push $ACR/swiftcpq-templater:latest
 
 # Trigger a new revision so Container Apps pulls the image
 az containerapp update --name swiftcpq --resource-group swiftcpq-rg --image $ACR/swiftcpq:latest
+az containerapp update --name swiftcpq-worker --resource-group swiftcpq-rg --image $ACR/swiftcpq-worker:latest
 az containerapp update --name swiftcpq-templater --resource-group swiftcpq-rg --image $ACR/swiftcpq-templater:latest
 
 # Run migrations and seed

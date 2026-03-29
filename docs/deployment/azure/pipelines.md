@@ -3,7 +3,7 @@
 Both pipelines follow the same steps:
 1. Build Docker images tagged with the commit SHA
 2. Push to Azure Container Registry
-3. Update both Container Apps to the new image
+3. Update all three Container Apps (main, worker, templater) to the new image
 4. Run database migrations
 
 ---
@@ -129,6 +129,7 @@ env:
   RESOURCE_GROUP: swiftcpq-rg
   ACR_NAME: swiftcpqregistry
   MAIN_APP: swiftcpq
+  WORKER_APP: swiftcpq-worker
   TEMPLATER_APP: swiftcpq-templater
 
 jobs:
@@ -160,6 +161,12 @@ jobs:
           docker push $ACR_SERVER/swiftcpq:${{ github.sha }}
           docker push $ACR_SERVER/swiftcpq:latest
 
+      - name: Build and push worker
+        run: |
+          docker build -f .docker/Dockerfile.worker -t $ACR_SERVER/swiftcpq-worker:${{ github.sha }} -t $ACR_SERVER/swiftcpq-worker:latest .
+          docker push $ACR_SERVER/swiftcpq-worker:${{ github.sha }}
+          docker push $ACR_SERVER/swiftcpq-worker:latest
+
       - name: Build and push templater
         run: |
           docker build -t $ACR_SERVER/swiftcpq-templater:${{ github.sha }} -t $ACR_SERVER/swiftcpq-templater:latest ./templater
@@ -172,6 +179,13 @@ jobs:
             --name $MAIN_APP \
             --resource-group $RESOURCE_GROUP \
             --image $ACR_SERVER/swiftcpq:${{ github.sha }}
+
+      - name: Deploy worker
+        run: |
+          az containerapp update \
+            --name $WORKER_APP \
+            --resource-group $RESOURCE_GROUP \
+            --image $ACR_SERVER/swiftcpq-worker:${{ github.sha }}
 
       - name: Deploy templater
         run: |
@@ -230,6 +244,8 @@ variables:
     value: swiftcpqregistry
   - name: MAIN_APP
     value: swiftcpq
+  - name: WORKER_APP
+    value: swiftcpq-worker
   - name: TEMPLATER_APP
     value: swiftcpq-templater
   - name: IMAGE_TAG
@@ -310,6 +326,18 @@ stages:
                         --name $(MAIN_APP) \
                         --resource-group $(RESOURCE_GROUP) \
                         --image $(getAcr.ACR_SERVER)/swiftcpq:$(IMAGE_TAG)
+
+                - task: AzureCLI@2
+                  displayName: Deploy worker
+                  inputs:
+                    azureSubscription: SwiftCPQ-Azure
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az containerapp update \
+                        --name $(WORKER_APP) \
+                        --resource-group $(RESOURCE_GROUP) \
+                        --image $(getAcr.ACR_SERVER)/swiftcpq-worker:$(IMAGE_TAG)
 
                 - task: AzureCLI@2
                   displayName: Deploy templater

@@ -13,10 +13,10 @@ The recommended Azure setup uses:
 | Service | Purpose |
 |---------|---------|
 | **Azure Container Registry (ACR)** | Store Docker images |
-| **Azure Container Apps** | Run the app and templater containers |
+| **Azure Container Apps** | Run the app, worker, and templater containers |
 | **Azure Database for PostgreSQL – Flexible Server** | Managed PostgreSQL |
 
-Azure Container Apps is preferred over App Service here because it natively supports multiple containers with internal-only networking - the templater never needs a public URL.
+Azure Container Apps is preferred over App Service here because it natively supports multiple containers with internal-only networking — the worker and templater never need a public URL.
 
 ---
 
@@ -34,6 +34,7 @@ LOCATION=australiaeast          # change to your preferred region
 ACR_NAME=swiftcpqregistry       # must be globally unique, lowercase
 APP_ENV=swiftcpq-env
 MAIN_APP=swiftcpq
+WORKER_APP=swiftcpq-worker
 TEMPLATER_APP=swiftcpq-templater
 PG_SERVER=swiftcpq-pg
 PG_USER=swiftcpqadmin
@@ -79,6 +80,10 @@ ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer -o tsv)
 # Main app (Express + Vue)
 docker build -t $ACR_LOGIN_SERVER/swiftcpq:latest .
 docker push $ACR_LOGIN_SERVER/swiftcpq:latest
+
+# Worker
+docker build -f .docker/Dockerfile.worker -t $ACR_LOGIN_SERVER/swiftcpq-worker:latest .
+docker push $ACR_LOGIN_SERVER/swiftcpq-worker:latest
 
 # Templater
 docker build -t $ACR_LOGIN_SERVER/swiftcpq-templater:latest ./templater
@@ -209,7 +214,32 @@ Azure Container Apps provides a free `*.azurecontainerapps.io` URL. To use a cus
 
 ---
 
-## Step 8 - Run Migrations
+## Step 8 - Deploy the Worker (internal only)
+
+The worker has no HTTP server, so it needs no ingress. It shares the same `DATABASE_URL` and secrets as the main app.
+
+```bash
+az containerapp create \
+  --name $WORKER_APP \
+  --resource-group $RESOURCE_GROUP \
+  --environment $APP_ENV \
+  --image $ACR_LOGIN_SERVER/swiftcpq-worker:latest \
+  --registry-server $ACR_LOGIN_SERVER \
+  --registry-username $ACR_NAME \
+  --registry-password $ACR_PASSWORD \
+  --ingress disabled \
+  --env-vars \
+      NODE_ENV=production \
+      DATABASE_URL="$DATABASE_URL" \
+  --min-replicas 1 \
+  --max-replicas 1
+```
+
+> `MODE=0` is baked into the worker image (`ENV MODE=0` in `Dockerfile.worker`), so no HTTP server starts. The worker polls the database directly and does not communicate with the main app over the network.
+
+---
+
+## Step 9 - Run Migrations
 
 Run migrations once against the Azure database (and again after each release):
 
@@ -231,7 +261,7 @@ az containerapp exec \
 
 ---
 
-## Step 9 - Microsoft Entra ID (optional)
+## Step 10 - Microsoft Entra ID (optional)
 
 Since the app is already running on Azure infrastructure, Entra login is straightforward to add.
 
@@ -260,10 +290,12 @@ When `ENTRA_CLIENT_ID` is set, the login page will show a "Sign in with Microsof
 ```bash
 # Rebuild and push updated images
 docker build -t $ACR_LOGIN_SERVER/swiftcpq:latest . && docker push $ACR_LOGIN_SERVER/swiftcpq:latest
+docker build -f .docker/Dockerfile.worker -t $ACR_LOGIN_SERVER/swiftcpq-worker:latest . && docker push $ACR_LOGIN_SERVER/swiftcpq-worker:latest
 docker build -t $ACR_LOGIN_SERVER/swiftcpq-templater:latest ./templater && docker push $ACR_LOGIN_SERVER/swiftcpq-templater:latest
 
 # Redeploy (pulls the new image)
 az containerapp update --name $MAIN_APP --resource-group $RESOURCE_GROUP --image $ACR_LOGIN_SERVER/swiftcpq:latest
+az containerapp update --name $WORKER_APP --resource-group $RESOURCE_GROUP --image $ACR_LOGIN_SERVER/swiftcpq-worker:latest
 az containerapp update --name $TEMPLATER_APP --resource-group $RESOURCE_GROUP --image $ACR_LOGIN_SERVER/swiftcpq-templater:latest
 
 # Run any new migrations
