@@ -1,17 +1,29 @@
 # Worker mode - runs the server process with MODE=0 (no HTTP server, no frontend)
 # Used to offload background work from the main app.
-FROM node:20 AS production
+FROM node:22 AS build
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy workspace config and lockfile first for layer caching
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY server/package.json server/
+
+RUN pnpm install --frozen-lockfile
+
+COPY server/ server/
+RUN pnpm --filter swiftcpq_server run build
+
+# Production image
+FROM node:22-slim AS production
 
 WORKDIR /server
 
-COPY server/package.json server/package-lock.json ./
-RUN npm install
-
-COPY server/ ./
-RUN npm run build
-
-COPY /server/src/data /server/dist/data
+COPY --from=build /app/server/dist ./dist
+COPY --from=build /app/server/package.json ./
+COPY --from=build /app/server/node_modules ./node_modules
 
 ENV MODE=0
 
-CMD ["npm", "run", "start:dist"]
+CMD ["node", "dist/index.js"]

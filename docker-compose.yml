@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: swiftcpq-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - swiftcpq-net
+
+  swiftcpq:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    container_name: swiftcpq
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      TEMPLATER_URL: http://swiftcpq-templater:5005
+      ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
+      ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:-}
+      ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
+      ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:-}
+    ports:
+      - "5000:5000"
+    volumes:
+      - appdata:/server/dist/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - swiftcpq-net
+
+  swiftcpq-worker:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.worker
+    container_name: swiftcpq-worker
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      WORKER_POLL_INTERVAL: ${WORKER_POLL_INTERVAL:-5000}
+      WORKER_CLEANUP_INTERVAL: ${WORKER_CLEANUP_INTERVAL:-86400000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - swiftcpq-net
+
+  swiftcpq-templater:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.templater
+    container_name: swiftcpq-templater
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MAIN_SERVER_URL: http://swiftcpq:5000
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    restart: unless-stopped
+    networks:
+      - swiftcpq-net
+
+volumes:
+  pgdata:
+  appdata:
+
+networks:
+  swiftcpq-net:

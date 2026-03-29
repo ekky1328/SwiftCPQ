@@ -1,0 +1,17 @@
+{
+  "name": "swiftcpq",
+  "private": true,
+  "description": "SwiftCPQ monorepo root",
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "esbuild",
+      "puppeteer",
+      "unrs-resolver",
+      "vue-demi"
+    ]
+  }
+}

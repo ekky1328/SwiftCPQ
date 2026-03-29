@@ -2,11 +2,12 @@
 
 ## Prerequisites
 
-| Tool        | Version | Notes                                 |
-|-------------|---------|---------------------------------------|
-| Node.js     | v20+    | [nodejs.org](https://nodejs.org)      |
-| PostgreSQL  | 15+     | Local instance or Docker              |
-| Git         | any     |                                       |
+| Tool        | Version | Notes                                       |
+|-------------|---------|---------------------------------------------|
+| Node.js     | v22+    | [nodejs.org](https://nodejs.org)            |
+| pnpm        | 10+     | `corepack enable` to activate               |
+| PostgreSQL  | 15+     | Local instance or Docker                    |
+| Git         | any     |                                             |
 
 ---
 
@@ -15,6 +16,7 @@
 ```bash
 git clone https://github.com/ekky1328/SwiftCPQ.git
 cd SwiftCPQ
+pnpm install   # installs all workspace packages
 ```
 
 SwiftCPQ has four services that each run in their own terminal:
@@ -60,18 +62,17 @@ JWT_REFRESH_SECRET=another-long-random-string
 INTERNAL_SERVICE_TOKEN=shared-secret-for-templater
 ```
 
-Install dependencies, run migrations, and seed the database:
+Run migrations and seed the database:
 
 ```bash
-npm install
-npm run migrate:up
-npm run seed
+pnpm run migrate:up
+pnpm run seed
 ```
 
 Start the dev server:
 
 ```bash
-npm run dev:server
+pnpm run dev:server
 ```
 Open server at http://localhost:5000
 
@@ -94,9 +95,9 @@ Open server at http://localhost:5000
 ### Database Scripts
 
 ```bash
-npm run migrate:up      # Apply all pending migrations
-npm run migrate:down    # Roll back the last migration batch
-npm run seed            # Seed initial tenant, user, and settings
+pnpm run migrate:up      # Apply all pending migrations
+pnpm run migrate:down    # Roll back the last migration batch
+pnpm run seed            # Seed initial tenant, user, and settings
 ```
 
 The seed creates a default user: **michael.scott / password** (bcrypt-hashed).
@@ -107,8 +108,7 @@ The seed creates a default user: **michael.scott / password** (bcrypt-hashed).
 
 ```bash
 cd client
-npm install
-npm run dev
+pnpm run dev
 # → http://localhost:5173
 ```
 
@@ -138,8 +138,7 @@ INTERNAL_SERVICE_TOKEN=same-secret-as-server
 `INTERNAL_SERVICE_TOKEN` must match the value in `server/.env`.
 
 ```bash
-npm install
-npm run dev
+pnpm run dev
 # → http://localhost:5005
 ```
 
@@ -170,7 +169,7 @@ Start the worker in development:
 
 ```bash
 cd server
-npm run dev:worker
+pnpm run dev:worker
 ```
 
 The worker does two things on a recurring basis:
@@ -199,7 +198,7 @@ In production the worker runs in its own container built from `.docker/Dockerfil
 
 ```dockerfile
 ENV MODE=0
-CMD ["npm", "run", "start:dist"]
+CMD ["node", "dist/index.js"]
 ```
 
 Build and run it independently from the main server container so background processing does not compete with request handling.

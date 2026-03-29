@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   TZ: UTC
 
 jobs:
@@ -20,15 +20,18 @@ jobs:
         working-directory: server
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test -- --testPathPattern=test/unit --passWithNoTests
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        working-directory: .
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - run: pnpm test --testPathPattern=test/unit --passWithNoTests
 
   server-integration:
     name: Server - Integration Tests
@@ -59,13 +62,16 @@ jobs:
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm test -- --testPathPattern=test/integration --passWithNoTests
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        working-directory: .
+      - run: pnpm test --testPathPattern=test/integration --passWithNoTests
 
   client:
     name: Client - Typecheck, Unit Tests
@@ -75,14 +81,17 @@ jobs:
         working-directory: client
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: client/package-lock.json
-      - run: npm ci
-      - run: npx vue-tsc -b --noEmit
-      - run: npm test -- --passWithNoTests
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        working-directory: .
+      - run: pnpm exec vue-tsc -b --noEmit
+      - run: pnpm test --passWithNoTests
 
   templater:
     name: Templater - Lint, Typecheck, Unit Tests
@@ -92,12 +101,15 @@ jobs:
         working-directory: templater
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: templater/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test -- --passWithNoTests
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        working-directory: .
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - run: pnpm test --passWithNoTests

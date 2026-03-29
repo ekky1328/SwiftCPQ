@@ -34,27 +34,12 @@ If you're running PostgreSQL on the same host as Docker, use `host.docker.intern
 
 ---
 
-## 2. Environment Files
+## 2. Environment File
 
-### `server/.env` (production)
+The `docker-compose.yml` reads all configuration from a single `.env` file in the project root. Copy the example and fill in your values:
 
-```env
-NODE_ENV=production
-DATABASE_URL=postgres://USER:PASSWORD@HOST:5432/swiftcpq
-
-JWT_SECRET=<64+ char random string>
-JWT_REFRESH_SECRET=<64+ char random string, different from JWT_SECRET>
-
-CORS_ORIGIN=https://your-domain.com
-INTERNAL_SERVICE_TOKEN=<random string, shared with templater>
-
-TEMPLATER_URL=http://swiftcpq-templater:5005
-
-# Leave blank to disable Entra
-ENTRA_CLIENT_ID=
-ENTRA_CLIENT_SECRET=
-ENTRA_TENANT_ID=
-ENTRA_REDIRECT_URI=https://your-domain.com/api/v1/auth/entra/callback
+```bash
+cp .env.example .env
 ```
 
 Generate secrets with:
@@ -62,13 +47,18 @@ Generate secrets with:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-### `templater/.env` (production)
+Key variables to change:
 
-```env
-NODE_ENV=production
-MAIN_SERVER_URL=http://swiftcpq:5000
-INTERNAL_SERVICE_TOKEN=<same value as server INTERNAL_SERVICE_TOKEN>
-```
+| Variable | Description |
+|----------|-------------|
+| `POSTGRES_PASSWORD` | Database password (also update in `DATABASE_URL`) |
+| `DATABASE_URL` | Full connection string — host is `swiftcpq-postgres` inside Docker |
+| `JWT_SECRET` | 64+ char random string for access tokens |
+| `JWT_REFRESH_SECRET` | 64+ char random string for refresh tokens (different from above) |
+| `CORS_ORIGIN` | Your public domain, e.g. `https://your-domain.com` |
+| `INTERNAL_SERVICE_TOKEN` | Shared secret for service-to-service auth |
+
+See `.env.example` for the full list including optional Entra ID variables.
 
 ---
 
@@ -76,37 +66,11 @@ INTERNAL_SERVICE_TOKEN=<same value as server INTERNAL_SERVICE_TOKEN>
 
 ### Option A: Docker Compose (recommended)
 
-Create `docker-compose.yml` in the project root:
+A `docker-compose.yml` is included in the project root. Copy the example environment file and fill in your values:
 
-```yaml
-services:
-  swiftcpq:
-    build:
-      context: .
-      dockerfile: .docker/Dockerfile
-    container_name: swiftcpq
-    env_file: server/.env
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./data:/server/dist/data
-    restart: unless-stopped
-
-  swiftcpq-worker:
-    build:
-      context: .
-      dockerfile: .docker/Dockerfile.worker
-    container_name: swiftcpq-worker
-    env_file: server/.env
-    restart: unless-stopped
-
-  swiftcpq-templater:
-    build:
-      context: .
-      dockerfile: .docker/Dockerfile.templater
-    container_name: swiftcpq-templater
-    env_file: templater/.env
-    restart: unless-stopped
+```bash
+cp .env.example .env
+# Edit .env with your database credentials, secrets, etc.
 ```
 
 > Neither the worker nor the templater are exposed externally — they communicate with the main container over the Docker network.
@@ -120,13 +84,13 @@ docker compose up -d --build
 Run migrations against the production database (once, or after each release):
 
 ```bash
-docker exec swiftcpq npm run migrate:up
+docker exec swiftcpq pnpm run migrate:up
 ```
 
 Seed initial data (first deploy only):
 
 ```bash
-docker exec swiftcpq npm run seed
+docker exec swiftcpq pnpm run seed
 ```
 
 ---
@@ -213,16 +177,16 @@ Always run migrations before starting a new release:
 
 ```bash
 # With Docker Compose
-docker compose run --rm swiftcpq npm run migrate:up
+docker compose run --rm swiftcpq pnpm run migrate:up
 
 # With standalone Docker
-docker exec swiftcpq npm run migrate:up
+docker exec swiftcpq pnpm run migrate:up
 ```
 
 To roll back the last batch:
 
 ```bash
-docker exec swiftcpq npm run migrate:down
+docker exec swiftcpq pnpm run migrate:down
 ```
 
 ---
@@ -263,4 +227,4 @@ Use this in your uptime monitor or Docker healthcheck config.
 1. Pull the latest code
 2. Review any new `.env.sample` entries and add them to your `.env`
 3. Rebuild the containers: `docker compose up -d --build`
-4. Run migrations: `docker exec swiftcpq npm run migrate:up`
+4. Run migrations: `docker exec swiftcpq pnpm run migrate:up`

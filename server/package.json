@@ -1,13 +1,16 @@
 {
   "name": "swiftcpq_server",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=22"
+  },
   "description": "SwiftCPQ is a fast, open-source quotation/proposal generation tool, designed to streamline the sales process.",
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev:server": "cross-env MODE=1 nodemon src/index.ts",
     "dev:worker": "cross-env MODE=0 nodemon src/index.ts",
-    "build": "tsc && npm run copy-templates",
+    "build": "tsc",
     "start:dist": "node dist/index.js",
     "lint": "eslint --fix src test",
     "test": "jest",

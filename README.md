@@ -92,24 +92,25 @@ If you're a developer, and you would like to help move the project forward, you'
 
 ## Development Environment
 
-**Prerequisites:** Node.js v20+, PostgreSQL 15+, Git
+**Prerequisites:** Node.js v22+, pnpm 10+ (`corepack enable`), PostgreSQL 15+, Git
 
 ```bash
 git clone https://github.com/ekky1328/SwiftCPQ.git
 cd SwiftCPQ
+pnpm install                       # installs all workspace packages
 
 # Server
 cd server && cp .env.sample .env   # edit DATABASE_URL + secrets
-npm install && npm run migrate:up && npm run seed
-npm run dev:server                 # → http://localhost:5000
+pnpm run migrate:up && pnpm run seed
+pnpm run dev:server                # → http://localhost:5000
 
 # Client (new terminal)
-cd client && npm install
-npm run dev                        # → http://localhost:5173
+cd client
+pnpm run dev                       # → http://localhost:5173
 
 # Templater (new terminal)
 cd templater && cp .env.sample .env
-npm install && npm run dev         # → http://localhost:5005
+pnpm run dev                       # → http://localhost:5005
 ```
 
 ## Deployment

@@ -1,5 +1,21 @@
 # Templater service — EJS + Puppeteer PDF generation on port 5005
-FROM node:20-slim AS production
+FROM node:22-slim AS build
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy workspace config and lockfile first for layer caching
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY templater/package.json templater/
+
+RUN pnpm install --frozen-lockfile
+
+COPY templater/ templater/
+RUN pnpm --filter swiftcpq_templater run build
+
+# Production image with system Chromium
+FROM node:22-slim AS production
 
 # Install system Chromium and its dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
@@ -43,14 +59,10 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /templater
 
-COPY templater/package.json templater/package-lock.json ./
-RUN npm install
-
-COPY templater/ ./
-RUN npm run build
-
-RUN cp -r src/views dist/views && cp -r src/public dist/public
+COPY --from=build /app/templater/dist ./dist
+COPY --from=build /app/templater/package.json ./
+COPY --from=build /app/templater/node_modules ./node_modules
 
 EXPOSE 5005
 
-CMD ["npm", "run", "start:dist"]
+CMD ["node", "dist/index.js"]

@@ -199,7 +199,7 @@ jobs:
           az containerapp exec \
             --name $MAIN_APP \
             --resource-group $RESOURCE_GROUP \
-            --command "npm run migrate:up"
+            --command "pnpm run migrate:up"
 ```
 
 > Images are tagged with both the commit SHA (immutable, for rollback) and `latest` (for convenience).
@@ -361,7 +361,7 @@ stages:
                       az containerapp exec \
                         --name $(MAIN_APP) \
                         --resource-group $(RESOURCE_GROUP) \
-                        --command "npm run migrate:up"
+                        --command "pnpm run migrate:up"
 ```
 
 > The `deployment` job type (rather than plain `job`) tracks deployments against an **environment**, giving you a deployment history and the ability to add approval gates in Azure DevOps before the deploy stage runs.
