@@ -1,6 +1,6 @@
 {
   "root": true,
-  "ignorePatterns": ["src/public/tailwind.js"],
+  "ignorePatterns": ["src/public/*.js"],
   "env": {
     "jest": true
   },
