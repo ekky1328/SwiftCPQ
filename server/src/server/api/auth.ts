@@ -10,7 +10,7 @@ import {
 } from 'openid-client';
 
 import db from '../../database/db';
-import { verifyPassword } from '../helpers/passwords';
+import { hashPassword, verifyPassword } from '../helpers/passwords';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, TokenPayload } from '../helpers/jwt';
 import { setAuthCookies, clearAuthCookies } from '../helpers/cookies';
 import { requireAuth } from '../middlewares';
@@ -59,6 +59,7 @@ authRouter.get('/config', (_req, res) => {
   res.json({
     local: true,
     entra: !!(process.env.ENTRA_CLIENT_ID && process.env.ENTRA_CLIENT_SECRET && process.env.ENTRA_TENANT_ID),
+    multiTenant: !!process.env.MULTI_TENANT,
   });
 });
 
@@ -75,10 +76,16 @@ authRouter.post('/login', async (req, res, next) => {
       return;
     }
 
-    const user = await db('user')
+    let userQuery = db('user')
       .where('username', username)
-      .where('auth_provider', 'LOCAL')
-      .first();
+      .where('auth_provider', 'LOCAL');
+
+    // In multi-tenant mode, scope login to the resolved tenant subdomain
+    if (process.env.MULTI_TENANT && req.tenantId) {
+      userQuery = userQuery.where('tenant_id', req.tenantId);
+    }
+
+    const user = await userQuery.first();
 
     if (!user || !(await verifyPassword(password, user.password_hash))) {
       res.status(401).json({ message: 'Invalid username or password' });
@@ -206,6 +213,17 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
       return;
     }
 
+    // Fetch user permissions via role assignments
+    const permissionRows = await db('tenant_role_user')
+      .join('tenant_role_permission', 'tenant_role_user.role_id', 'tenant_role_permission.role_id')
+      .join('tenant_permission', 'tenant_role_permission.permission_id', 'tenant_permission.id')
+      .where('tenant_role_user.user_id', user.id)
+      .where('tenant_permission.is_active', true)
+      .select('tenant_permission.name')
+      .distinct();
+
+    const permissions = permissionRows.map((r: { name: string }) => r.name);
+
     res.json({
       id: user.id,
       firstName: user.first_name,
@@ -216,7 +234,76 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
       isSuperAdmin: user.is_super_admin,
       authProvider: user.auth_provider,
       tenantId: user.tenant_id,
+      permissions,
+      forcePasswordReset: user.force_password_reset,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/v1/auth/change-password
+ * Allows an authenticated user to change their password. Also clears force_password_reset flag.
+ */
+authRouter.post('/change-password', requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ message: 'Current password and new password are required' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ message: 'New password must be at least 8 characters' });
+      return;
+    }
+
+    const user = await db('user')
+      .where('id', req.user!.userId)
+      .where('auth_provider', 'LOCAL')
+      .first();
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    if (!(await verifyPassword(currentPassword, user.password_hash))) {
+      res.status(401).json({ message: 'Current password is incorrect' });
+      return;
+    }
+
+    const newHash = await hashPassword(newPassword);
+
+    await db('user')
+      .where('id', user.id)
+      .update({ password_hash: newHash, force_password_reset: false });
+
+    // Revoke all existing refresh tokens for this user
+    await db('user_refresh_token').where('user_id', user.id).delete();
+
+    // Issue new tokens
+    const payload: TokenPayload = {
+      userId: user.id,
+      tenantId: user.tenant_id,
+      isSuperAdmin: user.is_super_admin,
+    };
+
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await db('user_refresh_token').insert({
+      user_id: user.id,
+      tenant_id: user.tenant_id,
+      token_hash: hashToken(refreshToken),
+      expires_at: expiresAt,
+    });
+
+    setAuthCookies(res, accessToken, refreshToken);
+    res.json({ message: 'Password changed successfully' });
   } catch (err) {
     next(err);
   }
@@ -291,8 +378,13 @@ authRouter.get('/entra/callback', async (req, res, next) => {
     const [firstName, ...rest] = name.split(' ');
     const lastName = rest.join(' ') || 'User';
 
-    // Look up active tenant (Entra users belong to the active tenant)
-    const tenant = await db('tenant').where('status', 'ACTIVE').first();
+    // Resolve tenant: use subdomain-resolved tenant in multi-tenant mode, else first active
+    let tenant;
+    if (process.env.MULTI_TENANT && req.tenantId) {
+      tenant = await db('tenant').where('id', req.tenantId).first();
+    } else {
+      tenant = await db('tenant').where('status', 'ACTIVE').first();
+    }
     if (!tenant) {
       res.status(500).json({ message: 'No active tenant found' });
       return;

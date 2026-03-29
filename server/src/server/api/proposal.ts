@@ -48,18 +48,6 @@ const DEFAULT_TEMPLATE_SECTIONS = [
 
 
 /**
- * Helper to get the default tenant ID.
- */
-async function getDefaultTenantId(): Promise<string> {
-  const tenant = await db('tenant').where('status', 'ACTIVE').first();
-  if (!tenant) {
-    throw new Error('No active tenant found');
-  }
-  return tenant.id;
-}
-
-
-/**
  * Maps a database section row to a Section object with camelCase keys.
  */
 export function mapSectionFromDb(row: Record<string, unknown>): Section {
@@ -275,7 +263,7 @@ async function fetchCoreSettings(tenantId: string): Promise<Record<string, unkno
  */
 proposalRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
 
     const rows = await db('proposal')
       .select(
@@ -338,7 +326,7 @@ proposalRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
     const calculatedProposal = calculateProposalTotals(proposal);
 
     if (req.query.coreSettings) {
-      const tenantId = await getDefaultTenantId();
+      const tenantId = req.user!.tenantId;
       const coreSettings = await fetchCoreSettings(tenantId);
 
       if (coreSettings) {
@@ -364,7 +352,7 @@ proposalRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
  */
 proposalRouter.post<{}, MessageResponse>('/:template_name', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
 
     // Generate a sequential identifier
     const countResult = await db('proposal').where('tenant_id', tenantId).count('* as count').first();

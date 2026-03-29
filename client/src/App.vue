@@ -18,18 +18,22 @@
         <router-link to="/customers" v-tooltip="'Customers'">
           <span class="pi pi-building" title="Customers"></span>
         </router-link>
-        <template v-if="auth.user.isSuperAdmin">
-          <router-link to="/suppliers" v-tooltip="'Suppliers'">
-            <span class="pi pi-truck" title="Suppliers"></span>
-          </router-link>
-          <router-link to="/users" v-tooltip="'Users'">
-            <span class="pi pi-users" title="Users"></span>
-          </router-link>
-          <router-link to="/roles" v-tooltip="'Roles'">
-            <span class="pi pi-shield" title="Roles"></span>
-          </router-link>
-          <router-link to="/settings" v-tooltip="'Settings'">
-            <span class="pi pi-cog" title="Settings"></span>
+        <router-link v-if="auth.hasPermission('supplier.manage')" to="/suppliers" v-tooltip="'Suppliers'">
+          <span class="pi pi-truck" title="Suppliers"></span>
+        </router-link>
+        <router-link v-if="auth.hasPermission('users.manage')" to="/users" v-tooltip="'Users'">
+          <span class="pi pi-users" title="Users"></span>
+        </router-link>
+        <router-link v-if="auth.hasPermission('roles.manage')" to="/roles" v-tooltip="'Roles'">
+          <span class="pi pi-shield" title="Roles"></span>
+        </router-link>
+        <router-link v-if="auth.hasPermission('system.manage')" to="/settings" v-tooltip="'Settings'">
+          <span class="pi pi-cog" title="Settings"></span>
+        </router-link>
+        <template v-if="auth.authMethods?.multiTenant && auth.user.isSuperAdmin">
+          <div class="nav-separator"></div>
+          <router-link to="/admin/tenants" v-tooltip="'Tenants'">
+            <span class="pi pi-sitemap" title="Tenants"></span>
           </router-link>
         </template>
       </div>
@@ -81,6 +85,12 @@ if (import.meta.env) {
 
   .nav-links {
     flex: 1;
+  }
+
+  .nav-separator {
+    height: 1px;
+    background-color: #d1d5db;
+    margin: 4px 8px;
   }
 
   .nav-footer {

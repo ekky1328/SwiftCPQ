@@ -8,6 +8,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: TokenPayload;
+      tenantId?: string | null;
     }
   }
 }
@@ -27,6 +28,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
   try {
     req.user = verifyAccessToken(token);
+
+    // In multi-tenant mode, verify the JWT tenant matches the resolved subdomain tenant
+    if (process.env.MULTI_TENANT && req.tenantId && req.user.tenantId !== req.tenantId) {
+      res.status(403).json({ message: 'Forbidden: tenant mismatch' });
+      return;
+    }
+
     next();
   } catch {
     res.status(401).json({ message: 'Unauthorized' });
@@ -77,6 +85,30 @@ export function requirePermission(permissionName: string) {
       next(err);
     }
   };
+}
+
+/**
+ * Middleware that restricts access to super admin users only.
+ * Also requires MULTI_TENANT mode to be enabled.
+ * Must be used AFTER requireAuth so that req.user is populated.
+ */
+export function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!process.env.MULTI_TENANT) {
+    res.status(404).json({ message: 'Not found' });
+    return;
+  }
+
+  if (!req.user) {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
+
+  if (!req.user.isSuperAdmin) {
+    res.status(403).json({ message: 'Forbidden: super admin access required' });
+    return;
+  }
+
+  next();
 }
 
 export function notFound(req: Request, res: Response, next: NextFunction) {

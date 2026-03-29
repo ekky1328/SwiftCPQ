@@ -39,17 +39,11 @@ function formatItem(row: Record<string, any>) {
  */
 catalogueRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = req.user?.tenantId;
-    if (!tenantId) {
-      const tenant = await db('tenant').where('status', 'ACTIVE').first();
-      if (!tenant) { res.status(404).json({ message: 'No active tenant found' }); return; }
-    }
-
-    const resolvedTenantId = tenantId ?? (await db('tenant').where('status', 'ACTIVE').first())?.id;
+    const tenantId = req.user!.tenantId;
     const search = req.query.search as string | undefined;
 
     let query = db('catalogue_item')
-      .where('tenant_id', resolvedTenantId)
+      .where('tenant_id', tenantId)
       .where('is_active', true)
       .orderBy('title', 'asc');
 
@@ -153,10 +147,7 @@ catalogueRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
       return;
     }
 
-    const tenantId = req.user?.tenantId
-      ?? (await db('tenant').where('status', 'ACTIVE').first())?.id;
-
-    if (!tenantId) { res.status(404).json({ message: 'No active tenant found' }); return; }
+    const tenantId = req.user!.tenantId;
 
     const [row] = await db('catalogue_item').insert({
       tenant_id: tenantId,

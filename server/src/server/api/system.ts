@@ -12,13 +12,9 @@ const systemRouter = express.Router();
  */
 systemRouter.get<{}, MessageResponse>('/core-settings', async (req, res, next) => {
   try {
-    const tenant = await db('tenant').where('status', 'ACTIVE').first();
-    if (!tenant) {
-      res.status(404).json({ message: 'No active tenant found' });
-      return;
-    }
+    const tenantId = req.user!.tenantId;
 
-    const settings = await db('tenant_settings').where('tenant_id', tenant.id).first();
+    const settings = await db('tenant_settings').where('tenant_id', tenantId).first();
     if (!settings) {
       res.status(404).json({ message: 'Tenant settings not found' });
       return;
@@ -86,13 +82,9 @@ systemRouter.get<{}, MessageResponse>('/core-settings', async (req, res, next) =
  */
 systemRouter.put<{}, MessageResponse>('/core-settings', async (req, res, next) => {
   try {
-    const tenant = await db('tenant').where('status', 'ACTIVE').first();
-    if (!tenant) {
-      res.status(404).json({ message: 'No active tenant found' });
-      return;
-    }
+    const tenantId = req.user!.tenantId;
 
-    const settings = await db('tenant_settings').where('tenant_id', tenant.id).first();
+    const settings = await db('tenant_settings').where('tenant_id', tenantId).first();
     if (!settings) {
       res.status(404).json({ message: 'Tenant settings not found' });
       return;
@@ -173,7 +165,7 @@ systemRouter.put<{}, MessageResponse>('/core-settings', async (req, res, next) =
     }
 
     // Return updated settings (re-fetch to get current state)
-    const updatedSettings = await db('tenant_settings').where('tenant_id', tenant.id).first();
+    const updatedSettings = await db('tenant_settings').where('tenant_id', tenantId).first();
     const updatedTheme = updatedSettings.proposal_settings_default
       ? await db('tenant_theme').where('id', updatedSettings.proposal_settings_default).first()
       : null;

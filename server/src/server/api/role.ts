@@ -6,18 +6,6 @@ import MessageResponse from '../interfaces/MessageResponse';
 const roleRouter = express.Router();
 
 
-/**
- * Helper to get the default tenant ID.
- */
-async function getDefaultTenantId(): Promise<string> {
-  const tenant = await db('tenant').where('status', 'ACTIVE').first();
-  if (!tenant) {
-    throw new Error('No active tenant found');
-  }
-  return tenant.id;
-}
-
-
 // =============================================================================
 // ROLE ENDPOINTS
 // =============================================================================
@@ -30,7 +18,7 @@ async function getDefaultTenantId(): Promise<string> {
  */
 roleRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
 
     const roles = await db('tenant_role')
       .where('tenant_id', tenantId)
@@ -122,7 +110,7 @@ roleRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
  */
 roleRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { name, description } = req.body;
 
     if (!name) {
@@ -216,7 +204,7 @@ roleRouter.delete<{}, MessageResponse>('/:id', async (req, res, next) => {
  */
 roleRouter.post<{}, MessageResponse>('/:id/user', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { id } = req.params as { id: string };
     const { userId } = req.body;
 
@@ -278,7 +266,7 @@ roleRouter.delete<{}, MessageResponse>('/:id/user/:assignmentId', async (req, re
  */
 roleRouter.post<{}, MessageResponse>('/:id/permission', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { id } = req.params as { id: string };
     const { permissionId } = req.body;
 
@@ -345,7 +333,7 @@ roleRouter.delete<{}, MessageResponse>('/:id/permission/:assignmentId', async (r
  */
 roleRouter.get<{}, MessageResponse>('/permission/all', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
 
     const permissions = await db('tenant_permission')
       .where('tenant_id', tenantId)
@@ -372,7 +360,7 @@ roleRouter.get<{}, MessageResponse>('/permission/all', async (req, res, next) =>
  */
 roleRouter.post<{}, MessageResponse>('/permission', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { name, description } = req.body;
 
     if (!name) {

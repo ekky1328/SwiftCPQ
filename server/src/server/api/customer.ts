@@ -6,18 +6,6 @@ import MessageResponse from '../interfaces/MessageResponse';
 const customerRouter = express.Router();
 
 
-/**
- * Helper to get the default tenant ID.
- */
-async function getDefaultTenantId(): Promise<string> {
-  const tenant = await db('tenant').where('status', 'ACTIVE').first();
-  if (!tenant) {
-    throw new Error('No active tenant found');
-  }
-  return tenant.id;
-}
-
-
 // =============================================================================
 // CUSTOMER ENDPOINTS
 // =============================================================================
@@ -30,7 +18,7 @@ async function getDefaultTenantId(): Promise<string> {
  */
 customerRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
 
     const rows = await db('customer')
       .select(
@@ -141,7 +129,7 @@ customerRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
  */
 customerRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { name, email, phone } = req.body;
 
     if (!name) {
@@ -288,7 +276,7 @@ customerRouter.get<{}, MessageResponse>('/:id/contact', async (req, res, next) =
  */
 customerRouter.post<{}, MessageResponse>('/:id/contact', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { id } = req.params as { id: string };
     const { firstName, lastName, email, phone, role, locationId } = req.body;
 
@@ -450,7 +438,7 @@ customerRouter.get<{}, MessageResponse>('/:id/location', async (req, res, next) 
  */
 customerRouter.post<{}, MessageResponse>('/:id/location', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { id } = req.params as { id: string };
     const { addressLine1, addressLine2, city, state, zipCode, country } = req.body;
 

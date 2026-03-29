@@ -50,6 +50,12 @@ export const useAuthStore = defineStore('auth', () => {
     return null;
   }
 
+  function hasPermission(name: string): boolean {
+    if (!user.value) return false;
+    if (user.value.isSuperAdmin) return true;
+    return user.value.permissions.includes(name);
+  }
+
   async function logout() {
     await fetch(`${domain}/api/v1/auth/logout`, {
       method: 'POST',
@@ -59,5 +65,5 @@ export const useAuthStore = defineStore('auth', () => {
     router.push('/login');
   }
 
-  return { user, authMethods, initialize, login, logout };
+  return { user, authMethods, initialize, login, logout, hasPermission };
 });

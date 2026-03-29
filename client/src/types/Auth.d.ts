@@ -8,9 +8,12 @@ interface AuthUser {
   isSuperAdmin: boolean;
   authProvider: 'LOCAL' | 'ENTRA';
   tenantId: string;
+  permissions: string[];
+  forcePasswordReset: boolean;
 }
 
 interface AuthConfig {
   local: boolean;
   entra: boolean;
+  multiTenant: boolean;
 }

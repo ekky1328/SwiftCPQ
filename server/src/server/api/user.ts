@@ -8,18 +8,6 @@ const userRouter = express.Router();
 
 
 /**
- * Helper to get the default tenant ID.
- */
-async function getDefaultTenantId(): Promise<string> {
-  const tenant = await db('tenant').where('status', 'ACTIVE').first();
-  if (!tenant) {
-    throw new Error('No active tenant found');
-  }
-  return tenant.id;
-}
-
-
-/**
  * Maps a user row with optional contact/location joins to a response object.
  */
 function mapUserResponse(row: Record<string, unknown>) {
@@ -47,7 +35,7 @@ function mapUserResponse(row: Record<string, unknown>) {
  */
 userRouter.get<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
 
     const rows = await db('user')
       .select(
@@ -136,7 +124,7 @@ userRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
  */
 userRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { title, firstName, lastName, username, password, description } = req.body;
 
     if (!firstName || !lastName || !username || !password) {
@@ -289,7 +277,7 @@ userRouter.get<{}, MessageResponse>('/:id/contact', async (req, res, next) => {
  */
 userRouter.post<{}, MessageResponse>('/:id/contact', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { id } = req.params as { id: string };
     const { name, email, phone } = req.body;
 
@@ -436,7 +424,7 @@ userRouter.get<{}, MessageResponse>('/:id/location', async (req, res, next) => {
  */
 userRouter.post<{}, MessageResponse>('/:id/location', async (req, res, next) => {
   try {
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user!.tenantId;
     const { id } = req.params as { id: string };
     const { addressLine1, addressLine2, city, state, zipCode, country } = req.body;
 

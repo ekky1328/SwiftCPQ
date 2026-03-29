@@ -682,3 +682,123 @@ export async function GetIngestionJobStatus(jobId: string) {
         return null;
     }
 }
+
+// ─── Auth: Password Change ──────────────────────────────────────────────────
+
+export async function ChangePassword(currentPassword: string, newPassword: string) {
+    try {
+        const res = await apiFetch('/api/v1/auth/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword }),
+        });
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        console.error('ChangePassword error:', error);
+        return null;
+    }
+}
+
+// ─── Admin: Tenants ─────────────────────────────────────────────────────────
+
+export async function AdminGetTenants(status?: string) {
+    try {
+        const url = status
+            ? `/api/v1/admin/tenant?status=${encodeURIComponent(status)}`
+            : '/api/v1/admin/tenant';
+        const res = await apiFetch(url);
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        console.error('AdminGetTenants error:', error);
+        return null;
+    }
+}
+
+export async function AdminGetTenantById(id: string) {
+    try {
+        const res = await apiFetch(`/api/v1/admin/tenant/${id}`);
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        console.error('AdminGetTenantById error:', error);
+        return null;
+    }
+}
+
+export async function AdminCreateTenant(data: Record<string, unknown>) {
+    try {
+        const res = await apiFetch('/api/v1/admin/tenant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            return { error: true, message: body.message || 'Failed to create tenant' };
+        }
+        return res.json();
+    } catch (error) {
+        console.error('AdminCreateTenant error:', error);
+        return null;
+    }
+}
+
+export async function AdminUpdateTenant(id: string, data: Record<string, unknown>) {
+    try {
+        const res = await apiFetch(`/api/v1/admin/tenant/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            return { error: true, message: body.message || 'Failed to update tenant' };
+        }
+        return res.json();
+    } catch (error) {
+        console.error('AdminUpdateTenant error:', error);
+        return null;
+    }
+}
+
+export async function AdminSuspendTenant(id: string, reason: string) {
+    try {
+        const res = await apiFetch(`/api/v1/admin/tenant/${id}/suspend`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason }),
+        });
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        console.error('AdminSuspendTenant error:', error);
+        return null;
+    }
+}
+
+export async function AdminActivateTenant(id: string) {
+    try {
+        const res = await apiFetch(`/api/v1/admin/tenant/${id}/activate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        console.error('AdminActivateTenant error:', error);
+        return null;
+    }
+}
+
+export async function AdminGetTenantUsers(id: string) {
+    try {
+        const res = await apiFetch(`/api/v1/admin/tenant/${id}/users`);
+        if (!res.ok) return null;
+        return res.json();
+    } catch (error) {
+        console.error('AdminGetTenantUsers error:', error);
+        return null;
+    }
+}
