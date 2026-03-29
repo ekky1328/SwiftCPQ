@@ -495,7 +495,6 @@ CREATE UNIQUE INDEX catalogue_item_tenant_sku_unique
 
 --
 -- SUPPLIER TABLES
--- Created with final names directly (previously created as vendor_* then renamed)
 --
 
 CREATE TABLE supplier (
