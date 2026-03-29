@@ -20,15 +20,15 @@ const router = express.Router();
 
 router.use('/auth', authRouter);
 router.use('/proposal', requireAuth, proposalRouter);
+router.use('/customer', requireAuth, customerRouter);
+router.use('/catalogue', requireAuth, catalogueRouter);
+router.use('/supplier-inventory', requireAuth, supplierInventoryRouter);
 router.use('/system', requireAuth, requirePermission(PERMISSIONS.SYSTEM_MANAGE), systemRouter);
 router.use('/user', requireAuth, requirePermission(PERMISSIONS.USERS_MANAGE), userRouter);
-router.use('/customer', requireAuth, customerRouter);
 router.use('/role', requireAuth, requirePermission(PERMISSIONS.ROLES_MANAGE), roleRouter);
-router.use('/catalogue', requireAuth, catalogueRouter);
 router.use('/supplier', requireAuth, requirePermission(PERMISSIONS.SUPPLIER_MANAGE), supplierRouter);
-router.use('/import-template', requireAuth, requirePermission(PERMISSIONS.SUPPLIER_MANAGE), importTemplateRouter);
 router.use('/supplier-sku-mapping', requireAuth, requirePermission(PERMISSIONS.SUPPLIER_MANAGE), supplierSkuMappingRouter);
-router.use('/supplier-inventory', requireAuth, supplierInventoryRouter);
+router.use('/import-template', requireAuth, requirePermission(PERMISSIONS.SUPPLIER_MANAGE), importTemplateRouter);
 router.use('/ingestion', requireAuth, requirePermission(PERMISSIONS.INGESTION_MANAGE), ingestionRouter);
 router.use('/admin', requireAuth, requireSuperAdmin, adminRouter);
 

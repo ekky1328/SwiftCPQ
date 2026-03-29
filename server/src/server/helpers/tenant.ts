@@ -7,7 +7,7 @@ import db from '../../database/db';
  *
  * - Single-tenant mode (no MULTI_TENANT env): resolves the single active tenant.
  * - Multi-tenant mode: extracts the subdomain from the Host header and looks up the tenant.
- *   Root domain or 'admin' subdomain results in null tenantId (for super admin routes).
+ *   Root domain or 'admin' subdomain results in null tenantId (aka super admin routes).
  */
 export async function resolveTenant(req: Request, res: Response, next: NextFunction) {
   try {
@@ -25,15 +25,12 @@ export async function resolveTenant(req: Request, res: Response, next: NextFunct
       return next();
     }
 
-    // If host is the base domain itself or doesn't end with it, no tenant context
     if (host === baseDomain || !host.endsWith(`.${baseDomain}`)) {
       req.tenantId = null;
       return next();
     }
 
     const subdomain = host.slice(0, host.length - baseDomain.length - 1);
-
-    // Reserved subdomains that bypass tenant resolution
     if (subdomain === 'admin' || subdomain === 'www') {
       req.tenantId = null;
       return next();
@@ -51,7 +48,9 @@ export async function resolveTenant(req: Request, res: Response, next: NextFunct
 
     req.tenantId = tenant.id;
     next();
-  } catch (err) {
+  }
+  
+  catch (err) {
     next(err);
   }
 }

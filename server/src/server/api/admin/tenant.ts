@@ -169,7 +169,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
     }
 
     const normalizedSubdomain = subdomain.trim().toLowerCase();
-
     if (!SUBDOMAIN_REGEX.test(normalizedSubdomain)) {
       res.status(400).json({ message: 'Subdomain must be lowercase alphanumeric with hyphens only' });
       return;
@@ -180,7 +179,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
       return;
     }
 
-    // Check subdomain uniqueness
     const existingTenant = await db('tenant').where('subdomain', normalizedSubdomain).first();
     if (existingTenant) {
       res.status(409).json({ message: 'Subdomain is already in use' });
@@ -192,16 +190,14 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
       return;
     }
 
-    // Check username uniqueness (global constraint)
     const existingUser = await db('user').where('username', adminUser.username.trim()).first();
     if (existingUser) {
       res.status(409).json({ message: 'Username is already in use' });
       return;
     }
 
-    // Full provisioning within a transaction
     const result = await db.transaction(async (trx) => {
-      // 1. Tenant
+
       const [tenant] = await trx('tenant').insert({
         name: name.trim(),
         subdomain: normalizedSubdomain,
@@ -211,7 +207,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
 
       const tenantId = tenant.id;
 
-      // 2. Theme
       const [theme] = await trx('tenant_theme').insert({
         tenant_id: tenantId,
         primary: '#ff822d',
@@ -219,7 +214,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
         accent: '#CC681F',
       }).returning('id');
 
-      // 3. Address
       const [address] = await trx('tenant_address_information').insert({
         tenant_id: tenantId,
         address_line1: '',
@@ -229,7 +223,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
         country: '',
       }).returning('id');
 
-      // 4. Contact
       const [contact] = await trx('tenant_contact_information').insert({
         tenant_id: tenantId,
         address: address.id,
@@ -237,7 +230,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
         phone: '',
       }).returning('id');
 
-      // 5. Proposal settings
       const [proposalSettings] = await trx('tenant_proposal_setting').insert({
         tenant_id: tenantId,
         expiry: 14,
@@ -245,7 +237,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
         tax_rate: 10,
       }).returning('id');
 
-      // 6. Tenant settings
       await trx('tenant_settings').insert({
         tenant_id: tenantId,
         prefix: 'S-CPQ',
@@ -260,7 +251,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
         proposal_settings_default: theme.id,
       });
 
-      // 7. Permissions
       const permissionNames = Object.values(PERMISSIONS);
       const permissionInserts = permissionNames.map((pName) => ({
         tenant_id: tenantId,
@@ -270,14 +260,12 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
       }));
       const permissions = await trx('tenant_permission').insert(permissionInserts).returning('*');
 
-      // 8. Admin role
       const [adminRole] = await trx('tenant_role').insert({
         tenant_id: tenantId,
         name: 'Admin',
         description: 'Default administrator role with all permissions',
       }).returning('id');
 
-      // 9. Role-permission assignments
       const rolePermInserts = permissions.map((p: any) => ({
         tenant_id: tenantId,
         role_id: adminRole.id,
@@ -285,7 +273,6 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
       }));
       await trx('tenant_role_permission').insert(rolePermInserts);
 
-      // 10. Admin user
       const passwordHash = await hashPassword(adminUser.password);
       const [user] = await trx('user').insert({
         tenant_id: tenantId,
@@ -300,14 +287,12 @@ adminTenantRouter.post<{}, MessageResponse>('/', async (req, res, next) => {
         force_password_reset: true,
       }).returning('*');
 
-      // 11. Assign admin user to admin role
       await trx('tenant_role_user').insert({
         tenant_id: tenantId,
         role_id: adminRole.id,
         user_id: user.id,
       });
 
-      // 12. Set admin_user_id on tenant
       await trx('tenant').where('id', tenantId).update({ admin_user_id: user.id });
 
       return { tenant, user };
