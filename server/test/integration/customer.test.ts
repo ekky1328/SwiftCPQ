@@ -46,7 +46,7 @@ describe('POST /api/v1/customer/', () => {
       .set('Cookie', cookies)
       .send({ name: 'Acme Corp' });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.body.name).toBe('Acme Corp');
     expect(res.body.id).toBeDefined();
   });
