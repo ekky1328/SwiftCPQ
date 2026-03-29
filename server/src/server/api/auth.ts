@@ -169,11 +169,11 @@ authRouter.post('/refresh', async (req, res, next) => {
       return;
     }
 
-    // Rotate: delete old, issue new
     await db('user_refresh_token').where('token_hash', tokenHash).delete();
 
-    const newAccessToken = signAccessToken(payload);
-    const newRefreshToken = signRefreshToken(payload);
+    const { userId, tenantId, isSuperAdmin } = payload;
+    const newAccessToken = signAccessToken({ userId, tenantId, isSuperAdmin });
+    const newRefreshToken = signRefreshToken({ userId, tenantId, isSuperAdmin });
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await db('user_refresh_token').insert({
