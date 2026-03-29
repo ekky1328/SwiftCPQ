@@ -7,6 +7,14 @@ const transformIgnorePatterns = [
   `/node_modules/(?!(${ESM_PACKAGES.join('|')})/)`,
 ];
 
+// The project tsconfig only covers .ts files; ts-jest needs allowJs:true
+// to compile the .js ESM packages pulled in via transformIgnorePatterns.
+// isolatedModules speeds up tests by skipping cross-file type analysis.
+const tsJestConfig = {
+  tsconfig: { allowJs: true },
+  isolatedModules: true,
+};
+
 module.exports = {
   projects: [
     {
@@ -16,6 +24,7 @@ module.exports = {
       testMatch: ['<rootDir>/test/unit/**/*.test.ts'],
       modulePathIgnorePatterns: ['<rootDir>/dist/'],
       transformIgnorePatterns,
+      transform: { '^.+\\.[jt]sx?$': ['ts-jest', tsJestConfig] },
     },
     {
       displayName: 'integration',
@@ -27,6 +36,7 @@ module.exports = {
       globalTeardown: '<rootDir>/test/integration/helpers/teardown.ts',
       setupFiles: ['<rootDir>/test/integration/helpers/env.ts'],
       transformIgnorePatterns,
+      transform: { '^.+\\.[jt]sx?$': ['ts-jest', tsJestConfig] },
     },
   ],
 };
