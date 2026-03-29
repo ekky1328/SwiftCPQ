@@ -23,6 +23,14 @@
     "import/extensions": 0,
     "@typescript-eslint/no-redeclare": 0
   },
+  "overrides": [
+    {
+      "files": ["**/*.js"],
+      "parserOptions": {
+        "project": null
+      }
+    }
+  ],
   "settings": {
     "import/parsers": {
       "@typescript-eslint/parser": [
