@@ -28,6 +28,14 @@
       "files": ["**/*.js"],
       "parserOptions": {
         "project": null
+      },
+      "rules": {
+        "@typescript-eslint/dot-notation": "off",
+        "dot-notation": "error",
+        "@typescript-eslint/no-implied-eval": "off",
+        "no-implied-eval": "error",
+        "@typescript-eslint/no-throw-literal": "off",
+        "@typescript-eslint/return-await": "off"
       }
     }
   ],
