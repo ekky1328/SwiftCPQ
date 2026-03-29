@@ -1,18 +1,17 @@
 /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 
-// openid-client v6+ and its peer oauth4webapi are pure-ESM packages.
-// Jest must transform them instead of leaving them as-is.
-const ESM_PACKAGES = ['openid-client', 'oauth4webapi'];
+// openid-client v6+ and its dependency tree (jose, oauth4webapi) are
+// pure-ESM packages. Jest must transform them rather than leaving them
+// as raw ES modules. babel-jest (bundled with Jest) converts import/export
+// to require/module.exports at test time; ts-jest handles TypeScript.
+const ESM_PACKAGES = ['openid-client', 'oauth4webapi', 'jose'];
 const transformIgnorePatterns = [
   `/node_modules/(?!(${ESM_PACKAGES.join('|')})/)`,
 ];
 
-// The project tsconfig only covers .ts files; ts-jest needs allowJs:true
-// to compile the .js ESM packages pulled in via transformIgnorePatterns.
-// isolatedModules speeds up tests by skipping cross-file type analysis.
-const tsJestConfig = {
-  tsconfig: { allowJs: true },
-  isolatedModules: true,
+const transform = {
+  '^.+\\.tsx?$': 'ts-jest',   // TypeScript files → ts-jest
+  '^.+\\.js$':   'babel-jest', // ESM JavaScript files → babel-jest (see babel.config.js)
 };
 
 module.exports = {
@@ -24,7 +23,7 @@ module.exports = {
       testMatch: ['<rootDir>/test/unit/**/*.test.ts'],
       modulePathIgnorePatterns: ['<rootDir>/dist/'],
       transformIgnorePatterns,
-      transform: { '^.+\\.[jt]sx?$': ['ts-jest', tsJestConfig] },
+      transform,
     },
     {
       displayName: 'integration',
@@ -36,7 +35,7 @@ module.exports = {
       globalTeardown: '<rootDir>/test/integration/helpers/teardown.ts',
       setupFiles: ['<rootDir>/test/integration/helpers/env.ts'],
       transformIgnorePatterns,
-      transform: { '^.+\\.[jt]sx?$': ['ts-jest', tsJestConfig] },
+      transform,
     },
   ],
 };
