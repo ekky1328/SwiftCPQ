@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-| Tool | Version | Notes |
-|------|---------|-------|
-| Node.js | v20+ | [nodejs.org](https://nodejs.org) |
-| PostgreSQL | 15+ | Local instance or Docker |
-| Git | any | |
+| Tool        | Version | Notes                                 |
+|-------------|---------|---------------------------------------|
+| Node.js     | v20+    | [nodejs.org](https://nodejs.org)      |
+| PostgreSQL  | 15+     | Local instance or Docker              |
+| Git         | any     |                                       |
 
 ---
 
@@ -17,13 +17,14 @@ git clone https://github.com/ekky1328/SwiftCPQ.git
 cd SwiftCPQ
 ```
 
-SwiftCPQ has three services that each run in their own terminal:
+SwiftCPQ has four services that each run in their own terminal:
 
-| Service | Directory | Port | Purpose |
-|---------|-----------|------|---------|
-| Server | `server/` | 5000 | Express API + serves built client in production |
-| Client | `client/` | 5173 | Vue 3 SPA (dev only, Vite) |
-| Templater | `templater/` | 5005 | PDF generation microservice |
+| Service   | Directory     | Port | Purpose                                          |
+|-----------|---------------|------|--------------------------------------------------|
+| Server    | `server/`     | 5000 | Express API & serves built client in production  f|
+| Client    | `client/`     | 5173 | Vue 3 SPA (dev only, Vite)                       |
+| Templater | `templater/`  | 5005 | PDF generation microservice                      |
+| Worker    | `server/`     | —    | Background job processor for supplier inventory  |
 
 ---
 
@@ -71,24 +72,24 @@ Start the dev server:
 
 ```bash
 npm run dev:server
-# → http://localhost:5000
 ```
+Open server at http://localhost:5000
 
 ### Server Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `NODE_ENV` | No | `development` | Set to `production` in prod |
-| `DATABASE_URL` | Yes | - | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | - | Signs access tokens (15 min expiry) |
-| `JWT_REFRESH_SECRET` | Yes | - | Signs refresh tokens (7 day expiry) |
-| `CORS_ORIGIN` | No | `http://localhost:5173` | Allowed frontend origin |
-| `INTERNAL_SERVICE_TOKEN` | Yes | - | Shared secret for service-to-service calls (must match templater) |
-| `TEMPLATER_URL` | No | `http://localhost:5005` | URL of the templater service |
-| `ENTRA_CLIENT_ID` | No | - | Azure app registration client ID (leave blank to disable Entra login) |
-| `ENTRA_CLIENT_SECRET` | No | - | Azure app registration client secret |
-| `ENTRA_TENANT_ID` | No | - | Azure tenant ID |
-| `ENTRA_REDIRECT_URI` | No | `http://localhost:5000/api/v1/auth/entra/callback` | OAuth callback URL registered in Azure |
+| Variable                | Required | Default                                          | Description                                                        |
+|-------------------------|----------|--------------------------------------------------|--------------------------------------------------------------------|
+| `NODE_ENV`              | No       | `development`                                    | Set to `production` in prod                                        |
+| `DATABASE_URL`          | Yes      | -                                                | PostgreSQL connection string                                       |
+| `JWT_SECRET`            | Yes      | -                                                | Signs access tokens (15 min expiry)                                |
+| `JWT_REFRESH_SECRET`    | Yes      | -                                                | Signs refresh tokens (7 day expiry)                                |
+| `CORS_ORIGIN`           | No       | http://localhost:5173                            | Allowed frontend origin                                            |
+| `INTERNAL_SERVICE_TOKEN`| Yes      | -                                                | Shared secret for service-to-service calls                         |
+| `TEMPLATER_URL`         | No       | http://localhost:5005                            | URL of the templater service                                       |
+| `ENTRA_CLIENT_ID`       | No       | -                                                | Azure app registration client ID                                   |
+| `ENTRA_CLIENT_SECRET`   | No       | -                                                | Azure app registration client secret                               |
+| `ENTRA_TENANT_ID`       | No       | -                                                | Azure tenant ID                                                    |
+| `ENTRA_REDIRECT_URI`    | No       | http://localhost:5000/api/v1/auth/entra/callback | OAuth callback URL registered in Azure                             |
 
 ### Database Scripts
 
@@ -144,17 +145,64 @@ npm run dev
 
 ### Templater Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `NODE_ENV` | No | `development` | |
-| `MAIN_SERVER_URL` | No | `http://localhost:5000` | URL of the main server API |
-| `INTERNAL_SERVICE_TOKEN` | Yes | - | Must match server's `INTERNAL_SERVICE_TOKEN` |
+| Variable                | Required | Default                  | Description                                      |
+|-------------------------|----------|--------------------------|--------------------------------------------------|
+| `NODE_ENV`              | No       | `development`            | Node environment (`development` or `production`) |
+| `MAIN_SERVER_URL`       | No       | `http://localhost:5000`  | URL of the main server API                       |
+| `INTERNAL_SERVICE_TOKEN`| Yes      | -                        | Must match server's `INTERNAL_SERVICE_TOKEN`     |
 
 ### PDF Generation
 
 The templater uses Puppeteer (headless Chromium) to generate PDFs. On first run, Puppeteer will download Chromium automatically (~170 MB) if it is not already cached.
 
 If you're behind a proxy or in a restricted environment, set `PUPPETEER_SKIP_DOWNLOAD=true` and point `PUPPETEER_EXECUTABLE_PATH` to a local Chrome/Chromium binary.
+
+---
+
+## 5. Worker
+
+The worker is a background job processor that handles supplier inventory ingestion. It lives in the same `server/` codebase but runs as a separate process controlled by the `MODE` environment variable:
+
+- `MODE=1` (default) → HTTP server + frontend
+- `MODE=0` → worker only (no HTTP listener)
+
+Start the worker in development:
+
+```bash
+cd server
+npm run dev:worker
+```
+
+The worker does two things on a recurring basis:
+
+| Task                    | Interval (default)  | Description                                                                |
+|-------------------------|---------------------|----------------------------------------------------------------------------|
+| Job processing          | Every 5 seconds     | Claims `PENDING` rows from `ingestion_job`, runs the CSV ingestion pipeline, marks jobs `COMPLETED` or `FAILED` |
+| Stale inventory cleanup | Once per day        | Soft-deletes supplier inventory rows and orphaned catalogue items older than the configured threshold |
+
+Jobs are claimed atomically using `SELECT ... FOR UPDATE SKIP LOCKED`, so multiple worker instances can run safely in parallel without double-processing a job.
+
+### Worker Environment Variables
+
+The worker shares `server/.env`. The only worker-specific variables are:
+
+| Variable                  | Required | Default             | Description                                         |
+|---------------------------|----------|---------------------|-----------------------------------------------------|
+| `MODE`                    | No       | `1`                 | Set to `0` to run as worker instead of HTTP server  |
+| `DATABASE_URL`            | Yes      | —                   | PostgreSQL connection string (same as server)       |
+| `WORKER_POLL_INTERVAL`    | No       | `5000`              | Milliseconds between job polling cycles             |
+| `WORKER_CLEANUP_INTERVAL` | No       | `86400000` (1 day)  | Milliseconds between stale inventory cleanup runs   |
+
+### Worker Docker Container
+
+In production the worker runs in its own container built from `.docker/Dockerfile.worker`. It shares the same source tree as the server but sets `MODE=0` at the image level:
+
+```dockerfile
+ENV MODE=0
+CMD ["npm", "run", "start:dist"]
+```
+
+Build and run it independently from the main server container so background processing does not compete with request handling.
 
 ---
 
@@ -183,17 +231,20 @@ When `ENTRA_CLIENT_ID` is set, the login page will show a "Sign in with Microsof
 ```
 SwiftCPQ/
 ├── client/          # Vue 3 SPA (Vite, PrimeVue 4, Pinia)
-├── server/          # Express API (TypeScript, Knex, PostgreSQL)
+├── server/          # Express API + worker (TypeScript, Knex, PostgreSQL)
 │   └── src/
 │       ├── database/
 │       │   └── migrations/   # SQL migration files
-│       └── server/
-│           ├── api/          # Route handlers
-│           ├── helpers/      # JWT, cookies, passwords
-│           └── middlewares.ts
+│       ├── server/
+│       │   ├── api/          # Route handlers
+│       │   ├── helpers/      # JWT, cookies, passwords
+│       │   └── middlewares.ts
+│       └── worker/           # Background job processor (MODE=0)
+│           └── ingestion/    # CSV ingestion pipeline
 ├── templater/       # PDF microservice (Express, Puppeteer, EJS)
 ├── .docker/
-│   └── Dockerfile   # Production build (server + client)
+│   ├── Dockerfile         # Production build (server + client, MODE=1)
+│   └── Dockerfile.worker  # Worker-only container (MODE=0)
 └── deploy.sh        # Example SSH deploy script
 ```
 
