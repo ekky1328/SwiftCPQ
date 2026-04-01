@@ -132,6 +132,9 @@ dist
 # Supabase
 **.exe
 
+# Server Environment Files
+.*.env
+
 # Root Project
 deploy.sh
 
