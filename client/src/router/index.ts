@@ -29,9 +29,10 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.meta.public) return true;
   const auth = useAuthStore();
+  if (!auth.initialized) await auth.initialize();
   if (!auth.user) return { path: '/login' };
   if (auth.user.forcePasswordReset && to.path !== '/change-password') {
     return { path: '/change-password' };

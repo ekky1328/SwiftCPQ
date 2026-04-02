@@ -86,8 +86,6 @@ authRouter.post('/login', async (req, res, next) => {
     }
 
     const user = await userQuery.first();
-
-    console.log(password, user);
     if (!user || !(await verifyPassword(password, user.password_hash))) {
       res.status(401).json({ message: 'Invalid username or password' });
       return;

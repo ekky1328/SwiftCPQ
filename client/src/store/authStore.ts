@@ -7,26 +7,34 @@ const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null);
   const authMethods = ref<AuthConfig | null>(null);
+  const initialized = ref(false);
+  let initPromise: Promise<void> | null = null;
 
   async function initialize() {
-    try {
-      const [configRes, meRes] = await Promise.all([
-        fetch(`${domain}/api/v1/auth/config`, { credentials: 'include' }),
-        fetch(`${domain}/api/v1/auth/me`, { credentials: 'include' }),
-      ]);
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+      try {
+        const [configRes, meRes] = await Promise.all([
+          fetch(`${domain}/api/v1/auth/config`, { credentials: 'include' }),
+          fetch(`${domain}/api/v1/auth/me`, { credentials: 'include' }),
+        ]);
 
-      if (configRes.ok) {
-        authMethods.value = await configRes.json();
-      }
+        if (configRes.ok) {
+          authMethods.value = await configRes.json();
+        }
 
-      if (meRes.ok) {
-        user.value = await meRes.json();
-      } else {
+        if (meRes.ok) {
+          user.value = await meRes.json();
+        } else {
+          user.value = null;
+        }
+      } catch {
         user.value = null;
+      } finally {
+        initialized.value = true;
       }
-    } catch {
-      user.value = null;
-    }
+    })();
+    return initPromise;
   }
 
   async function login(username: string, password: string): Promise<string | null> {
@@ -65,5 +73,5 @@ export const useAuthStore = defineStore('auth', () => {
     router.push('/login');
   }
 
-  return { user, authMethods, initialize, login, logout, hasPermission };
+  return { user, authMethods, initialized, initialize, login, logout, hasPermission };
 });
