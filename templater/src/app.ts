@@ -34,10 +34,11 @@ app.use('/api/v1', api);
 
 app.get<{ templateId: string, proposalId: string }, MessageResponse>('/pdf/:templateId/:proposalId', async (req, res) => {
   const { templateId } = req.params;
+  const { tenantId } = req.query as { tenantId?: string };
   const templatePath = path.join(app.get('views'), templateId, 'index.ejs');
-  
+
   if (fs.existsSync(templatePath)) {
-    const proposalData = await getProposalData(req.params.proposalId);
+    const proposalData = await getProposalData(req.params.proposalId, tenantId);
     res.render(`${templateId}/index`, { proposal: proposalData });
   } 
   
@@ -59,6 +60,7 @@ app.get<{ templateId: string, proposalId: string }, MessageResponse>('/download/
   }
 
   const { templateId, proposalId } = req.params;
+  const { tenantId } = req.query as { tenantId?: string };
   const templatePath = path.join(app.get('views'), templateId, 'index.ejs');
 
   if (!fs.existsSync(templatePath)) {
@@ -68,7 +70,7 @@ app.get<{ templateId: string, proposalId: string }, MessageResponse>('/download/
 
   try {
     const port = process.env.PORT || 5005;
-    const pdf = await generatePdf(templateId, proposalId, port);
+    const pdf = await generatePdf(templateId, proposalId, port, tenantId);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="proposal-${proposalId}.pdf"`);

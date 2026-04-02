@@ -92,7 +92,7 @@ pnpm run db:setup
 This applies all pending database migrations and seeds the initial tenant, user, and settings. The seed creates a default user:
 
 ```
-Username:   michael.scott
+Username:   m.scott@dundermifflin.com
 Password:   Dunder_M1fflin_$ux!
 ```
 

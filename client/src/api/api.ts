@@ -1,13 +1,27 @@
 
 const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : '';
 
-async function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
+async function apiFetch(input: string, init: RequestInit = {}, isRetry = false): Promise<Response> {
     const res = await fetch(`${domain}${input}`, {
         ...init,
         credentials: 'include',
     });
 
-    if (res.status === 401) {
+    if (res.status === 401 && !isRetry) {
+        const refreshRes = await fetch(`${domain}/api/v1/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+        });
+
+        if (refreshRes.ok) {
+            return apiFetch(input, init, true);
+        }
+
+        window.location.href = '/login';
+        return Promise.reject(new Error('Unauthorized'));
+    }
+
+    if (res.status === 401 && isRetry) {
         window.location.href = '/login';
         return Promise.reject(new Error('Unauthorized'));
     }

@@ -3,7 +3,7 @@
  * @param id
  * @returns
  */
-export async function getProposalData(id: string) {
+export async function getProposalData(id: string, tenantId?: string) {
   try {
     const mainServerUrl = process.env.MAIN_SERVER_URL || 'http://localhost:5000';
     const serviceToken = process.env.INTERNAL_SERVICE_TOKEN;
@@ -12,7 +12,10 @@ export async function getProposalData(id: string) {
       throw new Error('INTERNAL_SERVICE_TOKEN is not set');
     }
 
-    const response = await fetch(`${mainServerUrl}/api/v1/proposal/${id}?coreSettings=true`, {
+    const params = new URLSearchParams({ coreSettings: 'true' });
+    if (tenantId) params.set('tenantId', tenantId);
+
+    const response = await fetch(`${mainServerUrl}/api/v1/proposal/${id}?${params}`, {
       headers: {
         'x-service-token': serviceToken,
       },

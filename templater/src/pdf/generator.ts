@@ -6,8 +6,8 @@ import puppeteer from 'puppeteer';
  * @param proposalId  The proposal UUID
  * @param port        The port this templater is running on (for the internal render URL)
  */
-export async function generatePdf(templateId: string, proposalId: string, port: number | string): Promise<Buffer> {
-  const renderUrl = `http://localhost:${port}/pdf/${templateId}/${proposalId}`;
+export async function generatePdf(templateId: string, proposalId: string, port: number | string, tenantId?: string): Promise<Buffer> {
+  const renderUrl = `http://localhost:${port}/pdf/${templateId}/${proposalId}${tenantId ? `?tenantId=${tenantId}` : ''}`;
 
   const browser = await puppeteer.launch({
     headless: true,

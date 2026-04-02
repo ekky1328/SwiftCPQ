@@ -326,7 +326,12 @@ proposalRouter.get<{}, MessageResponse>('/:id', async (req, res, next) => {
     const calculatedProposal = calculateProposalTotals(proposal);
 
     if (req.query.coreSettings) {
-      const tenantId = req.user!.tenantId;
+      let tenantId = req.user?.tenantId as string;
+      if (!tenantId) {
+        const row = await db('proposal').where('id', id).first();
+        tenantId = row.tenant_id as string;
+      }
+
       const coreSettings = await fetchCoreSettings(tenantId);
 
       if (coreSettings) {
@@ -559,7 +564,8 @@ proposalRouter.get<{}, MessageResponse>('/:id/pdf', async (req, res, next) => {
       return;
     }
 
-    const pdfResponse = await fetch(`${templaterUrl}/download/${templateId}/${id}`, {
+    const tenantId = proposal.tenant_id;
+    const pdfResponse = await fetch(`${templaterUrl}/download/${templateId}/${id}?tenantId=${tenantId}`, {
       headers: { 'x-service-token': serviceToken },
     });
 
