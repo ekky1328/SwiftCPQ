@@ -10,7 +10,8 @@
     "strict": true,  // Enable all strict type-checking options
     "skipLibCheck": true,  // Skip type-checking of declaration files
     "isolatedModules": true,  // Required by ts-jest; each file transpiled independently
-    "baseUrl": ".",  // Set base path for relative imports
+    "baseUrl": ".",  // Set base path for relative imports,
+    "ignoreDeprecations": "6.0",
     "paths": {
       "*": ["node_modules/*"]
     }
