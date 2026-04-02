@@ -1,9 +1,31 @@
 import express from 'express';
 import fs from 'fs';
+import path from 'path';
 
 import MessageResponse from '../interfaces/MessageResponse';
 
 const router = express.Router();
+
+/**
+ * Method: GET
+ * Endpoint: /api/v1/templates
+ * - Returns all available PDF templates (folders in views/ that contain a metadata.json)
+ */
+router.get<{}, MessageResponse>('/templates', (req, res) => {
+  const viewsDir = path.join(__dirname, '../views');
+  const entries = fs.readdirSync(viewsDir, { withFileTypes: true });
+
+  const templates = entries
+    .filter(e => e.isDirectory())
+    .flatMap(e => {
+      const metaPath = path.join(viewsDir, e.name, 'metadata.json');
+      if (!fs.existsSync(metaPath)) return [];
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+      return [{ templateId: e.name, ...meta }];
+    });
+
+  res.json(templates);
+});
 
 /**
  * Method: GET
