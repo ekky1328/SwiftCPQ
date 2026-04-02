@@ -21,6 +21,7 @@ router.get<{}, MessageResponse>('/templates', (req, res) => {
       const metaPath = path.join(viewsDir, e.name, 'metadata.json');
       if (!fs.existsSync(metaPath)) return [];
       const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+      if (!meta.active) return [];
       return [{ templateId: e.name, ...meta }];
     });
 

@@ -33,18 +33,17 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use('/api/v1', api);
 
 app.get<{ templateId: string, proposalId: string }, MessageResponse>('/pdf/:templateId/:proposalId', async (req, res) => {
-  const { templateId } = req.params;
-  const { tenantId } = req.query as { tenantId?: string };
+  const { templateId, proposalId } = req.params;
+  const { tenantId, renderToken } = req.query as { tenantId?: string; renderToken?: string };
   const templatePath = path.join(app.get('views'), templateId, 'index.ejs');
 
-  if (fs.existsSync(templatePath)) {
-    const proposalData = await getProposalData(req.params.proposalId, tenantId);
-    res.render(`${templateId}/index`, { proposal: proposalData });
-  } 
-  
-  else {
+  if (!fs.existsSync(templatePath)) {
     res.status(404).send({ message: 'Template not found' });
+    return;
   }
+
+  const proposalData = await getProposalData(proposalId, tenantId, renderToken);
+  res.render(`${templateId}/index`, { proposal: proposalData });
 });
 
 /**
@@ -59,6 +58,12 @@ app.get<{ templateId: string, proposalId: string }, MessageResponse>('/download/
     return;
   }
 
+  const renderToken = req.headers['x-render-token'] as string | undefined;
+  if (!renderToken) {
+    res.status(401).json({ message: 'Missing render token' });
+    return;
+  }
+
   const { templateId, proposalId } = req.params;
   const { tenantId } = req.query as { tenantId?: string };
   const templatePath = path.join(app.get('views'), templateId, 'index.ejs');
@@ -70,7 +75,7 @@ app.get<{ templateId: string, proposalId: string }, MessageResponse>('/download/
 
   try {
     const port = process.env.PORT || 5005;
-    const pdf = await generatePdf(templateId, proposalId, port, tenantId);
+    const pdf = await generatePdf(templateId, proposalId, port, tenantId, renderToken);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="proposal-${proposalId}.pdf"`);

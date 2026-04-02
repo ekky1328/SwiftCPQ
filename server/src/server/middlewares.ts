@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import ErrorResponse from './interfaces/ErrorResponse';
-import { verifyAccessToken, TokenPayload } from './helpers/jwt';
+import { verifyAccessToken, TokenPayload, verifyRenderToken, RenderTokenPayload } from './helpers/jwt';
 import db from '../database/db';
 
 declare global {
@@ -9,6 +9,7 @@ declare global {
     interface Request {
       user?: TokenPayload;
       tenantId?: string | null;
+      renderToken?: RenderTokenPayload;
     }
   }
 }
@@ -109,6 +110,20 @@ export function requireSuperAdmin(req: Request, res: Response, next: NextFunctio
   }
 
   next();
+}
+
+export function requireRenderToken(req: Request, res: Response, next: NextFunction) {
+  const token = req.headers['x-render-token'] as string;
+  if (!token) {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
+  try {
+    req.renderToken = verifyRenderToken(token);
+    next();
+  } catch {
+    res.status(401).json({ message: 'Unauthorized' });
+  }
 }
 
 export function notFound(req: Request, res: Response, next: NextFunction) {
