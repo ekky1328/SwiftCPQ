@@ -89,7 +89,12 @@ INTERNAL_SERVICE_TOKEN=shared-secret-for-templater
 pnpm run db:setup
 ```
 
-This applies all pending database migrations and seeds the initial tenant, user, and settings. The seed creates a default user: **michael.scott / password** (bcrypt-hashed).
+This applies all pending database migrations and seeds the initial tenant, user, and settings. The seed creates a default user:
+
+```
+Username:   michael.scott
+Password:   Dunder_M1fflin_$ux!
+```
 
 You can also run these individually:
 

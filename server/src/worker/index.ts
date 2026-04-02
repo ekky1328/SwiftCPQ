@@ -28,7 +28,7 @@ async function processJobs() {
   let job = await claimNextJob();
 
   while (job) {
-    console.log(`[worker] processing ingestion job ${job.id} for supplier ${job.supplier_id}`);
+    console.log(`Processing ingestion job ${job.id} for supplier ${job.supplier_id}`);
 
     try {
       const csvBuffer = Buffer.isBuffer(job.csv_data) ? job.csv_data : Buffer.from(job.csv_data);
@@ -42,9 +42,9 @@ async function processJobs() {
           completed_at: db.fn.now(),
         });
 
-      console.log(`[worker] job ${job.id} completed: inserted=${result.inserted} updated=${result.updated} created=${result.created} errors=${result.errors.length}`);
+      console.log(`Job ${job.id} completed: inserted=${result.inserted} updated=${result.updated} created=${result.created} errors=${result.errors.length}`);
     } catch (err: any) {
-      console.error(`[worker] job ${job.id} failed:`, err.message);
+      console.error(`Job ${job.id} failed:`, err.message);
 
       await db('ingestion_job')
         .where('id', job.id)
@@ -60,22 +60,22 @@ async function processJobs() {
 }
 
 export default function startWorker() {
-  console.log('[worker] started');
+  console.log('Started');
 
   setInterval(() => {
     processJobs().catch((err) => {
-      console.error('[worker] job processing error:', err);
+      console.error('Job processing error:', err);
     });
   }, POLL_INTERVAL);
 
   runStaleCleanup().catch((err) => {
-    console.error('[worker] stale cleanup error on startup:', err);
+    console.error('Stale cleanup error on startup:', err);
   });
 
   setInterval(() => {
-    console.log('[worker] running stale inventory cleanup...');
+    console.log('Running stale inventory cleanup...');
     runStaleCleanup().catch((err) => {
-      console.error('[worker] stale cleanup error:', err);
+      console.error('Stale cleanup error:', err);
     });
   }, CLEANUP_INTERVAL);
 }

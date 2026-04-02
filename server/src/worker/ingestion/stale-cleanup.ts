@@ -21,7 +21,7 @@ export async function runStaleCleanup(): Promise<void> {
     const staleCount = await db('supplier_inventory')
       .where('tenant_id', tenant.id)
       .where('is_active', true)
-      .whereRaw('last_synced_at < NOW() - INTERVAL ? DAY', [staleDays])
+      .whereRaw("last_synced_at < NOW() - MAKE_INTERVAL(days => ?)", [staleDays])
       .update({ is_active: false });
 
     if (staleCount > 0) {

@@ -3,7 +3,7 @@
   <div v-if="IS_DEV_BUILD" class="py-2 text-center bg-black text-yellow-200 border-b-4 border-yellow-200">
     🚧 Beware you are viewing a development build (v0.0.1-alpha); there will be bugs. 🚧
   </div>
-  <main>
+  <div class="app-layout" :class="{ 'app-layout--no-nav': !auth.user }">
     <nav v-if="auth.user" class="bg-white border-r border-r-gray-300 z-50">
       <div class="grid place-content-center h-[75px] cursor-default" v-tooltip="'⚡ SwiftCPQ'">
         ⚡
@@ -47,14 +47,16 @@
         </button>
       </div>
     </nav>
-    <div class="z-25">
+    <div>
       <RouterView />
     </div>
-  </main>
+  </div>
+  <ConfirmDialog />
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
+import ConfirmDialog from 'primevue/confirmdialog';
 import { useAuthStore } from './store/authStore';
 
 const auth = useAuthStore();
@@ -66,12 +68,16 @@ if (import.meta.env) {
 </script>
 
 <style scoped>
-  main {
+  .app-layout {
     display: grid;
     grid-template-columns: 50px 1fr;
-    grid-template-rows: 1fr;
     gap: 8px;
     min-height: 100vh;
+  }
+
+  .app-layout--no-nav {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 
   nav {

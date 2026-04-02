@@ -92,7 +92,7 @@ onMounted(async () => {
     const res = await fetch(`${domain}/api/v1/auth/config`, { credentials: 'include' });
     if (res.ok) authMethods.value = await res.json();
   } catch {
-    authMethods.value = { local: true, entra: false };
+    authMethods.value = { local: true, entra: false, multiTenant: false };
   }
 });
 

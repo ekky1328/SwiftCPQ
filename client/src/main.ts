@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
 import Tooltip from 'primevue/tooltip';
 
 import Aura from '@primevue/themes/aura';
@@ -21,6 +22,7 @@ app.directive('tooltip', Tooltip);
 
 app.use(router);
 app.use(ToastService);
+app.use(ConfirmationService);
 app.use(pinia);
 app.use(PrimeVue, {
     theme: {
