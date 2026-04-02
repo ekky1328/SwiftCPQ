@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Quote</title>
+  <link rel="stylesheet" href="/paper.css">
+  <script src="/tailwind.js"></script>
+</head>
+<body class="A4">
+
+  <style>
+    body {
+      font-family: Arial;
+      font-size: 12px;
+      overflow-x: hidden;
+    }
+    .bg-primary { background-color: <%- proposal.theme.primary || '#374151' %>; }
+    .text-primary { color: <%- proposal.theme.primary || '#374151' %>; }
+    .border-primary { border-color: <%- proposal.theme.primary || '#374151' %>; }
+  </style>
+
+  <section class="sheet px-8 py-6" data-overflow-scan>
+
+    <!-- Header -->
+    <header class="flex justify-between items-start pb-4 border-b-2 border-primary mb-4" data-overflow-locked>
+      <img class="max-w-40" src="http://localhost:5000/content/logos/<%= proposal.customerLogo ? proposal.customerLogo : proposal.logo %>">
+      <div class="text-right">
+        <h1 class="font-bold text-xl text-primary"><%= proposal.title %></h1>
+        <p class="text-gray-500 text-xs mt-0.5">
+          <%= `${proposal.prefix}${proposal.prefix ? '-' : ''}` %><%= proposal.identifier %><%= `${proposal.suffix ? '-' : ''}${proposal.suffix}` %> v<%= proposal.version %>
+        </p>
+      </div>
+    </header>
+
+    <!-- From / For -->
+    <div class="grid grid-cols-2 gap-4 mb-5" data-overflow-locked>
+      <div>
+        <p class="font-bold text-xs uppercase text-gray-400 mb-1">Prepared By</p>
+        <p class="font-bold"><%= proposal.author.firstName %> <%= proposal.author.lastName %></p>
+        <% if (proposal.author.email) { %><p class="text-gray-600"><%= proposal.author.email %></p><% } %>
+        <% if (proposal.author.phone) { %><p class="text-gray-600"><%= proposal.author.phone %></p><% } %>
+        <% if (proposal.contactInformationDefaults && proposal.contactInformationDefaults.address) { %>
+          <% const a = proposal.contactInformationDefaults.address; %>
+          <% if (a.street) { %><p class="text-gray-600"><%= a.street %></p><% } %>
+          <% if (a.city || a.state || a.postcode) { %>
+            <p class="text-gray-600"><%= [a.city, a.state, a.postcode].filter(Boolean).join(', ') %></p>
+          <% } %>
+        <% } %>
+      </div>
+      <div>
+        <p class="font-bold text-xs uppercase text-gray-400 mb-1">Prepared For</p>
+        <p class="font-bold"><%= proposal.customer.name %></p>
+        <% if (proposal.customer.contact) { %><p class="text-gray-600"><%= proposal.customer.contact %></p><% } %>
+        <% if (proposal.customer.email) { %><p class="text-gray-600"><%= proposal.customer.email %></p><% } %>
+        <% if (proposal.customer.phone) { %><p class="text-gray-600"><%= proposal.customer.phone %></p><% } %>
+        <% if (proposal.customer.address) { %>
+          <% const ca = proposal.customer.address; %>
+          <% if (ca.street) { %><p class="text-gray-600"><%= ca.street %></p><% } %>
+          <% if (ca.city || ca.state || ca.postcode) { %>
+            <p class="text-gray-600"><%= [ca.city, ca.state, ca.postcode].filter(Boolean).join(', ') %></p>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Product Sections -->
+    <% proposal.sections.forEach((section) => { %>
+      <% if (section.type.toUpperCase() === 'PRODUCTS') { %>
+
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold"><%= section.title %></h3>
+            <span class="text-xs text-gray-500 capitalize"><%= section.recurrance.toLowerCase().replace('_', ' ') %></span>
+          </div>
+
+          <div class="grid grid-cols-[50px_1fr_80px_100px] bg-primary text-white text-xs font-bold py-0.5 px-1">
+            <div>QTY</div>
+            <div>Description</div>
+            <div class="text-right">Unit Price</div>
+            <div class="text-right">Total</div>
+          </div>
+
+          <% section.items.forEach((item, i) => { %>
+            <% if (item.type.toUpperCase() === 'PRODUCT') { %>
+              <div class="grid grid-cols-[50px_1fr_80px_100px] py-0.5 px-1 <%= i < section.items.length - 1 ? 'border-b border-gray-100' : '' %>">
+                <div><%= item.qty %></div>
+                <div>
+                  <div><%- item.title %></div>
+                  <% if (item.description && item.description.trim() !== '') { %>
+                    <div class="text-gray-500 text-xs pt-0.5"><%- item.description %></div>
+                  <% } %>
+                </div>
+                <div class="text-right"><%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.price) %></div>
+                <div class="text-right"><%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.price * item.qty) %></div>
+              </div>
+            <% } else if (item.type.toUpperCase() === 'COMMENT') { %>
+              <div class="bg-gray-100 px-1 py-0.5 text-gray-500 text-xs"><%- item.description %></div>
+            <% } %>
+          <% }) %>
+
+          <div class="flex justify-end border-t border-gray-300 mt-0.5">
+            <span class="text-xs font-bold py-0.5 px-1">Subtotal</span>
+            <span class="w-[100px] text-right bg-primary text-white text-xs font-bold py-0.5 px-1">
+              <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.total) %>
+            </span>
+          </div>
+        </div>
+
+      <% } %>
+    <% }) %>
+
+    <!-- Totals Summary -->
+    <% const recurrances = Object.keys(proposal._section_totals).filter(r => proposal._section_totals[r].length > 0); %>
+    <% if (recurrances.length > 0) { %>
+      <div class="mt-4 mb-5">
+        <% recurrances.forEach((recurrance) => { %>
+          <div class="flex justify-end items-center gap-4 py-0.5">
+            <span class="text-xs text-gray-500 capitalize"><%= recurrance.replace('_', ' ') %></span>
+            <span class="w-[150px] text-right font-bold border-t border-gray-300 pt-0.5">
+              <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                proposal._section_totals[recurrance].reduce((sum, s) => sum + s.total, 0)
+              ) %>
+            </span>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <!-- Authorization -->
+    <div class="mt-6 pt-4 border-t border-gray-200">
+      <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+        By signing below, the undersigned agrees to the terms, scope, and costs outlined in this quote.
+      </p>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="border-b border-black pb-0.5">
+          <p class="text-xs text-gray-400 mb-4">Full Name</p>
+        </div>
+        <div class="border-b border-black pb-0.5">
+          <p class="text-xs text-gray-400 mb-4">Signature</p>
+        </div>
+        <div class="border-b border-black pb-0.5">
+          <p class="text-xs text-gray-400 mb-4">Date</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full text-center absolute py-4 bottom-0 left-0" data-overflow-locked>
+      <p class="text-xs text-gray-400">Page 1</p>
+    </footer>
+
+  </section>
+
+  <script>
+    const data = <%- JSON.stringify(proposal) %>
+    window.addEventListener("DOMContentLoaded", () => {
+      document.title = `${data.prefix}${data.prefix && '-'}${data.identifier}${data.suffix && '-'}${data.suffix}v${data.version} - ${data.title}`;
+    })
+  </script>
+
+  <script src="/pageOverflowHandler.js"></script>
+
+</body>
+</html>

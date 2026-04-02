@@ -151,9 +151,12 @@ server/src/content/logos/**
 /server/src/data/system/core-settings.json
 
 # Templater: Default Templates
-!templater/src/views/default/**
-!templater/src/views/index.ejs
 templater/src/views/**
+!templater/src/views/default/
+!templater/src/views/default/**
+!templater/src/views/quick-quote/
+!templater/src/views/quick-quote/**
+!templater/src/views/index.ejs
 server/src/server/data/system/core-settings.json
 server/src/server/data/proposals/6.json
 server/src/server/content/logos/ttc.svg
