@@ -1,6 +1,6 @@
 import { hashPassword } from '../../server/helpers/passwords';
 import { toCents } from '../../server/helpers/money';
-import { exampleProposal } from './exampleProposal';
+import { exampleProposal } from '../data/exampleProposal';
 
 import knex from '../db';
 
