@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "migrate:make": "knex migrate:make",
     "migrate:up": "knex migrate:latest",
-    "migrate:down": "knex migrate:rollback"
+    "migrate:down": "knex migrate:rollback",
+    "seed": "knex seed:run"
   },
   "keywords": [],
   "author": "Christopher Talke Buscaino <chris@talke.dev> (https://talke.dev)",

@@ -36,7 +36,7 @@ If you're running PostgreSQL on the same host as Docker, use `host.docker.intern
 
 ## 2. Environment File
 
-The `docker-compose.yml` reads all configuration from a single `.env` file in the project root. Copy the example and fill in your values:
+The `.docker/docker-compose.yml` reads all configuration from a single `.env` file in the project root. Copy the example and fill in your values:
 
 ```bash
 cp .env.example .env
@@ -66,7 +66,7 @@ See `.env.example` for the full list including optional Entra ID variables.
 
 ### Option A: Docker Compose (recommended)
 
-A `docker-compose.yml` is included in the project root. Copy the example environment file and fill in your values:
+A `docker-compose.yml` is included in the `.docker/` directory. Copy the example environment file and fill in your values:
 
 ```bash
 cp .env.example .env
@@ -78,7 +78,7 @@ cp .env.example .env
 Build and start:
 
 ```bash
-docker compose up -d --build
+docker compose --env-file .env -f .docker/docker-compose.yml up -d --build
 ```
 
 Run migrations against the production database (once, or after each release):
@@ -177,7 +177,7 @@ Always run migrations before starting a new release:
 
 ```bash
 # With Docker Compose
-docker compose run --rm swiftcpq pnpm run migrate:up
+docker compose --env-file .env -f .docker/docker-compose.yml run --rm swiftcpq pnpm run migrate:up
 
 # With standalone Docker
 docker exec swiftcpq pnpm run migrate:up
@@ -226,5 +226,5 @@ Use this in your uptime monitor or Docker healthcheck config.
 
 1. Pull the latest code
 2. Review any new `.env.sample` entries and add them to your `.env`
-3. Rebuild the containers: `docker compose up -d --build`
+3. Rebuild the containers: `docker compose --env-file .env -f .docker/docker-compose.yml up -d --build`
 4. Run migrations: `docker exec swiftcpq pnpm run migrate:up`

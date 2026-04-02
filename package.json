@@ -5,6 +5,24 @@
   "engines": {
     "node": ">=22"
   },
+  "scripts": {
+    "dev": "concurrently -k -n server,client,templater,worker -c blue,green,magenta,yellow \"pnpm --filter swiftcpq_server dev:server\" \"pnpm --filter swiftcpq_client dev\" \"pnpm --filter swiftcpq_templater dev\" \"pnpm --filter swiftcpq_server dev:worker\"",
+    "dev:server": "pnpm --filter swiftcpq_server dev:server",
+    "dev:client": "pnpm --filter swiftcpq_client dev",
+    "dev:templater": "pnpm --filter swiftcpq_templater dev",
+    "dev:worker": "pnpm --filter swiftcpq_server dev:worker",
+    "build": "pnpm --filter swiftcpq_client build && pnpm --filter swiftcpq_server build && pnpm --filter swiftcpq_templater build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "migrate:up": "pnpm --filter swiftcpq_server migrate:up",
+    "migrate:down": "pnpm --filter swiftcpq_server migrate:down",
+    "seed": "pnpm --filter swiftcpq_server seed",
+    "db:setup": "pnpm run migrate:up && pnpm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "bcrypt",

@@ -21,7 +21,7 @@ services:
 
   swiftcpq:
     build:
-      context: .
+      context: ..
       dockerfile: .docker/Dockerfile
     container_name: swiftcpq
     environment:
@@ -49,7 +49,7 @@ services:
 
   swiftcpq-worker:
     build:
-      context: .
+      context: ..
       dockerfile: .docker/Dockerfile.worker
     container_name: swiftcpq-worker
     environment:
@@ -69,7 +69,7 @@ services:
 
   swiftcpq-templater:
     build:
-      context: .
+      context: ..
       dockerfile: .docker/Dockerfile.templater
     container_name: swiftcpq-templater
     environment:

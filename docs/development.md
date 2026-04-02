@@ -2,16 +2,18 @@
 
 ## Prerequisites
 
-| Tool        | Version | Notes                                       |
-|-------------|---------|---------------------------------------------|
-| Node.js     | v22+    | [nodejs.org](https://nodejs.org)            |
-| pnpm        | 10+     | `corepack enable` to activate               |
-| PostgreSQL  | 15+     | Local instance or Docker                    |
-| Git         | any     |                                             |
+| Tool       | Version | Notes                                                    |
+|------------|---------|----------------------------------------------------------|
+| Node.js    | v22+    | [nodejs.org](https://nodejs.org)                         |
+| pnpm       | 10+     | `corepack enable` to activate                            |
+| Docker     | 24+     | [docker.com](https://www.docker.com/get-started) — used for PostgreSQL |
+| Git        | any     |                                                          |
 
 ---
 
 ## Quick Start
+
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/ekky1328/SwiftCPQ.git
@@ -19,64 +21,117 @@ cd SwiftCPQ
 pnpm install   # installs all workspace packages
 ```
 
-SwiftCPQ has four services that each run in their own terminal:
+### 2. Start PostgreSQL
 
-| Service   | Directory     | Port | Purpose                                          |
-|-----------|---------------|------|--------------------------------------------------|
-| Server    | `server/`     | 5000 | Express API & serves built client in production  f|
-| Client    | `client/`     | 5173 | Vue 3 SPA (dev only, Vite)                       |
-| Templater | `templater/`  | 5005 | PDF generation microservice                      |
-| Worker    | `server/`     | —    | Background job processor for supplier inventory  |
-
----
-
-## 1. Database
-
-Create a PostgreSQL database:
-
-```sql
-CREATE DATABASE swiftcpq_dev;
-```
-
-Or with `psql`:
+The project includes a dev-only Docker Compose file that runs PostgreSQL with sensible defaults — no manual database configuration required.
 
 ```bash
-psql -U postgres -c "CREATE DATABASE swiftcpq_dev;"
+docker compose -f .docker/docker-compose.dev.yml up -d
 ```
 
----
+This starts a PostgreSQL 16 container with:
 
-## 2. Server
+| Setting             | Value                |
+|---------------------|----------------------|
+| Host                | `localhost`          |
+| Port                | `5432`               |
+| User                | `swiftcpq`           |
+| Password            | `swiftcpq`           |
+| Database            | `swiftcpq_dev`       |
+| Connection string   | `postgres://swiftcpq:swiftcpq@localhost:5432/swiftcpq_dev` |
+
+Data is persisted in a Docker volume (`pgdata_dev`), so it survives container restarts.
+
+To stop the database:
 
 ```bash
-cd server
-cp .env.sample .env
+docker compose -f .docker/docker-compose.dev.yml down
 ```
 
-Edit `.env` - the minimum required changes:
+To stop **and delete all data** (fresh start):
+
+```bash
+docker compose -f .docker/docker-compose.dev.yml down -v
+```
+
+### 3. Configure environment files
+
+Copy the sample environment files:
+
+```bash
+cp server/.server.env.sample server/.env
+cp templater/.env.sample templater/.env
+```
+
+The defaults in each sample file are pre-configured to work with the dev Docker Compose database. Review and adjust if needed:
+
+**`server/.env`** — minimum required changes:
 
 ```env
-DATABASE_URL=postgres://postgres:YOUR_PASSWORD@localhost:5432/swiftcpq_dev
+DATABASE_URL=postgres://swiftcpq:swiftcpq@localhost:5432/swiftcpq_dev
 JWT_SECRET=any-long-random-string
 JWT_REFRESH_SECRET=another-long-random-string
 INTERNAL_SERVICE_TOKEN=shared-secret-for-templater
 ```
 
-Run migrations and seed the database:
+**`templater/.env`** — ensure the service token matches:
 
-```bash
-pnpm run migrate:up
-pnpm run seed
+```env
+MAIN_SERVER_URL=http://localhost:5000
+INTERNAL_SERVICE_TOKEN=shared-secret-for-templater
 ```
 
-Start the dev server:
+`INTERNAL_SERVICE_TOKEN` **must** be the same value in both files.
+
+### 4. Run migrations and seed
 
 ```bash
-pnpm run dev:server
+pnpm run db:setup
 ```
-Open server at http://localhost:5000
 
-### Server Environment Variables
+This applies all pending database migrations and seeds the initial tenant, user, and settings. The seed creates a default user: **michael.scott / password** (bcrypt-hashed).
+
+You can also run these individually:
+
+```bash
+pnpm run migrate:up    # apply migrations only
+pnpm run seed          # seed data only
+pnpm run migrate:down  # roll back the last migration batch
+```
+
+### 5. Start all services
+
+```bash
+pnpm run dev
+```
+
+This single command starts **all four services** concurrently with hot reloading:
+
+| Service   | Port | Label (in terminal) | Purpose                                         |
+|-----------|------|---------------------|-------------------------------------------------|
+| Server    | 5000 | `[server]`          | Express API                                     |
+| Client    | 5173 | `[client]`          | Vue 3 SPA (Vite dev server)                     |
+| Templater | 5005 | `[templater]`       | PDF generation microservice                     |
+| Worker    | —    | `[worker]`          | Background job processor for supplier inventory |
+
+Each service is colour-coded in the terminal output. Press `Ctrl+C` to stop all services at once.
+
+Open the app at **http://localhost:5173** (client dev server with API proxy to `:5000`).
+
+### Running individual services
+
+If you only need specific services, run them individually from the root:
+
+```bash
+pnpm run dev:server     # Express API only (port 5000)
+pnpm run dev:client     # Vue SPA only (port 5173)
+pnpm run dev:templater  # PDF service only (port 5005)
+pnpm run dev:worker     # Background worker only
+```
+
+---
+
+## Server Environment Variables
 
 | Variable                | Required | Default                                          | Description                                                        |
 |-------------------------|----------|--------------------------------------------------|--------------------------------------------------------------------|
@@ -92,57 +147,7 @@ Open server at http://localhost:5000
 | `ENTRA_TENANT_ID`       | No       | -                                                | Azure tenant ID                                                    |
 | `ENTRA_REDIRECT_URI`    | No       | http://localhost:5000/api/v1/auth/entra/callback | OAuth callback URL registered in Azure                             |
 
-### Database Scripts
-
-```bash
-pnpm run migrate:up      # Apply all pending migrations
-pnpm run migrate:down    # Roll back the last migration batch
-pnpm run seed            # Seed initial tenant, user, and settings
-```
-
-The seed creates a default user: **michael.scott / password** (bcrypt-hashed).
-
----
-
-## 3. Client
-
-```bash
-cd client
-pnpm run dev
-# → http://localhost:5173
-```
-
-The client proxies API requests to `http://localhost:5000` via the Vite dev server config. No `.env` file is required for local development unless you want to enable the dev-build banner:
-
-```env
-# client/.env.local (optional)
-VITE_IS_DEV_BUILD=true
-```
-
----
-
-## 4. Templater
-
-```bash
-cd templater
-cp .env.sample .env
-```
-
-Edit `.env`:
-
-```env
-MAIN_SERVER_URL=http://localhost:5000
-INTERNAL_SERVICE_TOKEN=same-secret-as-server
-```
-
-`INTERNAL_SERVICE_TOKEN` must match the value in `server/.env`.
-
-```bash
-pnpm run dev
-# → http://localhost:5005
-```
-
-### Templater Environment Variables
+## Templater Environment Variables
 
 | Variable                | Required | Default                  | Description                                      |
 |-------------------------|----------|--------------------------|--------------------------------------------------|
@@ -150,38 +155,7 @@ pnpm run dev
 | `MAIN_SERVER_URL`       | No       | `http://localhost:5000`  | URL of the main server API                       |
 | `INTERNAL_SERVICE_TOKEN`| Yes      | -                        | Must match server's `INTERNAL_SERVICE_TOKEN`     |
 
-### PDF Generation
-
-The templater uses Puppeteer (headless Chromium) to generate PDFs. On first run, Puppeteer will download Chromium automatically (~170 MB) if it is not already cached.
-
-If you're behind a proxy or in a restricted environment, set `PUPPETEER_SKIP_DOWNLOAD=true` and point `PUPPETEER_EXECUTABLE_PATH` to a local Chrome/Chromium binary.
-
----
-
-## 5. Worker
-
-The worker is a background job processor that handles supplier inventory ingestion. It lives in the same `server/` codebase but runs as a separate process controlled by the `MODE` environment variable:
-
-- `MODE=1` (default) → HTTP server + frontend
-- `MODE=0` → worker only (no HTTP listener)
-
-Start the worker in development:
-
-```bash
-cd server
-pnpm run dev:worker
-```
-
-The worker does two things on a recurring basis:
-
-| Task                    | Interval (default)  | Description                                                                |
-|-------------------------|---------------------|----------------------------------------------------------------------------|
-| Job processing          | Every 5 seconds     | Claims `PENDING` rows from `ingestion_job`, runs the CSV ingestion pipeline, marks jobs `COMPLETED` or `FAILED` |
-| Stale inventory cleanup | Once per day        | Soft-deletes supplier inventory rows and orphaned catalogue items older than the configured threshold |
-
-Jobs are claimed atomically using `SELECT ... FOR UPDATE SKIP LOCKED`, so multiple worker instances can run safely in parallel without double-processing a job.
-
-### Worker Environment Variables
+## Worker Environment Variables
 
 The worker shares `server/.env`. The only worker-specific variables are:
 
@@ -192,16 +166,31 @@ The worker shares `server/.env`. The only worker-specific variables are:
 | `WORKER_POLL_INTERVAL`    | No       | `5000`              | Milliseconds between job polling cycles             |
 | `WORKER_CLEANUP_INTERVAL` | No       | `86400000` (1 day)  | Milliseconds between stale inventory cleanup runs   |
 
-### Worker Docker Container
+---
 
-In production the worker runs in its own container built from `.docker/Dockerfile.worker`. It shares the same source tree as the server but sets `MODE=0` at the image level:
+## PDF Generation
 
-```dockerfile
-ENV MODE=0
-CMD ["node", "dist/index.js"]
-```
+The templater uses Puppeteer (headless Chromium) to generate PDFs. On first run, Puppeteer will download Chromium automatically (~170 MB) if it is not already cached.
 
-Build and run it independently from the main server container so background processing does not compete with request handling.
+If you're behind a proxy or in a restricted environment, set `PUPPETEER_SKIP_DOWNLOAD=true` and point `PUPPETEER_EXECUTABLE_PATH` to a local Chrome/Chromium binary.
+
+---
+
+## Worker
+
+The worker is a background job processor that handles supplier inventory ingestion. It lives in the same `server/` codebase but runs as a separate process controlled by the `MODE` environment variable:
+
+- `MODE=1` (default) — HTTP server + frontend
+- `MODE=0` — worker only (no HTTP listener)
+
+The worker performs two recurring tasks:
+
+| Task                    | Interval (default)  | Description                                                                |
+|-------------------------|---------------------|----------------------------------------------------------------------------|
+| Job processing          | Every 5 seconds     | Claims `PENDING` rows from `ingestion_job`, runs the CSV ingestion pipeline, marks jobs `COMPLETED` or `FAILED` |
+| Stale inventory cleanup | Once per day        | Soft-deletes supplier inventory rows and orphaned catalogue items older than the configured threshold |
+
+Jobs are claimed atomically using `SELECT ... FOR UPDATE SKIP LOCKED`, so multiple worker instances can run safely in parallel without double-processing a job.
 
 ---
 
@@ -229,22 +218,25 @@ When `ENTRA_CLIENT_ID` is set, the login page will show a "Sign in with Microsof
 
 ```
 SwiftCPQ/
-├── client/          # Vue 3 SPA (Vite, PrimeVue 4, Pinia)
-├── server/          # Express API + worker (TypeScript, Knex, PostgreSQL)
+├── client/                     # Vue 3 SPA (Vite, PrimeVue 4, Pinia)
+├── server/                     # Express Server + Worker (TypeScript, Knex w/ PG)
 │   └── src/
 │       ├── database/
-│       │   └── migrations/   # SQL migration files
-│       ├── server/
-│       │   ├── api/          # Route handlers
-│       │   ├── helpers/      # JWT, cookies, passwords
+│       │   └── migrations/     
+│       ├── server/             # API Server (MODE=1)
+│       │   ├── api/            
+│       │   ├── helpers/        
 │       │   └── middlewares.ts
-│       └── worker/           # Background job processor (MODE=0)
-│           └── ingestion/    # CSV ingestion pipeline
-├── templater/       # PDF microservice (Express, Puppeteer, EJS)
+│       └── worker/             # Background job processor (MODE=0)
+│           └── ingestion/      # CSV ingestion pipeline
+├── templater/                  # PDF microservice (Express, Puppeteer, EJS)
 ├── .docker/
-│   ├── Dockerfile         # Production build (server + client, MODE=1)
-│   └── Dockerfile.worker  # Worker-only container (MODE=0)
-└── deploy.sh        # Example SSH deploy script
+│   ├── Dockerfile              # Production build (server + client, MODE=1)
+│   ├── Dockerfile.worker       # Worker-only container (MODE=0)
+│   └── Dockerfile.templater    # PDF service container
+│   ├── docker-compose.yml      # Production Docker Compose
+│   └── docker-compose.dev.yml  # Development Docker Compose (PostgreSQL only)
+└── deploy.sh                   # Example SSH deploy script
 ```
 
 ---
@@ -255,7 +247,7 @@ SwiftCPQ/
 Each service has a fixed port. Check for conflicting processes with `lsof -i :5000` (macOS/Linux) or `netstat -ano | findstr :5000` (Windows).
 
 **Migration errors**
-Ensure `DATABASE_URL` is correct and the database exists before running `migrate:up`. Run `migrate:down` to roll back a broken migration.
+Ensure PostgreSQL is running (`docker compose -f .docker/docker-compose.dev.yml ps`) and `DATABASE_URL` in `server/.env` is correct. Run `pnpm run migrate:down` to roll back a broken migration.
 
 **Puppeteer fails to launch**
 On Linux servers, install Chromium dependencies:
@@ -266,3 +258,6 @@ See [Puppeteer troubleshooting](https://pptr.dev/troubleshooting) for the full l
 
 **401 errors in the browser**
 The client and server must run on origins that match `CORS_ORIGIN`. In dev, keep the client on `http://localhost:5173` and the server on `http://localhost:5000`.
+
+**Docker permission issues on Linux**
+If `docker compose` fails with permission errors, either add your user to the `docker` group (`sudo usermod -aG docker $USER`, then log out and back in) or prefix commands with `sudo`.
