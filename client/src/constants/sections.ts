@@ -44,3 +44,26 @@ export const DEFAULT_INFO_SECTION = {
     blockRemoval: false
 } as Section;
 
+export const DEFAULT_TOTALS_SECTION = {
+    id: 0,
+    title: "Totals",
+    type: SECTION_TYPES.TOTALS,
+    order: 0,
+    recurrance: null,
+    isOptional: false,
+    isLocked: false,
+    blockRemoval: false
+} as Section;
+
+export const DEFAULT_MILESTONES_SECTION = {
+    id: 0,
+    title: "Milestones",
+    type: SECTION_TYPES.MILESTONES,
+    order: 0,
+    recurrance: null,
+    isOptional: false,
+    isLocked: false,
+    blockRemoval: false,
+    milestones: []
+} as Section;
+

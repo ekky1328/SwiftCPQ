@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import _ from 'lodash';
 import { DEFAULT_ITEM_COMMENT, DEFAULT_ITEM_PRODUCT } from '../constants/products';
 import { DEFAULT_MILESTONE } from '../constants/milestone';
-import { DEFAULT_INFO_SECTION, DEFAULT_PRODUCT_SECTION, SECTION_TYPES } from '../constants/sections';
+import { DEFAULT_INFO_SECTION, DEFAULT_MILESTONES_SECTION, DEFAULT_PRODUCT_SECTION, DEFAULT_TOTALS_SECTION, SECTION_TYPES } from '../constants/sections';
 
 import { Item, Milestone, Proposal, Section} from '../types/Proposal';
 import { concatProposalIdentifier } from '../utils/helpers';
@@ -219,13 +219,19 @@ export const useProposalStore = defineStore('proposal', () => {
         let template = null as any;
         switch (sectionType) {
             case 'PRODUCT':
-                template = { ...DEFAULT_PRODUCT_SECTION }; // Clone the product template
+                template = { ...DEFAULT_PRODUCT_SECTION };
                 break;
             case 'INFO':
-                template = { ...DEFAULT_INFO_SECTION }; // Clone the info template
+                template = { ...DEFAULT_INFO_SECTION };
+                break;
+            case 'TOTALS':
+                template = { ...DEFAULT_TOTALS_SECTION };
+                break;
+            case 'MILESTONES':
+                template = { ...DEFAULT_MILESTONES_SECTION };
                 break;
             default:
-                throw new Error(`Invalid section type: '${sectionType}'. Allowed values are 'PRODUCT' or 'INFO'.`);
+                throw new Error(`Invalid section type: '${sectionType}'. Allowed values are 'PRODUCT', 'INFO', 'TOTALS', or 'MILESTONES'.`);
         }
     
         template.id = sections.length > 0 ? Math.max(...sections.map((s: any) => s.id)) + 1 : 1;

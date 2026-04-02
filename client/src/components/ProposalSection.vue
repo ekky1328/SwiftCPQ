@@ -57,13 +57,15 @@ import CataloguePickerDialog from './CataloguePickerDialog.vue';
 import SectionHeader from './SectionHeader.vue';
 import SectionInfoEditor from './SectionInfoEditor.vue';
 import SectionProductsTable from './SectionProductsTable.vue';
+import SectionTotalsTable from './SectionTotalsTable.vue';
 import SectionMilestonesTable from './SectionMilestonesTable.vue';
 
 const SECTION_COMPONENT_MAP: Record<string, Component> = {
-    [SECTION_TYPES.PRODUCTS]: SectionProductsTable,
-    [SECTION_TYPES.MILESTONES]: SectionMilestonesTable,
-    [SECTION_TYPES.INFO]: SectionInfoEditor,
     [SECTION_TYPES.COVER_LETTER]: SectionInfoEditor,
+    [SECTION_TYPES.INFO]: SectionInfoEditor,
+    [SECTION_TYPES.PRODUCTS]: SectionProductsTable,
+    [SECTION_TYPES.TOTALS]: SectionTotalsTable,
+    [SECTION_TYPES.MILESTONES]: SectionMilestonesTable,
     [SECTION_TYPES.TERMS_AND_CONDITIONS]: SectionInfoEditor,
 };
 
@@ -115,16 +117,16 @@ const proposalSectionOptions = (sectionId: number) => [
         label: 'Totals',
         icon: 'pi pi-dollar',
         command: () => {
-            proposalStore.addSectionToProposal(sectionId, 'INFO');
-            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
+            proposalStore.addSectionToProposal(sectionId, 'TOTALS');
+            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new totals section to proposal', life: 3000 });
         }
     },
     {
         label: 'Milestones',
         icon: 'pi pi-sort-numeric-down',
         command: () => {
-            proposalStore.addSectionToProposal(sectionId, 'INFO');
-            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new info section to proposal', life: 3000 });
+            proposalStore.addSectionToProposal(sectionId, 'MILESTONES');
+            toast.add({ severity: 'info', summary: 'Added Section', detail: 'Added new milestones section to proposal', life: 3000 });
         }
     }
 ];

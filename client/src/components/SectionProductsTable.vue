@@ -61,7 +61,6 @@
                     <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
                         <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL')" v-model="item.subtotal" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
                     </td>
-
                     <td v-if="isComment(item)" class="product-comment border border-gray-300 bg-gray-200 text-left" colspan="7">
                         <Editor placeholder="Description..." v-model="item.description" />
                     </td>
