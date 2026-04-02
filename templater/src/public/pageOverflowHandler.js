@@ -85,7 +85,7 @@ const handlePageOverflow = () => {
                 sheet.insertAdjacentElement('afterend', newSheet);
 
                 const continuedMessage = document.createElement('div');
-                continuedMessage.className = 'continued-message text-center text-gray-400 mt-4 w-full absolute bottom-8 left-0';
+                continuedMessage.className = 'continued-message text-center text-gray-400 mt-4 w-full absolute bottom-10 left-0';
                 continuedMessage.textContent = '** Continued on the next page **';
                 content.appendChild(continuedMessage);
             }

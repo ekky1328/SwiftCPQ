@@ -1,9 +1,26 @@
-<section class="totals sheet px-8" data-type="totals" data-overflow-scan>
+<section class="milestones sheet px-8" data-type="milestones" data-overflow-scan>
     <%- include('header') %>
 
-    <h3 class="heading font-bold text-lg">
+    <h3 class="heading font-bold text-lg mb-6">
         <%- section.title %>
     </h3>
+
+    <% section.milestones.forEach((milestone, index) => { %>
+    <div class="flex gap-4 pb-8">
+        <div class="flex justify-between items-start w-full pb-2">
+            <div>
+                <div class="font-bold text-base"><%- milestone.title %></div>
+                <% if (milestone.description) { %>
+                    <div class="text-sm text-gray-500 mt-0.5"><%- milestone.description %></div>
+                <% } %>
+            </div>
+            <div class="text-right ml-8 shrink-0">
+                <div class="font-bold text-base"><%- new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(milestone.amount) %></div>
+                <div class="text-sm text-gray-500"><%- new Date(milestone.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></div>
+            </div>
+        </div>
+    </div>
+    <% }) %>
 
     <%- include('footer', { page_number }) %>
 </section>
