@@ -1,84 +1,63 @@
 <template>
-    <div class="flex flex-col gap-3 cursor-auto">
+    <div class="totals-summary">
 
-        <div v-if="Object.keys(sectionsByRecurrance).length === 0"
-             class="p-12 text-center text-gray-400">
+        <div v-if="Object.keys(sectionsByRecurrance).length === 0" class="empty">
             No product sections in this proposal.
         </div>
 
-        <!-- Recurrance group cards -->
-        <div
+        <section
             v-for="(sections, recurrance) in sectionsByRecurrance"
             :key="recurrance"
-            class="border border-gray-300 overflow-hidden rounded"
+            class="swift-panel recurrance-group"
         >
-            <!-- Group header -->
-            <div class="px-4 py-2.5 bg-gray-100 border-b border-gray-300 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold text-gray-800">
-                        {{ formatRecurrance(recurrance as string) }}
-                    </span>
-                    <span class="text-xs text-gray-500">· {{ sections.length }} {{ sections.length === 1 ? 'section' : 'sections' }}</span>
-                </div>
-                <span class="text-sm font-bold text-gray-900 tabular-nums">
-                    {{ formatCurrency(totals[recurrance as string]?.total ?? 0) }}
-                </span>
-            </div>
+            <header class="swift-panel__header">
+                <span class="group-label">{{ formatRecurrance(recurrance as string) }}</span>
+                <span class="group-meta">{{ sections.length }} {{ sections.length === 1 ? 'section' : 'sections' }}</span>
+                <span class="spacer"></span>
+                <span class="group-total">{{ formatCurrency(totals[recurrance as string]?.total ?? 0) }}</span>
+            </header>
 
-            <!-- Section rows -->
             <div
                 v-for="sec in sections"
                 :key="sec.id"
-                class="flex items-center gap-4 pl-7 pr-4 py-2.5 border-b border-gray-300 last:border-b-0 hover:bg-gray-50 transition-colors"
+                class="section-row"
             >
-                <!-- Title + detail stacked -->
-                <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-700 truncate">
-                            {{ sec.title || 'Untitled Section' }}
-                        </span>
-                        <span v-if="sec.isOptional" class="text-xs text-gray-500 border border-gray-300 rounded px-1.5 py-0.5 shrink-0">Optional</span>
-                        <span v-if="sec.isReference" class="text-xs text-gray-500 border border-gray-300 rounded px-1.5 py-0.5 shrink-0">Reference</span>
+                <div class="section-info">
+                    <div class="section-title-row">
+                        <span class="section-title">{{ sec.title || 'Untitled Section' }}</span>
+                        <Tag v-if="sec.isOptional">Optional</Tag>
+                        <Tag v-if="sec.isReference">Reference</Tag>
                     </div>
-                    <span class="flex items-center gap-1.5 text-xs text-gray-500">
-                        Cost <span class="text-gray-700">{{ formatCurrency(sec._totals?.cost ?? 0) }}</span>
-                        &nbsp;·&nbsp;
-                        Margin <span class="text-gray-700">{{ formatCurrency(sec._totals?.margin ?? 0) }}</span>
-                        <span
-                            v-if="marginPercent(sec) !== null"
-                            class="font-medium px-1.5 py-0.5 rounded"
-                            :class="marginPercentClass(sec)"
-                        >{{ marginPercent(sec) }}%</span>
-                    </span>
+                    <div class="section-meta">
+                        <span>Cost <strong>{{ formatCurrency(sec._totals?.cost ?? 0) }}</strong></span>
+                        <span class="dot">·</span>
+                        <span>Margin <strong>{{ formatCurrency(sec._totals?.margin ?? 0) }}</strong></span>
+                        <Tag v-if="marginPercent(sec) !== null" :kind="marginTone(sec)">{{ marginPercent(sec) }}%</Tag>
+                    </div>
                 </div>
-                <!-- Total -->
-                <span class="text-sm font-medium text-gray-700 w-24 text-right tabular-nums shrink-0">
-                    {{ formatCurrency(sec._totals?.total ?? 0) }}
-                </span>
+                <span class="section-total">{{ formatCurrency(sec._totals?.total ?? 0) }}</span>
             </div>
-        </div>
+        </section>
 
-        <!-- Grand total -->
-        <div
+        <section
             v-if="Object.keys(sectionsByRecurrance).length > 1"
-            class="flex items-center justify-between px-4 py-2.5 bg-gray-200 border border-gray-300 rounded"
+            class="swift-panel grand-total"
         >
-            <div class="flex flex-col gap-0.5">
-                <span class="text-sm font-bold text-gray-900">Grand Total</span>
-                <span class="text-xs text-gray-600">
+            <div class="grand-info">
+                <span class="grand-label">Grand Total</span>
+                <span class="grand-meta">
                     Cost {{ formatCurrency(grandTotals.cost) }} · Margin {{ formatCurrency(grandTotals.margin) }}
                 </span>
             </div>
-            <span class="text-sm font-bold text-gray-900 tabular-nums">
-                {{ formatCurrency(grandTotals.total) }}
-            </span>
-        </div>
+            <span class="grand-amount">{{ formatCurrency(grandTotals.total) }}</span>
+        </section>
 
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import Tag from '../ui/Tag.vue';
 import { useProposalStore } from '../store/proposalStore';
 import { SECTION_TYPES } from '../constants/sections';
 import type { Section } from '../types/Proposal';
@@ -137,11 +116,125 @@ function marginPercent(sec: Section): number | null {
     return Math.round((margin / total) * 100);
 }
 
-function marginPercentClass(sec: Section) {
-    const pct = marginPercent(sec);
-    if (pct === null) return '';
-    if (pct >= 30) return 'bg-green-100 text-green-700';
-    if (pct >= 15) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-red-100 text-red-700';
+function marginTone(sec: Section): 'success' | 'warn' | 'error' {
+    const pct = marginPercent(sec) ?? 0;
+    if (pct >= 30) return 'success';
+    if (pct >= 15) return 'warn';
+    return 'error';
 }
 </script>
+
+<style scoped>
+.totals-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+}
+
+.empty {
+    padding: var(--s-7);
+    text-align: center;
+    color: var(--text-3);
+}
+
+.recurrance-group .swift-panel__header {
+    gap: var(--s-3);
+}
+.group-label {
+    font-weight: 600;
+    color: var(--text-1);
+    font-size: var(--fs-md);
+}
+.group-meta {
+    font-size: var(--fs-sm);
+    color: var(--text-3);
+}
+.group-total {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--text-1);
+}
+
+.section-row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-5) var(--s-4) var(--s-7);
+    border-top: 1px solid var(--border-subtle);
+    transition: background 120ms;
+}
+.section-row:hover { background: var(--surface-100); }
+
+.section-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+.section-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+}
+.section-title {
+    color: var(--text-1);
+    font-size: var(--fs-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.section-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--text-3);
+    font-size: var(--fs-sm);
+}
+.section-meta strong {
+    color: var(--text-2);
+    font-weight: 500;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+.section-meta .dot { color: var(--text-4); }
+.section-total {
+    width: 110px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-1);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.grand-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--s-4) var(--s-5);
+    background: var(--surface-100);
+}
+.grand-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.grand-label {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-1);
+}
+.grand-meta {
+    font-size: var(--fs-sm);
+    color: var(--text-3);
+}
+.grand-amount {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    color: var(--text-1);
+}
+</style>

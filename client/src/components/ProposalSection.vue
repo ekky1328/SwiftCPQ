@@ -3,38 +3,40 @@
     <CataloguePickerDialog />
 
     <div
+        class="proposal-section-wrap"
         @mouseenter="onSectionEnter"
         @mouseleave="onSectionLeave"
     >
-        <Card
+        <section
             :key="section.id"
+            class="swift-panel proposal-section"
             :class="{
-                is_table: isTableContent(section.type),
-                is_hidden: !sectionVisibility,
-                is_active: sectionIsEntered
+                'is-table': isTableContent(section.type),
+                'is-hidden': !sectionVisibility,
+                'is-active': sectionIsEntered,
             }"
         >
-            <template #title>
+            <header class="swift-panel__header proposal-section__header">
                 <SectionHeader
                     :section="section"
                     :visibility="sectionVisibility"
                     :open-catalogue-picker="openCataloguePicker"
                     @update:visibility="sectionVisibility = $event"
                 />
-            </template>
+            </header>
 
-            <template #content>
+            <div class="swift-panel__body" :class="{ 'swift-panel__body--flush': isTableContent(section.type) }">
                 <component
                     v-if="sectionVisibility && SECTION_COMPONENT_MAP[section.type]"
                     :is="SECTION_COMPONENT_MAP[section.type]"
                     :section="section"
                     :open-catalogue-picker="openCataloguePicker"
                 />
-            </template>
-        </Card>
+            </div>
+        </section>
 
-        <div v-if="[ SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES ].includes(section.type)" class="add-section-container mt-4 w-full flex justify-center items-center relative">
-            <SpeedDial :model="proposalSectionOptions(section.id)" direction="right" :style="{ position: 'absolute', top: '-7px' }" />
+        <div v-if="canAppend" class="add-section-container">
+            <SpeedDial :model="proposalSectionOptions(section.id)" direction="right" />
         </div>
 
     </div>
@@ -42,11 +44,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, provide } from 'vue';
+import { computed, ref, provide } from 'vue';
 import type { Component } from 'vue';
 import type { Section } from '../types/Proposal';
 import { useToast } from 'primevue/usetoast';
-import Card from 'primevue/card';
 import SpeedDial from 'primevue/speeddial';
 
 import { useProposalStore } from '../store/proposalStore';
@@ -70,6 +71,8 @@ const SECTION_COMPONENT_MAP: Record<string, Component> = {
     [SECTION_TYPES.TERMS_AND_CONDITIONS]: SectionInfoEditor,
 };
 
+const APPEND_TYPES = [SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES];
+
 const toast = useToast();
 const proposalStore = useProposalStore();
 
@@ -77,6 +80,8 @@ const { data: section } = defineProps<{ data: Section }>();
 
 const sectionIsEntered = ref<boolean>(false);
 const sectionVisibility = ref<boolean>(true);
+
+const canAppend = computed(() => APPEND_TYPES.includes(section.type));
 
 const {
     catalogueDialogVisible,
@@ -136,84 +141,64 @@ function onSectionEnter() { sectionIsEntered.value = true; }
 function onSectionLeave() { sectionIsEntered.value = false; }
 </script>
 
+<style scoped>
+.proposal-section-wrap {
+    margin-bottom: var(--s-5);
+}
+
+.proposal-section {
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.proposal-section.is-active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-bg);
+}
+.proposal-section.is-hidden .swift-panel__body {
+    display: none;
+}
+
+.proposal-section__header {
+    height: auto;
+    min-height: 36px;
+    padding: var(--s-3) var(--s-4);
+}
+
+.add-section-container {
+    height: 24px;
+    margin-top: var(--s-3);
+    display: flex;
+    justify-content: center;
+    position: relative;
+    opacity: 0.4;
+    transition: opacity 200ms;
+}
+.add-section-container:hover {
+    opacity: 1;
+}
+.add-section-container :deep(.p-speeddial-open .p-speeddial-list) {
+    background: var(--surface-100);
+    border-radius: var(--r-pill);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    padding: var(--s-2);
+    flex-direction: row;
+    margin-top: -8px;
+}
+.add-section-container :deep(.p-speeddial .p-speeddial-button) {
+    transform: scale(0.6);
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+</style>
+
 <style>
-    .add-section-container {
-        height: 25px;
-    }
+/* Vue Draggable shared styles */
+.ghost {
+    opacity: 0.25;
+    background: var(--accent-bg);
+}
+.flip-list-move { transition: transform 1s; }
+.no-move { transition: transform 0s; }
 
-    .add-section-container:hover {
-        opacity: 1;
-        transition: all 500ms;
-    }
-
-    .section-header-left {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: 1fr;
-        grid-column-gap: 8px;
-        width: 100%;
-    }
-
-    .section-header-left input.section-title {
-        font-size: 20px;
-        padding: 0;
-        background-color: #083e69;
-        border-color: #083e69;
-        color: white;
-        box-shadow: none;
-    }
-
-    .section-header-left input.section-title:hover {
-        border-color: #ffffff;
-    }
-
-    .section-header-left input.section-title:focus {
-        font-size: 20px;
-        padding: 0;
-        color: #083e69;
-        background-color: #ffffff;
-    }
-
-    .add-section-container .p-speeddial-open .p-speeddial-list {
-        transition: all 200ms;
-        background: white;
-        margin-top: -10px;
-        padding: 8px;
-        top: -8px;
-        border-radius: 30px;
-        box-shadow: 0px 4px 9px #0000008f;
-        flex-direction: row;
-    }
-
-    .add-section-container .p-speeddial .p-speeddial-button {
-        transform: scale(0.6) !important;
-    }
-
-    .add-section-container .p-speeddial .p-speeddial-button {
-        background: black !important;
-        border-color: black !important;
-    }
-
-    /* Vue Draggable */
-    .ghost {
-        opacity: 0.25;
-        background: #c8ebfb;
-    }
-
-    .flip-list-move {
-        transition: transform 1s;
-    }
-
-    .no-move {
-        transition: transform 0s;
-    }
-
-    /* Smooth Scroll */
-    html {
-        scroll-behavior: smooth;
-    }
-
-    :target {
-        scroll-margin-top: 4.5rem;
-    }
+html { scroll-behavior: smooth; }
+:target { scroll-margin-top: 4.5rem; }
 </style>

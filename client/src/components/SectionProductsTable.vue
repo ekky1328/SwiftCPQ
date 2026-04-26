@@ -1,97 +1,158 @@
 <template>
-    <table class="table-auto w-full border-collapse border border-gray-300 cursor-auto">
-        <thead class="bg-gray-100 text-left text-sm font-medium text-gray-700">
+    <table class="swift-table products-table">
+        <thead>
             <tr>
-                <th class="p-2 border border-gray-300 text-center w-10"></th>
-                <th class="p-2 border border-gray-300">SKU</th>
-                <th class="p-2 border border-gray-300">Title</th>
-                <th class="p-2 product qty border border-gray-300 text-right w-20">Qty</th>
-                <th class="p-2 product currency border border-gray-300 text-right">Cost</th>
-                <th class="p-2 product currency border border-gray-300 text-right">Price</th>
-                <th class="p-2 product currency border border-gray-300 text-right">Margin</th>
-                <th class="p-2 product currency border border-gray-300 text-right">Subtotal</th>
+                <th class="col-handle"></th>
+                <th class="col-sku">SKU</th>
+                <th class="col-title">Title</th>
+                <th class="col-num col-qty">Qty</th>
+                <th class="col-currency">Cost</th>
+                <th class="col-currency">Price</th>
+                <th class="col-currency">Margin</th>
+                <th class="col-currency">Subtotal</th>
+                <th class="col-actions"></th>
             </tr>
         </thead>
         <Draggable
             tag="tbody"
             v-model="section.items"
             v-bind="dragOptions"
-            handle=".handle"
+            handle=".drag-handle"
             item-key="id"
             :animation="200"
         >
             <template #item="{ element: item }">
-                <tr class="product-row hover:bg-gray-50 odd:bg-white even:bg-gray-50 transition ease-in-out delay-150 relative">
+                <template v-if="isComment(item)">
+                    <tr class="row-comment">
+                        <td class="col-handle">
+                            <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+                        </td>
+                        <td colspan="7" class="comment-cell">
+                            <Editor
+                                placeholder="Comment..."
+                                v-model="item.description"
+                                class="comment-editor"
+                            />
+                        </td>
+                        <td class="col-actions">
+                            <div class="row-actions">
+                                <Btn variant="ghost" icon="duplicate" title="Duplicate" @click="proposalStore.duplicateItem(section.id, item)" />
+                                <Btn variant="ghost" icon="trash" title="Delete" @click="proposalStore.deleteSectionItem(section.id, item.id)" />
+                            </div>
+                        </td>
+                    </tr>
+                </template>
 
-                    <td colspan="1" class="product p-2 border border-gray-300 text-center text-gray-500 w-10" :class="{ 'bg-gray-200': isComment(item) }" title="Drag to reorder">
-                        <span class="inline-block handle cursor-move">⋮⋮</span>
-                        <div class="product-shortcuts">
-                            <span class="product-shortcut delete pi pi-trash" title="Delete item" @click="proposalStore.deleteSectionItem(section.id, item.id)"></span>
-                            <span class="product-shortcut pi pi-clone" title="Duplicate item" @click="proposalStore.duplicateItem(section.id, item)"></span>
-                        </div>
-                    </td>
-                    <td v-if="!isComment(item)" class="product sku p-2 border border-gray-300">
-                        <InputText placeholder="Product SKU" v-model="item.sku" size="small" fluid />
-                    </td>
-                    <td v-if="!isComment(item)" class="product title p-2 border border-gray-300">
-                        <InputText placeholder="Product Title" v-model="item.title" inputClass="w-full title" size="small" fluid />
-
-                        <Inplace :active="item.description.trim() !== ''">
-                            <template #display>
-                                <a>Edit Description</a>
-                            </template>
-                            <template #content="{ closeCallback }">
-                                <Editor placeholder="Description..." v-model="item.description" class="mt-2 description" editor-style="max-height: 500px; overflow-y: auto;" />
-                                <a class="description-close" @click="closeCallback">Close Description</a>
-                            </template>
-                        </Inplace>
-                    </td>
-                    <td v-if="!isComment(item)" class="product qty p-2 border border-gray-300 text-right">
-                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'QTY')" v-model="item.qty" inputClass="text-right" size="small" fluid />
-                    </td>
-                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'COST')" v-model="item.cost" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                    </td>
-                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'PRICE')" v-model="item.price" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                    </td>
-                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'MARGIN')" v-model="item.margin" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                    </td>
-                    <td v-if="!isComment(item)" class="product currency p-2 border border-gray-300 text-right">
-                        <InputNumber @value-change="proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL')" v-model="item.subtotal" inputClass="text-right w-fit" size="small" mode="currency" currency="USD" locale="en-US" fluid />
-                    </td>
-                    <td v-if="isComment(item)" class="product-comment border border-gray-300 bg-gray-200 text-left" colspan="7">
-                        <Editor placeholder="Description..." v-model="item.description" />
-                    </td>
-                </tr>
+                <template v-else>
+                    <tr class="row-product">
+                        <td class="col-handle">
+                            <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+                        </td>
+                        <td class="col-sku">
+                            <InlineEditCell
+                                type="text"
+                                :model-value="item.sku"
+                                @commit="(v) => { item.sku = String(v); }"
+                            />
+                        </td>
+                        <td class="col-title">
+                            <div class="title-row">
+                                <InlineEditCell
+                                    type="text"
+                                    :model-value="item.title"
+                                    @commit="(v) => { item.title = String(v); }"
+                                />
+                                <button
+                                    class="desc-toggle"
+                                    :class="{ 'desc-toggle--open': isDescOpen(item.id) }"
+                                    :title="isDescOpen(item.id) ? 'Hide description' : 'Edit description'"
+                                    @click="toggleDesc(item.id)"
+                                >›</button>
+                            </div>
+                        </td>
+                        <td class="col-num col-qty">
+                            <InlineEditCell
+                                type="qty"
+                                :model-value="item.qty"
+                                @commit="(v) => { item.qty = Number(v); proposalStore.recalculateSectionItem(section.id, item.id, 'QTY'); }"
+                            />
+                        </td>
+                        <td class="col-currency">
+                            <InlineEditCell
+                                type="cost"
+                                :model-value="item.cost"
+                                @commit="(v) => { item.cost = Number(v); proposalStore.recalculateSectionItem(section.id, item.id, 'COST'); }"
+                            />
+                        </td>
+                        <td class="col-currency">
+                            <InlineEditCell
+                                type="price"
+                                :model-value="item.price"
+                                @commit="(v) => { item.price = Number(v); proposalStore.recalculateSectionItem(section.id, item.id, 'PRICE'); }"
+                            />
+                        </td>
+                        <td class="col-currency">
+                            <InlineEditCell
+                                type="price"
+                                :model-value="item.margin"
+                                @commit="(v) => { item.margin = Number(v); proposalStore.recalculateSectionItem(section.id, item.id, 'MARGIN'); }"
+                            />
+                        </td>
+                        <td class="col-currency col-subtotal">
+                            <InlineEditCell
+                                type="price"
+                                :model-value="item.subtotal"
+                                @commit="(v) => { item.subtotal = Number(v); proposalStore.recalculateSectionItem(section.id, item.id, 'SUB_TOTAL'); }"
+                            />
+                        </td>
+                        <td class="col-actions">
+                            <div class="row-actions">
+                                <Btn variant="ghost" icon="duplicate" title="Duplicate" @click="proposalStore.duplicateItem(section.id, item)" />
+                                <Btn variant="ghost" icon="trash" title="Delete" @click="proposalStore.deleteSectionItem(section.id, item.id)" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-if="isDescOpen(item.id)" class="row-description">
+                        <td></td>
+                        <td colspan="7" class="desc-cell">
+                            <Editor
+                                placeholder="Description..."
+                                v-model="item.description"
+                                editor-style="min-height: 120px; max-height: 500px; overflow-y: auto;"
+                            />
+                        </td>
+                        <td></td>
+                    </tr>
+                </template>
             </template>
+
             <template #footer>
-                <tr v-if="section.items && section.items.length === 0">
-                    <td colspan="7">
-                        <div class="grid place-content-center text-center py-12 w-full">
+                <tr v-if="!section.items || section.items.length === 0" class="row-empty">
+                    <td colspan="9">
+                        <div class="empty-state">
                             <h3>No products</h3>
-                            <div class="flex gap-2 pt-2">
-                                <Button label="Add Product" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)" />
-                                <Button label="Add Comment" size="small" severity="contrast" @click="addItemToSection(section.id, PRODUCT_TYPES.COMMENT)" />
-                                <Button label="Add from Catalogue" size="small" severity="secondary" icon="pi pi-database" @click="openCataloguePicker(section.id)" />
+                            <div class="empty-actions">
+                                <Btn variant="primary" @click="addItemToSection(section.id, PRODUCT_TYPES.PRODUCT)">Add Product</Btn>
+                                <Btn variant="default" @click="addItemToSection(section.id, PRODUCT_TYPES.COMMENT)">Add Comment</Btn>
+                                <Btn variant="default" icon="db" @click="openCataloguePicker(section.id)">From Catalogue</Btn>
                             </div>
                         </div>
                     </td>
                 </tr>
 
-                <tr v-if="section._totals">
-                    <td class="p-2 bg-gray-200" colspan="4"></td>
-                    <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Cost Total'">
+                <tr v-if="section._totals" class="row-totals">
+                    <td colspan="4"></td>
+                    <td class="col-currency" v-tooltip.top="'Section Cost Total'">
                         {{ formatCurrency(section._totals.cost) }}
                     </td>
-                    <td class="p-2 pr-3 text-right w-25 bg-gray-200"></td>
-                    <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
+                    <td class="col-currency"></td>
+                    <td class="col-currency" v-tooltip.top="'Section Margin Total'">
                         {{ formatCurrency(section._totals.margin) }}
                     </td>
-                    <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
-                        {{ formatCurrency(section._totals.total) }}
+                    <td class="col-currency col-subtotal" v-tooltip.top="'Section Subtotal'">
+                        <strong>{{ formatCurrency(section._totals.total) }}</strong>
                     </td>
+                    <td></td>
                 </tr>
             </template>
         </Draggable>
@@ -100,14 +161,13 @@
 
 <script setup lang="ts">
 /* eslint-disable vue/no-use-v-if-with-v-for */
-import { onMounted } from 'vue';
+import { onMounted, reactive } from 'vue';
 import Draggable from 'vuedraggable';
 import { useToast } from 'primevue/usetoast';
-import Button from 'primevue/button';
-import InputNumber from 'primevue/inputnumber';
-import InputText from 'primevue/inputtext';
 import Editor from 'primevue/editor';
-import Inplace from 'primevue/inplace';
+
+import Btn from '../ui/Btn.vue';
+import InlineEditCell from '../ui/InlineEditCell.vue';
 
 import { useProposalStore } from '../store/proposalStore';
 import { PRODUCT_TYPES } from '../constants/products';
@@ -130,15 +190,20 @@ const dragOptions = {
     ghostClass: 'ghost',
 };
 
+const descOpen = reactive<Record<number, boolean>>({});
+function isDescOpen(id: number) {
+    return !!descOpen[id];
+}
+function toggleDesc(id: number) {
+    descOpen[id] = !descOpen[id];
+}
+
 function addItemToSection(sectionId: number, itemType: string) {
     proposalStore.addItemToSection(sectionId, itemType);
-    switch (itemType) {
-        case PRODUCT_TYPES.PRODUCT:
-            toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added product to section', life: 3000 });
-            break;
-        case PRODUCT_TYPES.COMMENT:
-            toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added comment to section', life: 3000 });
-            break;
+    if (itemType === PRODUCT_TYPES.PRODUCT) {
+        toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added product to section', life: 3000 });
+    } else if (itemType === PRODUCT_TYPES.COMMENT) {
+        toast.add({ severity: 'success', summary: 'Added Item', detail: 'Added comment to section', life: 3000 });
     }
 }
 
@@ -152,90 +217,113 @@ onMounted(() => {
 });
 </script>
 
-<style>
-/* Product Styling */
-.product {
-    vertical-align: top;
+<style scoped>
+.products-table {
+    table-layout: fixed;
 }
 
-.product.handle { max-width: 12px; }
-.product.sku { width: 150px; max-width: 200px; }
-.product.qty { width: 75px; }
-.product.currency { width: 125px; }
-.product-comment textarea { height: fit-content; }
+.col-handle { width: 28px; text-align: center; color: var(--text-3); }
+.col-sku { width: 140px; }
+.col-title { width: auto; }
+.col-qty { width: 70px; }
+.col-currency { width: 110px; }
+.col-actions { width: 60px; }
 
-.product-row .product-shortcuts {
-    visibility: hidden;
-    cursor: auto;
+.drag-handle {
+    cursor: grab;
+    color: var(--text-3);
+    user-select: none;
+    font-size: 12px;
+    line-height: 1;
+}
+.drag-handle:active { cursor: grabbing; }
+
+.title-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: absolute;
-    top: 0;
-    padding-left: 8px !important;
-    right: -42px;
-    height: 100%;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
 }
+.title-row > .iec { flex: 1; min-width: 0; }
 
-.product-shortcuts:hover,
-.product-row:hover .product-shortcuts {
-    visibility: visible;
-}
-
-.product-row .product-shortcut {
-    padding: 8px;
-    background: white;
-    border: 2px solid #cdcdcd;
-    border-radius: 6px;
+.desc-toggle {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-50);
+    color: var(--text-3);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 0 1px 0;
     cursor: pointer;
-    transition: all 200ms;
+    transition: transform 120ms ease, color 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.desc-toggle:hover { color: var(--text-1); border-color: var(--text-3); }
+.desc-toggle--open { transform: rotate(90deg); color: var(--accent); border-color: var(--accent); }
+
+.row-comment > td:not(.col-handle) {
+    background: var(--accent-bg);
+}
+.row-comment > .comment-cell {
+    border-left: 2px solid var(--accent);
+    padding: var(--s-3) var(--s-5);
+}
+.row-comment :deep(.comment-editor),
+.row-comment :deep(.comment-editor .p-editor-container) {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+.row-comment :deep(.comment-editor .p-editor-toolbar) {
+    display: none;
+}
+.row-comment :deep(.comment-editor .p-editor-content),
+.row-comment :deep(.comment-editor .ql-container) {
+    background: transparent !important;
+    border: none !important;
+    min-height: unset !important;
+}
+.row-comment :deep(.comment-editor .ql-editor) {
+    padding: 4px 0 !important;
+    background: transparent !important;
+    color: var(--text-1);
 }
 
-.product-shortcuts .product-shortcut:hover {
-    border-color: black;
-    background-color: black;
-    color: white;
+.row-description > .desc-cell {
+    background: var(--surface-100);
+    padding: var(--s-3) var(--s-5);
+}
+.row-description :deep(.p-editor-content) {
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
 }
 
-.product-shortcuts .product-shortcut.delete:hover {
-    border-color: rgb(143, 0, 0);
-    background-color: rgb(143, 0, 0);
+.row-totals td {
+    background: var(--surface-50);
+    border-top: 1px solid var(--border);
+    font-weight: 500;
 }
 
-.product.title .description-close {
-    opacity: 0.5;
-    font-size: 12px;
-    text-decoration: underline;
-    background: white;
+.empty-state {
+    display: grid;
+    place-content: center;
+    text-align: center;
+    padding: var(--s-7) 0;
+    gap: var(--s-4);
+}
+.empty-actions {
+    display: flex;
+    gap: var(--s-3);
+    justify-content: center;
 }
 
-.product.title .description-close:hover { opacity: 1; }
-
-/* PrimeVue overrides */
-.product-comment .p-editor-toolbar.ql-toolbar,
-.product .description .p-editor-toolbar.ql-toolbar {
-    display: none !important;
+.ghost {
+    opacity: 0.4;
+    background: var(--accent-bg);
 }
-
-.product .description .p-editor-content {
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 6px !important;
-    overflow: hidden;
-}
-
-.product-comment .ql-editor {
-    background: #e5e7eb !important;
-}
-
-.product.title .p-inplace-content { position: relative; }
-
-.product.title .p-inplace-display {
-    opacity: 0.5;
-    background: none;
-    padding: 0;
-    font-size: 12px;
-    text-decoration: underline;
-}
-
-.product.title .p-inplace-display:hover { opacity: 1; }
 </style>

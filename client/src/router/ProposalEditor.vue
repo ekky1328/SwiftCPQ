@@ -1,343 +1,422 @@
 <template>
-  <div id="proposal-editor" v-if="proposalStore.data !== null">
+  <div v-if="proposalStore.data !== null" class="proposal-editor">
 
     <Toast position="top-center" />
+    <ConfirmDialog />
+
+    <!-- Topbar -->
+    <TopBar :crumbs="['Proposals', identifier]">
+      <Tag :kind="proposalStore.isDraft ? 'warn' : 'success'" dot>
+        {{ proposalStore.isDraft ? 'draft' : 'saved' }}
+      </Tag>
+      <span class="topbar-divider" />
+      <Btn icon="history" @click="loadVersionHistory">History</Btn>
+      <Btn icon="eye" @click="openPreview">Preview</Btn>
+      <Btn icon="download" @click="downloadPdf">PDF</Btn>
+      <Btn variant="primary" kbd="⌘S" @click="triggerSaveProposal">Save</Btn>
+    </TopBar>
+
+    <!-- Sub-header -->
+    <div class="sub-header">
+      <div class="sub-header__left">
+        <div class="sub-header__meta">
+          <span class="mono small muted">{{ identifier }} · v{{ proposalStore.data.version }}</span>
+          <Tag dot :kind="proposalStore.isDraft ? 'warn' : 'success'">
+            {{ proposalStore.isDraft ? 'draft' : proposalStore.data.status?.toLowerCase() || 'saved' }}
+          </Tag>
+          <span class="muted small">·</span>
+          <span class="mono small muted">
+            <template v-if="proposalStore.data.createdOnDate">created {{ shortDate(proposalStore.data.createdOnDate) }}</template>
+            <template v-if="proposalStore.data.modifiedOnDate"> · modified {{ shortDate(proposalStore.data.modifiedOnDate) }}</template>
+          </span>
+        </div>
+        <div class="sub-header__title">
+          <input
+            v-model="proposalStore.data.title"
+            class="sub-header__title-input"
+            placeholder="Untitled proposal"
+          />
+        </div>
+      </div>
+      <div class="sub-header__stats">
+        <Stat label="Sections" :value="sectionCount" />
+        <Stat label="Items" :value="itemCount" />
+        <Stat label="Margin" :value="`${marginPct}%`" :tone="marginTone" />
+        <Stat
+          label="Total"
+          :value="formatCurrency(grandTotal)"
+          bold
+          :class="{ 'totals-pulse': proposalStore.totalsRecalculated }"
+        />
+        <Stat label="Expires" :value="expiresFormatted" />
+      </div>
+    </div>
+
+    <!-- Three-pane body -->
+    <div class="editor-body">
+      <CollapsibleRail side="left" label="Outline">
+        <div class="rail-section">
+          <div class="rail-section-label">Sections</div>
+          <div class="rail-section-content">
+            <OutlineNavItem
+              v-for="(section, i) in proposalStore.data.sections"
+              :key="section.id"
+              :index="i + 1"
+              :title="section.title || 'Untitled'"
+              :type="section.type"
+              :item-count="section.items?.length"
+              :locked="section.isLocked"
+              :recurring="!!section.recurrance && section.recurrance !== 'ONE_TIME'"
+              :active="activeSection === section.id"
+              @click="scrollToSection(section.id)"
+              @lock-toggle="section.isLocked = !section.isLocked"
+            />
+          </div>
+        </div>
+
+        <div class="rail-section rail-section--bordered">
+          <div class="rail-section-label">Customer</div>
+          <div class="rail-customer">
+            <input
+              v-model="proposalStore.data.customer.name"
+              class="swift-input"
+              placeholder="Customer name"
+            />
+            <label class="swift-label" style="margin-top: 8px;">Expires</label>
+            <input
+              v-model="expiresOnInput"
+              type="date"
+              class="swift-input"
+            />
+          </div>
+        </div>
+      </CollapsibleRail>
+
+      <main class="editor-pane">
+        <ProposalSection
+          v-for="section in proposalStore.data.sections"
+          :id="`section_${section.id}`"
+          :key="section.id"
+          :data="section"
+        />
+      </main>
+
+      <CollapsibleRail side="right" label="Summary">
+        <div class="rail-summary">
+          <section class="swift-panel" :class="{ 'totals-pulse': proposalStore.totalsRecalculated }">
+            <header class="swift-panel__header">
+              <span style="font-weight: 500;">Totals</span>
+              <Tag dot>USD</Tag>
+            </header>
+            <div class="swift-panel__body" style="padding: 0;">
+              <div
+                v-for="(values, recurrence) in proposalStore.data._totals"
+                :key="recurrence"
+                class="total-row"
+              >
+                <div class="total-row__label">{{ humanRecurrance(String(recurrence)) }}</div>
+                <div class="total-row__line">
+                  <span class="mono small muted">cost</span>
+                  <span class="mono small">{{ formatCurrency(values.cost) }}</span>
+                </div>
+                <div class="total-row__line">
+                  <span class="mono small muted">margin</span>
+                  <span class="mono small success">{{ formatCurrency(values.margin) }}</span>
+                </div>
+                <div class="total-row__line total-row__line--strong">
+                  <span class="mono">total</span>
+                  <span class="mono">{{ formatCurrency(values.total) }}</span>
+                </div>
+              </div>
+              <div v-if="!hasTotals" class="swift-empty" style="padding: 16px;">No totals yet.</div>
+            </div>
+          </section>
+
+          <section class="swift-panel">
+            <header class="swift-panel__header">
+              <span style="font-weight: 500;">Activity</span>
+            </header>
+            <div class="swift-panel__body" style="padding: 0;">
+              <ActivityRow
+                v-for="(a, i) in activity"
+                :key="i"
+                :actor="a.actor"
+                :verb="a.verb"
+                :target="a.target"
+                :timestamp="a.timestamp"
+              />
+              <div v-if="activity.length === 0" class="swift-empty" style="padding: 12px;">No recent activity.</div>
+            </div>
+          </section>
+        </div>
+      </CollapsibleRail>
+    </div>
+
+    <!-- Status bar -->
+    <StatusBar
+      :status="proposalStore.isDraft ? 'unsaved' : 'synced'"
+      :tone="proposalStore.isDraft ? 'warn' : 'success'"
+    >
+      <span>{{ sectionCount }} sections · {{ itemCount }} items · margin {{ marginPct }}% · {{ formatCurrency(grandTotal) }}</span>
+      <template #right>
+        <Kbd>⌘S</Kbd>&nbsp;save · <Kbd>⌘[</Kbd>&nbsp;outline · <Kbd>⌘\</Kbd>&nbsp;summary
+      </template>
+    </StatusBar>
 
     <!-- Version History Dialog -->
     <Dialog
       v-model:visible="showVersionHistory"
-      :header="previewVersion ? `v${previewVersion.version} — ${new Date(previewVersion.createdOnDate).toLocaleString()}` : 'Version History'"
+      :header="previewVersion ? `v${previewVersion.version} — ${shortDate(previewVersion.createdOnDate)}` : 'Version History'"
       :style="{ width: '620px' }"
       modal
       @hide="previewVersion = null"
     >
-      <!-- List view -->
       <template v-if="!previewVersion">
-        <p v-if="versions.length === 0" class="text-gray-500 text-sm">No saved versions yet. Versions are created each time you save.</p>
-        <DataTable v-else :value="versions" size="small">
-          <Column field="version" header="Version" style="width: 80px">
-            <template #body="{ data }">
-              <span class="font-mono">v{{ data.version }}</span>
-            </template>
-          </Column>
-          <Column field="createdOnDate" header="Saved At">
-            <template #body="{ data }">
-              {{ new Date(data.createdOnDate).toLocaleString() }}
-            </template>
-          </Column>
-          <Column header="" style="width: 150px">
-            <template #body="{ data }">
-              <div class="flex gap-1">
-                <Button label="View" size="small" severity="secondary" :loading="previewLoading === data.id" @click="loadPreview(data)" />
-                <Button label="Restore" size="small" severity="warn" @click="confirmRevert(data)" />
-              </div>
-            </template>
-          </Column>
-        </DataTable>
+        <p v-if="versions.length === 0" class="muted small">No saved versions yet. Versions are created each time you save.</p>
+        <table v-else class="swift-table">
+          <thead>
+            <tr><th style="width: 80px;">Version</th><th>Saved at</th><th style="width: 160px;"></th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="v in versions" :key="v.id">
+              <td class="col-id">v{{ v.version }}</td>
+              <td class="mono small">{{ shortDate(v.createdOnDate) }}</td>
+              <td class="row-actions" style="visibility: visible;">
+                <Btn variant="ghost" @click="loadPreview(v)">View</Btn>
+                <Btn variant="primary" @click="confirmRevert(v)">Restore</Btn>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </template>
 
-      <!-- Preview view -->
       <template v-else>
-        <div class="flex items-center gap-2 mb-4">
-          <Button icon="pi pi-arrow-left" label="Back to list" text size="small" @click="previewVersion = null" />
-        </div>
-
-        <div class="flex flex-col gap-3 mb-4 p-3 bg-gray-50 rounded border">
+        <Btn variant="ghost" icon="chevron" @click="previewVersion = null">Back to list</Btn>
+        <div class="version-preview">
           <div>
-            <p class="text-xs text-gray-500 mb-1">Title</p>
-            <p class="font-medium">{{ previewVersion.title || '(untitled)' }}</p>
+            <div class="swift-label">Title</div>
+            <div>{{ previewVersion.title || '(untitled)' }}</div>
           </div>
           <div v-if="previewVersion.description">
-            <p class="text-xs text-gray-500 mb-1">Description</p>
-            <p class="text-sm">{{ previewVersion.description }}</p>
+            <div class="swift-label">Description</div>
+            <div class="small">{{ previewVersion.description }}</div>
           </div>
           <div>
-            <p class="text-xs text-gray-500 mb-1">Status</p>
-            <Tag :value="previewVersion.status" />
+            <div class="swift-label">Status</div>
+            <Tag>{{ previewVersion.status }}</Tag>
           </div>
         </div>
 
-        <div class="flex flex-col gap-2 mb-4 max-h-64 overflow-y-auto">
-          <div v-for="section in previewVersion.sections" :key="section.id" class="border rounded p-2">
-            <p class="text-sm font-medium">{{ section.title }} <span class="text-xs text-gray-400 font-normal ml-1">{{ section.type }}</span></p>
-            <ul v-if="section.items?.length" class="mt-1 ml-2 space-y-0.5">
-              <li v-for="item in section.items" :key="item.id" class="flex justify-between text-xs text-gray-600">
+        <div class="version-sections">
+          <div v-for="section in previewVersion.sections" :key="section.id" class="version-section">
+            <div class="version-section__title">
+              {{ section.title }}
+              <span class="muted small">{{ section.type }}</span>
+            </div>
+            <ul v-if="section.items?.length">
+              <li v-for="item in section.items" :key="item.id">
                 <span>{{ item.title || '(unnamed)' }}</span>
-                <span class="tabular-nums">{{ item.qty }}× {{ formatCurrency(item.price) }}</span>
+                <span class="mono small">{{ item.qty }}× {{ formatCurrency(item.price) }}</span>
               </li>
             </ul>
-            <p v-else-if="section.type === 'PRODUCTS'" class="text-xs text-gray-400 mt-1 ml-2">No items</p>
           </div>
         </div>
 
-        <div class="flex justify-end">
-          <Button label="Restore this version" icon="pi pi-history" severity="warn" @click="confirmRevert(previewVersion)" />
+        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+          <Btn variant="primary" icon="history" @click="confirmRevert(previewVersion)">Restore this version</Btn>
         </div>
       </template>
     </Dialog>
-
-    <ConfirmDialog />
-
-    <Toolbar class="proposal-toolbar m-2 mt-0 !border-none">
-      <template #start> 
-        <h1 class="m-0 text-3xl">{{ concatProposalIdentifier(proposalStore.data) }}</h1>
-      </template>
-      <template #end> 
-        <Badge class="mr-2" v-if="proposalStore.isDraft" value="Changes Detected" severity="warn"></Badge>
-        <SplitButton label="Save" size="small" :model="proposalOptions" @click="triggerSaveProposal" severity="contrast"></SplitButton>
-      </template>
-    </Toolbar>
-
-    <div class="proposal_editor_container m-2">
-
-      <!-- Left Panel -->
-      <aside>
-        <Card class="!cursor-default">
-          <template #title>Proposal Details</template>
-          <template #content>
-            <div class="flex flex-col gap-3">
-              <div class="flex flex-col">
-                <label for="title">Title</label>
-                <InputText id="title" v-model="proposalStore.data.title" size="small" />
-              </div>
-              <div class="flex flex-col">
-                <label for="title">Description</label>
-                <Textarea v-model="proposalStore.data.description" size="small" fluid auto-resize />
-              </div>
-              <div class="flex flex-col">
-                <label for="title">Name</label>
-                <InputText id="title" v-model="proposalStore.data.customer.name" size="small" />
-              </div>
-              <div class="flex flex-col">
-                <label for="expiresOnDate">Expiry Date</label>
-                <DatePicker name="expiresOnDate" v-model="proposalStore.data.expiresOnDate" size="small" showIcon dateFormat="yy/mm/dd" fluid />
-              </div>
-            </div>
-          </template>
-        </Card>
-
-        <div class="sticky top-16">
-          <Card class="mt-4">
-            <template #title> 
-              <div class="flex justify-between">
-                <p>Sections</p>
-                <p>({{ proposalStore.data.sections.length + 1 }})</p>
-              </div> 
-            </template>
-            <template #content>
-
-              <!-- Cover Letter, cannot be moved -->
-              <li 
-                class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mb-2 justify-between"
-              >
-                  <div>
-                    <span class="text-gray-500 pi pi-lock cursor-not-allowed" style="font-size: 14px;"></span>
-                    <span href="#cover_letter" class="text-left text-sm ml-2 cursor-text">Cover Letter</span>
-                  </div>
-                  <a class="text-sm text-gray-500 cursor-pointer pi pi-eye" href="#cover_letter" style="font-size: 14px;"></a>
-              </li>
-
-              <Draggable
-                v-model="proposalStore.data.sections"
-                tag="ul"
-                item-key="id"
-                class="flex flex-col gap-2"
-                ghost-class="bg-gray-200"
-                handle=".handle" 
-                :animation="200"
-              >
-                <template #item="{ element : section }">
-                  <li 
-                    v-if="[SECTION_TYPES.INFO, SECTION_TYPES.PRODUCTS, SECTION_TYPES.TOTALS, SECTION_TYPES.MILESTONES].includes(section.type) && section.title.trim()" 
-                    class="border border-gray-300 p-2 rounded-md cursor-default flex items-center justify-between"
-                  >
-                    <div>
-                      <span class="text-sm text-gray-500 handle cursor-move pi pi-bars" style="font-size: 14px;"></span>
-                      <span class="text-left text-sm ml-2 cursor-text">{{ section.title }}</span>
-                    </div>
-                    <a class="text-sm text-gray-500 handle cursor-pointer pi pi-eye" :href="`#section_${section.id}`" style="font-size: 14px;"></a>
-                  </li>
-                </template>
-              </Draggable>
-
-              <!-- Terms and Conditions, cannot be moved -->
-              <li 
-                class="border border-gray-300 p-2 rounded-md cursor-default flex items-center mt-2 justify-between"
-              >
-                  <div>
-                    <span class="text-gray-500 pi pi-lock cursor-not-allowed"  style="font-size: 14px;"></span>
-                    <span class="text-left text-sm ml-2 cursor-text">Terms and Conditions</span>
-                  </div>
-                  <a class="text-sm text-gray-500 handle cursor-pointer pi pi-eye" href="#terms_and_conditions" style="font-size: 14px;"></a>
-              </li>
-            </template>
-          </Card>
-          
-          <Card class="mt-4 !cursor-default" :class="{ 'pulse-animation': proposalStore.totalsRecalculated }">
-            <template #title>Totals</template>
-            <template #content>
-              <div
-                v-for="(values, recurrence) in proposalStore.data._totals"
-                :key="proposalStore.changeCount"
-                class="flex items-start justify-between p-1 [&:not(:last-child)]:border-b border-b-gray-400"
-              >
-                <div>
-                  <h3 class="text-lg font-medium capitalize">
-                    {{ recurrence.toLowerCase().replace('_', ' ') }}
-                  </h3>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm text-gray-400">
-                    Cost <span class="inline-block w-24 text-red-500 tabular-nums">{{ formatCurrency(values.cost) }}</span>
-                  </p>
-                  <p class="text-sm text-gray-400">
-                    Margin <span class="inline-block w-24 text-green-500 tabular-nums">{{ formatCurrency(values.margin) }}</span>
-                  </p>
-                  <p class="text-sm text-black">
-                    Total <span class="inline-block w-24 tabular-nums">{{ formatCurrency(values.total) }}</span>
-                  </p>
-                </div>
-              </div>
-            </template>
-          </Card>
-
-        </div>
-      </aside>
-
-      <!-- Main Section -->
-      <section id="section-grid" class="mb-4">
-        <ProposalSection v-for="section in proposalStore.data.sections" :key="section.id" :data="section" />
-      </section>
-    
-    </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { useToast } from 'primevue/usetoast';
-import Draggable from "vuedraggable";
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { cloneDeep } from 'lodash';
 
-import { concatProposalIdentifier, formatCurrency } from '../utils/helpers'
-import ProposalSection from '../components/ProposalSection.vue';
-import { useProposalStore } from '../store/proposalStore'
-
-import Toast from 'primevue/toast';
-import Toolbar from 'primevue/toolbar';
-import SplitButton from 'primevue/splitbutton'
-import Card from 'primevue/card';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Badge from 'primevue/badge';
-import DatePicker from 'primevue/datepicker';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import Tag from 'primevue/tag';
-import ConfirmDialog from 'primevue/confirmdialog';
+import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import Toast from 'primevue/toast';
+import Dialog from 'primevue/dialog';
+import ConfirmDialog from 'primevue/confirmdialog';
 
-import { GetProposalById, SaveProposal, GetProposalVersions, GetProposalVersion, RevertProposalVersion, DownloadProposalPdf } from '../api/api'
+import TopBar from '../ui/TopBar.vue';
+import StatusBar from '../ui/StatusBar.vue';
+import Btn from '../ui/Btn.vue';
+import Tag from '../ui/Tag.vue';
+import Kbd from '../ui/Kbd.vue';
+import Stat from '../ui/Stat.vue';
+import CollapsibleRail from '../ui/CollapsibleRail.vue';
+import OutlineNavItem from '../ui/OutlineNavItem.vue';
+import ActivityRow from '../ui/ActivityRow.vue';
 
-import { onMounted, onUnmounted, ref } from 'vue'
-import { SECTION_TYPES } from '../constants/sections';
-import { useRoute, useRouter } from 'vue-router';
+import ProposalSection from '../components/ProposalSection.vue';
+import { useProposalStore } from '../store/proposalStore';
+import { concatProposalIdentifier, formatCurrency } from '../utils/helpers';
+import {
+  GetProposalById,
+  SaveProposal,
+  GetProposalVersions,
+  GetProposalVersion,
+  RevertProposalVersion,
+  DownloadProposalPdf,
+} from '../api/api';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const confirm = useConfirm();
-
 const proposalStore = useProposalStore();
-const activeSection = ref(null);
 
+const activeSection = ref<number | null>(null);
 const showVersionHistory = ref(false);
-const versions = ref([]);
-const previewVersion = ref(null);
-const previewLoading = ref(null);
+const versions = ref<any[]>([]);
+const previewVersion = ref<any>(null);
+const previewLoading = ref<number | null>(null);
 
-const proposalOptions = [
-    {
-        label: 'New Version',
-        command: () => {
-            toast.add({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
-        }
-    },
-    {
-      label: 'View History',
-      command: () => loadVersionHistory(),
-    },
-    {
-      separator: true
-    },
-    {
-        label: 'Preview PDF',
-        command: () => {
-            window.open(`http://localhost:5005/pdf/${proposalStore.data.selectedTemplate}/${proposalStore.data.id}`)
-        }
-    },
-    {
-        label: 'Download PDF',
-        command: () => downloadPdf()
-    },
-    {
-        separator: true
-    },
-    {
-        label: 'Webhook Sync',
-        command: () => {
-            toast.add({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
-        }
+const identifier = computed(() =>
+  proposalStore.data ? concatProposalIdentifier(proposalStore.data) : ''
+);
+
+const sections = computed(() => proposalStore.data?.sections ?? []);
+const sectionCount = computed(() => sections.value.length);
+const itemCount = computed(() =>
+  sections.value.reduce((acc, s) => acc + (s.items?.length ?? 0), 0)
+);
+
+const grandTotal = computed(() => {
+  const totals = proposalStore.data?._totals;
+  if (!totals) return 0;
+  return Object.values(totals).reduce((acc, v) => acc + v.total, 0);
+});
+
+const grandCost = computed(() => {
+  const totals = proposalStore.data?._totals;
+  if (!totals) return 0;
+  return Object.values(totals).reduce((acc, v) => acc + v.cost, 0);
+});
+
+const marginPct = computed(() => {
+  if (grandTotal.value <= 0) return '0.0';
+  const m = ((grandTotal.value - grandCost.value) / grandTotal.value) * 100;
+  return m.toFixed(1);
+});
+
+const marginTone = computed<'success' | 'warn' | 'error' | undefined>(() => {
+  const v = parseFloat(marginPct.value);
+  if (v >= 30) return 'success';
+  if (v >= 15) return 'warn';
+  if (grandTotal.value === 0) return undefined;
+  return 'error';
+});
+
+const hasTotals = computed(() => {
+  const t = proposalStore.data?._totals;
+  return t && Object.keys(t).length > 0;
+});
+
+const expiresOnInput = computed({
+  get() {
+    const v = proposalStore.data?.expiresOnDate;
+    if (!v) return '';
+    return new Date(v).toISOString().slice(0, 10);
+  },
+  set(v: string) {
+    if (proposalStore.data) {
+      proposalStore.data.expiresOnDate = v ? new Date(v).toISOString() : undefined;
     }
-];
+  },
+});
+
+const expiresFormatted = computed(() => {
+  const v = proposalStore.data?.expiresOnDate;
+  return v ? new Date(v).toISOString().slice(0, 10) : '—';
+});
+
+const activity = computed(() => {
+  if (!proposalStore.data) return [] as { actor: string; verb: string; target?: string; timestamp: string }[];
+  const items: { actor: string; verb: string; target?: string; timestamp: string }[] = [];
+  if (proposalStore.data.modifiedOnDate) {
+    items.push({
+      actor: proposalStore.data.author?.name || 'Someone',
+      verb: 'last modified',
+      timestamp: proposalStore.data.modifiedOnDate,
+    });
+  }
+  if (proposalStore.data.createdOnDate) {
+    items.push({
+      actor: proposalStore.data.author?.name || 'Someone',
+      verb: 'created',
+      target: `v${proposalStore.data.version}`,
+      timestamp: proposalStore.data.createdOnDate,
+    });
+  }
+  return items;
+});
+
+function shortDate(iso: string | undefined) {
+  if (!iso) return '';
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+function humanRecurrance(key: string) {
+  return key.toLowerCase().replace(/_/g, ' ');
+}
+
+function scrollToSection(id: number) {
+  activeSection.value = id;
+  const el = document.getElementById(`section_${id}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 async function triggerSaveProposal() {
-
+  if (!proposalStore.data) return;
   const payloadCopy = cloneDeep(proposalStore.data);
-
   if (payloadCopy._totals && payloadCopy._section_totals) {
-    delete payloadCopy._section_totals
+    delete payloadCopy._section_totals;
     delete payloadCopy._totals;
   }
-
-  await SaveProposal(payloadCopy);
+  await SaveProposal(payloadCopy as any);
   proposalStore.resetDraftStatus();
-  toast.add({ severity: 'success', summary: 'Proposal Saved', detail: 'Proposal has been saved', life: 3000 });
+  toast.add({ severity: 'success', summary: 'Saved', detail: 'Proposal saved', life: 3000 });
 }
 
 async function loadVersionHistory() {
   versions.value = [];
   previewVersion.value = null;
   showVersionHistory.value = true;
-  const result = await GetProposalVersions(proposalStore.data.id);
+  if (!proposalStore.data) return;
+  const result = await GetProposalVersions(String(proposalStore.data.id));
   if (result) versions.value = result;
 }
 
-async function loadPreview(versionEntry) {
-  previewLoading.value = versionEntry.id;
-  const result = await GetProposalVersion(proposalStore.data.id, versionEntry.id);
+async function loadPreview(v: any) {
+  previewLoading.value = v.id;
+  if (!proposalStore.data) return;
+  const result = await GetProposalVersion(String(proposalStore.data.id), v.id);
   previewLoading.value = null;
   if (result) previewVersion.value = result;
 }
 
-function confirmRevert(versionEntry) {
+function confirmRevert(v: any) {
   confirm.require({
-    message: `Restore the proposal to v${versionEntry.version}? Your current state will be saved as a new version first.`,
+    message: `Restore the proposal to v${v.version}? Your current state will be saved as a new version first.`,
     header: 'Restore Version',
     icon: 'pi pi-history',
     acceptLabel: 'Restore',
     rejectLabel: 'Cancel',
     accept: async () => {
-      const restored = await RevertProposalVersion(proposalStore.data.id, versionEntry.id);
+      if (!proposalStore.data) return;
+      const restored = await RevertProposalVersion(String(proposalStore.data.id), v.id);
       if (restored) {
-        proposalStore.data = restored;
+        proposalStore.data = restored as any;
         proposalStore.recalculateTotals();
         proposalStore.resetDraftStatus();
         previewVersion.value = null;
         showVersionHistory.value = false;
-        toast.add({ severity: 'success', summary: 'Restored', detail: `Proposal restored to v${versionEntry.version}`, life: 3000 });
+        toast.add({ severity: 'success', summary: 'Restored', detail: `Restored to v${v.version}`, life: 3000 });
       } else {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to restore version', life: 3000 });
       }
@@ -345,176 +424,245 @@ function confirmRevert(versionEntry) {
   });
 }
 
+function openPreview() {
+  if (!proposalStore.data) return;
+  const tpl = (proposalStore.data as any).selectedTemplate ?? 'default';
+  window.open(`http://localhost:5005/pdf/${tpl}/${proposalStore.data.id}`);
+}
+
 async function downloadPdf() {
-  const blob = await DownloadProposalPdf(proposalStore.data!.id);
+  if (!proposalStore.data) return;
+  const blob = await DownloadProposalPdf(proposalStore.data.id);
   if (!blob) {
     toast.add({ severity: 'error', summary: 'PDF Error', detail: 'Failed to generate PDF', life: 4000 });
     return;
   }
-  const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob as Blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${proposalStore.data!.identifier || proposalStore.data!.id}.pdf`;
+  a.download = `${proposalStore.data.identifier || proposalStore.data.id}.pdf`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-// Keyboard Shortcuts
-const handleKeyDown = (event) => {
-    if (event.ctrlKey && event.key === "s") {
-      event.preventDefault();
-      triggerSaveProposal();
-    }
-};
+function handleKeyDown(event: KeyboardEvent) {
+  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+    event.preventDefault();
+    triggerSaveProposal();
+  }
+}
 
-// Focus Handler
-const handleFocus = () => {
-    proposalStore.isTabFocused = !!document.hasFocus();
-};
+function handleFocus() {
+  proposalStore.isTabFocused = !!document.hasFocus();
+}
 
 onMounted(async () => {
-
-    if (proposalStore.data === null) {
-
-      const proposal = await GetProposalById(route.params.id);
-      if (proposal.error) {
-        router.push('/');
-        toast.add({ severity: 'error', summary: 'Error', detail: proposal.message, life: 3000 })
-        return;
-      }
-
-      if (proposal) {
-        proposalStore.data = proposal;
-        proposalStore.recalculateTotals();
-        proposalStore.resetDraftStatus();
-        
-        document.title = `${concatProposalIdentifier(proposalStore.data)} - ${proposalStore.data.title}`;
-        window.addEventListener("keydown", handleKeyDown);
-
-        window.addEventListener('focus', handleFocus);
-        window.addEventListener('blur', handleFocus);
-
-        return;
-      }
-      
-    } 
-  
+  if (proposalStore.data === null) {
+    const proposal = await GetProposalById(route.params.id as string);
+    if ((proposal as any)?.error) {
+      router.push('/');
+      toast.add({ severity: 'error', summary: 'Error', detail: (proposal as any).message, life: 3000 });
+      return;
+    }
+    if (proposal) {
+      proposalStore.data = proposal as any;
+      proposalStore.recalculateTotals();
+      proposalStore.resetDraftStatus();
+      document.title = `${concatProposalIdentifier(proposalStore.data!)} - ${proposalStore.data!.title}`;
+    }
+  }
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('focus', handleFocus);
+  window.addEventListener('blur', handleFocus);
 });
 
 onUnmounted(() => {
   proposalStore.data = null;
-  window.removeEventListener("keydown", handleKeyDown);
+  window.removeEventListener('keydown', handleKeyDown);
   window.removeEventListener('focus', handleFocus);
   window.removeEventListener('blur', handleFocus);
 });
 </script>
 
-<style>
-  #proposal-editor .p-card-title {
-      background: #083e69;
-      border: none;
-      color: white;
-  }
+<style scoped>
+.proposal-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
 
-  #proposal-editor .p-card-body {
-      border: 1px solid #636363;
-      border-radius: 8px;
-  }
+.topbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+}
 
-  .proposal-toolbar {
-    max-width: 1830px;
-  }
+.sub-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface-0);
+  flex-shrink: 0;
+}
+.sub-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.sub-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sub-header__title-input {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: var(--r-sm);
+  width: 100%;
+  outline: none;
+  font-family: var(--font-ui);
+}
+.sub-header__title-input:hover { border-color: var(--border-subtle); }
+.sub-header__title-input:focus { border-color: var(--accent); background: var(--surface-100); }
 
-  #proposal-editor .p-toolbar {
-    position: sticky !important;
-    top: 0;
-    padding: 8px 8px !important;
-    border: 2px solid #cdcdcd !important;
-    border-radius: 0px 0px 8px 8px !important;
-    border-top: 0 !important;
-    z-index: 40;
-  }
+.sub-header__stats {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
 
-  .proposal_editor_container {
-    display: grid;
-    grid-template-columns: 350px 1430px;
-    grid-template-rows: 1fr;
-    grid-column-gap: 16px;
-  }
+.editor-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  min-height: 0;
+}
+.editor-pane {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface-0);
+  padding: 16px;
+  min-width: 0;
+}
 
-  section#section-grid {
-    display: grid;
-    grid-auto-rows: min-content;
-    gap: 16px;
-  }
+.rail-section { padding: 12px 12px 0; }
+.rail-section--bordered {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 12px;
+}
+.rail-section-label {
+  padding: 0 0 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  font-weight: 600;
+}
+.rail-section-content { padding: 0 6px; }
+.rail-customer { display: flex; flex-direction: column; gap: 4px; }
 
-  main p {
-    margin: 0;
-  }
+.rail-summary {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-  .p-card {
-    cursor: pointer;
-  }
+.total-row {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: baseline;
+}
+.total-row:first-child { border-top: none; }
+.total-row__label {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 400;
+  grid-column: 1 / -1;
+  text-transform: capitalize;
+}
+.total-row__line {
+  display: contents;
+}
+.total-row__line > span:first-child {
+  font-size: 11px;
+  color: var(--text-3);
+}
+.total-row__line > span:last-child {
+  font-size: 11px;
+  text-align: right;
+  color: var(--text-2);
+}
+.total-row__line--strong > span:first-child { color: var(--text-1); font-weight: 500; font-size: 12px; }
+.total-row__line--strong > span:last-child { color: var(--text-1); font-weight: 600; font-size: 13px; }
 
-  .p-card-body {
-    padding: 0 !important;
-    border: 2px solid #cdcdcd;
-    border-radius: 8px 8px 0px 0px;
-    gap: 0 !important;
-  }
+.totals-pulse {
+  animation: swift-pulse 600ms ease-out;
+}
+@keyframes swift-pulse {
+  0% { background: var(--accent-bg); }
+  100% { background: transparent; }
+}
 
-  .p-card.active {
-    box-shadow: 0px 0px 5px rgb(9 9 9 / 35%);
-  }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--text-3); }
+.small { font-size: 11px; }
+.success { color: var(--success); }
 
-  .p-card-title {
-    background: #cdcdcd;
-    border: 1px solid #cdcdcd;
-    padding: 8px;
-    border-radius: 6px 6px 0px 0px;
-  }
-
-  .p-card-content {
-    padding: 8px;
-  }
-
-  .is_table .p-card-content,
-  .is_hidden .p-card-content {
-    padding: 0;
-  }
-
-  #section-grid {
-    box-shadow: 0px 0px 0px #808080;
-  }
-
-  #section-grid .is_active {
-    transition: 200ms;
-    box-shadow: 0px 0px 8px #808080;
-  }
-
-  .p-datatable-header-cell {
-    padding: 4px 16px !important;
-  }
-
-  li[draggable="false"] {
-    background-color: white !important;
-    color: black !important;
-  }
-
-  .pulse-animation {
-    animation: pulse 500ms ease-out;
-    z-index: 9999;
-  }
-
-  @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-  100% {
-    transform: scale(1);
-  }
+.version-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-100);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin: 12px 0;
+}
+.version-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 256px;
+  overflow-y: auto;
+}
+.version-section {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 8px;
+}
+.version-section__title { font-size: 13px; font-weight: 500; }
+.version-section ul {
+  margin: 4px 0 0 12px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.version-section ul li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-2);
 }
 </style>

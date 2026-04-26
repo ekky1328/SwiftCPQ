@@ -1,56 +1,14 @@
-
 <template>
-  <div v-if="IS_DEV_BUILD" class="py-2 text-center bg-black text-yellow-200 border-b-4 border-yellow-200">
-    🚧 Beware you are viewing a development build (v0.0.1-alpha); there will be bugs. 🚧
-  </div>
-  <div class="app-layout" :class="{ 'app-layout--no-nav': !auth.user }">
-    <nav v-if="auth.user" class="bg-white border-r border-r-gray-300 z-50">
-      <div class="grid place-content-center h-[75px] cursor-default" v-tooltip="'⚡ SwiftCPQ'">
-        ⚡
-      </div>
-      <div class="nav-links">
-        <router-link to="/" v-tooltip="'Home'">
-          <span class="pi pi-home" title="Home"></span>
-        </router-link>
-        <router-link to="/catalogue" v-tooltip="'Catalogue'">
-          <span class="pi pi-database" title="Catalogue"></span>
-        </router-link>
-        <router-link to="/customers" v-tooltip="'Customers'">
-          <span class="pi pi-building" title="Customers"></span>
-        </router-link>
-        <router-link v-if="auth.hasPermission('supplier.manage')" to="/suppliers" v-tooltip="'Suppliers'">
-          <span class="pi pi-truck" title="Suppliers"></span>
-        </router-link>
-        <router-link v-if="auth.hasPermission('users.manage')" to="/users" v-tooltip="'Users'">
-          <span class="pi pi-users" title="Users"></span>
-        </router-link>
-        <router-link v-if="auth.hasPermission('roles.manage')" to="/roles" v-tooltip="'Roles'">
-          <span class="pi pi-shield" title="Roles"></span>
-        </router-link>
-        <router-link v-if="auth.hasPermission('system.manage')" to="/settings" v-tooltip="'Settings'">
-          <span class="pi pi-cog" title="Settings"></span>
-        </router-link>
-        <template v-if="auth.authMethods?.multiTenant && auth.user.isSuperAdmin">
-          <div class="nav-separator"></div>
-          <router-link to="/admin/tenants" v-tooltip="'Tenants'">
-            <span class="pi pi-sitemap" title="Tenants"></span>
-          </router-link>
-        </template>
-      </div>
-      <div class="nav-footer">
-        <button
-          v-tooltip="`${auth.user.firstName} ${auth.user.lastName} — Sign out`"
-          class="nav-user-btn"
-          @click="auth.logout()"
-        >
-          <span class="pi pi-user"></span>
-        </button>
-      </div>
-    </nav>
-    <div>
+  <template v-if="auth.user">
+    <AppShell>
+      <RouterView />
+    </AppShell>
+  </template>
+  <template v-else>
+    <div class="swift-app" :class="`theme-${mode}`" style="height: 100vh;">
       <RouterView />
     </div>
-  </div>
+  </template>
   <ConfirmDialog />
 </template>
 
@@ -58,87 +16,10 @@
 import { RouterView } from 'vue-router';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useAuthStore } from './store/authStore';
+import { useTheme } from './composables/useTheme';
+import AppShell from './ui/AppShell.vue';
 
 const auth = useAuthStore();
-
-let IS_DEV_BUILD = false;
-if (import.meta.env) {
-  IS_DEV_BUILD = !!import.meta.env.VITE_IS_DEV_BUILD;
-}
+const { mode } = useTheme();
 </script>
 
-<style scoped>
-  .app-layout {
-    display: grid;
-    grid-template-columns: 50px 1fr;
-    gap: 8px;
-    min-height: 100vh;
-  }
-
-  .app-layout--no-nav {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  nav {
-    position: sticky;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .nav-links {
-    flex: 1;
-  }
-
-  .nav-separator {
-    height: 1px;
-    background-color: #d1d5db;
-    margin: 4px 8px;
-  }
-
-  .nav-footer {
-    padding-bottom: 8px;
-  }
-
-  nav a, .nav-user-btn {
-    display: grid;
-    place-content: center;
-    height: 49px !important;
-    width: 49px !important;
-  }
-
-  nav a:hover, .nav-user-btn:hover {
-    background-color: #cdcdcd;
-  }
-
-  .nav-user-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: inherit;
-    width: 100%;
-  }
-</style>
-
-<style>
-html, body {
-  min-height: 100vh;
-  background-color: #ebeef0;
-}
-
-#app .p-editor .ql-toolbar,
-#app .p-editor .ql-container {
-  border: 1px solid #d1d5db;
-}
-#app .product-comment .p-editor .ql-toolbar,
-#app .product-comment .p-editor .ql-container {
-  border: 0px solid #636363;
-}
-
-#app .p-editor .ql-toolbar {
-  border-bottom: 0;
-}
-</style>

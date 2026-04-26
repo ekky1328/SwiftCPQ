@@ -1,36 +1,50 @@
 <template>
-    <Dialog v-model:visible="catalogueDialogVisible" header="Add from Catalogue" modal style="width: 640px">
-        <div class="flex flex-col gap-3 pt-1">
-            <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText v-model="catalogueSearch" placeholder="Search catalogue..." fluid @input="onCatalogueSearch" />
-            </IconField>
-            <DataTable
-                :value="catalogueItems"
-                :loading="catalogueLoading"
-                size="small"
-                striped-rows
-                selection-mode="single"
-                data-key="id"
-                @row-click="onCatalogueRowClick"
-                style="cursor: pointer"
-            >
-                <template #empty><p class="text-center py-6 text-gray-400">No items found.</p></template>
-                <Column field="sku" header="SKU" style="width: 100px" />
-                <Column field="title" header="Title" />
-                <Column field="price" header="Price" style="width: 110px">
-                    <template #body="{ data: row }">{{ formatCataloguePrice(row.price) }}</template>
-                </Column>
-                <Column field="type" header="Type" style="width: 90px">
-                    <template #body="{ data: row }">
-                        <Tag :value="row.type" :severity="row.type === 'PRODUCT' ? 'info' : 'secondary'" />
-                    </template>
-                </Column>
-            </DataTable>
-            <p class="text-xs text-gray-400">Click a row to add it to the section.</p>
+    <Dialog v-model:visible="catalogueDialogVisible" header="Add from Catalogue" modal style="width: 720px">
+        <div class="catalogue-body">
+            <label class="swift-search">
+                <span class="ico">⌕</span>
+                <input
+                    v-model="catalogueSearch"
+                    placeholder="Search catalogue..."
+                    class="swift-input"
+                    @input="onCatalogueSearch"
+                />
+            </label>
+
+            <div class="catalogue-list">
+                <table v-if="catalogueItems.length > 0" class="swift-table">
+                    <thead>
+                        <tr>
+                            <th class="col-sku">SKU</th>
+                            <th>Title</th>
+                            <th class="col-currency">Price</th>
+                            <th class="col-type">Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="row in catalogueItems"
+                            :key="row.id"
+                            class="catalogue-row"
+                            @click="onCatalogueRowClick({ data: row })"
+                        >
+                            <td class="col-sku col-id">{{ row.sku }}</td>
+                            <td>{{ row.title }}</td>
+                            <td class="col-currency">{{ formatCataloguePrice(row.price) }}</td>
+                            <td class="col-type">
+                                <Tag :kind="row.type === 'PRODUCT' ? 'info' : undefined">{{ row.type }}</Tag>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div v-else-if="catalogueLoading" class="empty-state">Loading…</div>
+                <div v-else class="empty-state">No items found.</div>
+            </div>
+
+            <p class="hint">Click a row to add it to the section.</p>
         </div>
         <template #footer>
-            <Button label="Close" severity="secondary" @click="catalogueDialogVisible = false" />
+            <Btn variant="default" @click="catalogueDialogVisible = false">Close</Btn>
         </template>
     </Dialog>
 </template>
@@ -38,21 +52,49 @@
 <script setup lang="ts">
 import { inject } from 'vue';
 import type { Ref } from 'vue';
-import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Tag from 'primevue/tag';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
+
+import Btn from '../ui/Btn.vue';
+import Tag from '../ui/Tag.vue';
 
 const catalogueDialogVisible = inject<Ref<boolean>>('catalogueDialogVisible')!;
 const catalogueItems = inject<Ref<any[]>>('catalogueItems')!;
 const catalogueLoading = inject<Ref<boolean>>('catalogueLoading')!;
 const catalogueSearch = inject<Ref<string>>('catalogueSearch')!;
-    
+
 const onCatalogueSearch = inject<() => void>('onCatalogueSearch')!;
 const onCatalogueRowClick = inject<(event: { data: any }) => void>('onCatalogueRowClick')!;
 const formatCataloguePrice = inject<(value: number) => string>('formatCataloguePrice')!;
 </script>
+
+<style scoped>
+.catalogue-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    padding-top: var(--s-2);
+}
+
+.catalogue-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+}
+
+.catalogue-row { cursor: pointer; }
+
+.col-sku { width: 110px; }
+.col-type { width: 90px; }
+
+.empty-state {
+    padding: var(--s-7);
+    text-align: center;
+    color: var(--text-3);
+}
+
+.hint {
+    font-size: var(--fs-sm);
+    color: var(--text-3);
+}
+</style>

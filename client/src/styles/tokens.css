@@ -1,0 +1,668 @@
+/* SwiftCPQ — power-user preset
+ * Aesthetic refs: Linear, Datadog, Stripe Dashboard, GitHub
+ * Dark mode is the primary surface; light follows the same scale, inverted.
+ */
+
+:root {
+  /* Type */
+  --font-ui: "Inter", "Inter Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;     /* base */
+  --fs-lg: 14px;
+  --fs-xl: 16px;
+  --fs-2xl: 20px;
+  --fs-3xl: 24px;
+
+  --lh-tight: 1.25;
+  --lh-base: 1.45;
+
+  /* Spacing — 4px scale */
+  --s-1: 2px;
+  --s-2: 4px;
+  --s-3: 6px;
+  --s-4: 8px;
+  --s-5: 12px;
+  --s-6: 16px;
+  --s-7: 20px;
+  --s-8: 24px;
+  --s-9: 32px;
+
+  /* Radius — sharp */
+  --r-sm: 2px;
+  --r-md: 3px;
+  --r-lg: 4px;
+  --r-pill: 999px;
+
+  /* Row heights */
+  --row-compact: 28px;
+  --row-default: 32px;
+  --row-input: 26px;
+}
+
+/* ─── DARK (primary) ─────────────────────────────────────── */
+.theme-dark {
+  /* Surface: desaturated cool slate */
+  --surface-0:   oklch(0.18 0.005 250);   /* app bg */
+  --surface-50:  oklch(0.20 0.006 250);   /* panel bg */
+  --surface-100: oklch(0.22 0.006 250);   /* card */
+  --surface-200: oklch(0.25 0.007 250);   /* hover */
+  --surface-300: oklch(0.30 0.008 250);   /* selected */
+  --surface-400: oklch(0.38 0.008 250);
+  --surface-500: oklch(0.50 0.008 250);
+
+  --border:      oklch(0.30 0.008 250);   /* hairline */
+  --border-strong: oklch(0.38 0.008 250);
+  --border-subtle: oklch(0.25 0.006 250);
+
+  --text-1: oklch(0.96 0.005 250);   /* primary */
+  --text-2: oklch(0.78 0.005 250);   /* secondary */
+  --text-3: oklch(0.62 0.005 250);   /* muted */
+  --text-4: oklch(0.50 0.005 250);   /* placeholder */
+
+  /* Accent — electric amber, used SPARINGLY */
+  --accent:        oklch(0.80 0.15 78);
+  --accent-hover:  oklch(0.85 0.15 78);
+  --accent-fg:     oklch(0.18 0.005 250);
+  --accent-bg:     oklch(0.30 0.06 78 / 0.20);
+  --focus-ring:    oklch(0.80 0.15 78 / 0.35);
+
+  /* Status — vivid because they carry meaning */
+  --success: oklch(0.78 0.16 155);
+  --success-bg: oklch(0.78 0.16 155 / 0.14);
+  --warn: oklch(0.82 0.15 80);
+  --warn-bg: oklch(0.82 0.15 80 / 0.14);
+  --error: oklch(0.70 0.20 25);
+  --error-bg: oklch(0.70 0.20 25 / 0.16);
+  --info: oklch(0.75 0.13 235);
+  --info-bg: oklch(0.75 0.13 235 / 0.14);
+
+  --shadow-overlay: 0 8px 24px -6px rgba(0,0,0,0.6), 0 2px 6px -2px rgba(0,0,0,0.4);
+}
+
+/* ─── LIGHT ──────────────────────────────────────────────── */
+.theme-light {
+  --surface-0:   oklch(0.99 0.002 250);
+  --surface-50:  oklch(0.985 0.003 250);
+  --surface-100: oklch(0.97 0.003 250);
+  --surface-200: oklch(0.95 0.004 250);
+  --surface-300: oklch(0.92 0.005 250);
+  --surface-400: oklch(0.85 0.006 250);
+  --surface-500: oklch(0.65 0.006 250);
+
+  --border:      oklch(0.90 0.005 250);
+  --border-strong: oklch(0.82 0.006 250);
+  --border-subtle: oklch(0.94 0.004 250);
+
+  --text-1: oklch(0.18 0.01 250);
+  --text-2: oklch(0.36 0.01 250);
+  --text-3: oklch(0.50 0.008 250);
+  --text-4: oklch(0.65 0.006 250);
+
+  --accent:        oklch(0.55 0.18 35);   /* burnt orange — same family, shifted for contrast */
+  --accent-hover:  oklch(0.50 0.18 35);
+  --accent-fg:     oklch(0.99 0.002 250);
+  --accent-bg:     oklch(0.55 0.18 35 / 0.10);
+  --focus-ring:    oklch(0.55 0.18 35 / 0.30);
+
+  --success: oklch(0.50 0.16 155);
+  --success-bg: oklch(0.50 0.16 155 / 0.10);
+  --warn: oklch(0.55 0.15 65);
+  --warn-bg: oklch(0.55 0.15 65 / 0.10);
+  --error: oklch(0.50 0.20 25);
+  --error-bg: oklch(0.50 0.20 25 / 0.10);
+  --info: oklch(0.50 0.15 235);
+  --info-bg: oklch(0.50 0.15 235 / 0.10);
+
+  --shadow-overlay: 0 8px 24px -6px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.08);
+}
+
+/* ─── Base ──────────────────────────────────────────────── */
+.swift-app {
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: var(--lh-base);
+  color: var(--text-1);
+  background: var(--surface-0);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+.swift-app *,
+.swift-app *::before,
+.swift-app *::after {
+  box-sizing: border-box;
+}
+
+.swift-app .mono,
+.swift-app code,
+.swift-app .tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "calt" off;
+}
+
+.swift-app .num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ─── Chrome ─────────────────────────────────────────────── */
+.swift-sidenav {
+  width: 200px;
+  background: var(--surface-50);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.swift-sidenav__brand {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--s-5);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: var(--s-3);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  letter-spacing: -0.01em;
+}
+.swift-sidenav__brand .bolt {
+  color: var(--accent);
+  font-size: 13px;
+}
+.swift-sidenav__brand .ver {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.swift-sidenav__section {
+  padding: var(--s-5) var(--s-3) var(--s-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.swift-sidenav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 5px var(--s-4);
+  margin: 0 var(--s-2);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: var(--fs-md);
+  cursor: pointer;
+  user-select: none;
+}
+.swift-sidenav__link:hover {
+  background: var(--surface-200);
+  color: var(--text-1);
+}
+.swift-sidenav__link.active {
+  background: var(--surface-200);
+  color: var(--text-1);
+}
+.swift-sidenav__link.active::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  width: 2px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 0 1px 1px 0;
+}
+.swift-sidenav__link { position: relative; }
+
+.swift-sidenav__link .ico {
+  width: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.swift-sidenav__link.active .ico { color: var(--accent); }
+
+.swift-sidenav__link .kbd {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-4);
+  letter-spacing: 0.05em;
+}
+
+.swift-sidenav__footer {
+  margin-top: auto;
+  padding: var(--s-3);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
+}
+.swift-sidenav__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-md);
+  background: var(--surface-300);
+  color: var(--text-1);
+  display: grid;
+  place-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ─── Topbar ─────────────────────────────────────────────── */
+.swift-topbar {
+  height: 38px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--s-5);
+  background: var(--surface-50);
+  gap: var(--s-5);
+  flex-shrink: 0;
+}
+.swift-crumb {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--fs-md);
+  color: var(--text-2);
+}
+.swift-crumb .sep {
+  color: var(--text-4);
+  font-size: 11px;
+}
+.swift-crumb .current {
+  color: var(--text-1);
+  font-weight: 500;
+}
+
+.swift-topbar__spacer { flex: 1; }
+
+/* ─── Buttons ────────────────────────────────────────────── */
+.swift-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  height: 26px;
+  padding: 0 var(--s-4);
+  font-size: var(--fs-sm);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface-100);
+  color: var(--text-1);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: background 80ms, border-color 80ms;
+}
+.swift-btn:hover {
+  background: var(--surface-200);
+  border-color: var(--border-strong);
+}
+.swift-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.swift-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.swift-btn--primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.swift-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
+}
+.swift-btn--ghost:hover {
+  background: var(--surface-200);
+  color: var(--text-1);
+}
+
+.swift-btn--danger:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.swift-btn .kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  margin-left: var(--s-2);
+  padding: 1px 4px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  line-height: 1;
+}
+.swift-btn--primary .kbd {
+  border-color: rgba(0,0,0,0.2);
+  color: rgba(0,0,0,0.6);
+}
+
+.swift-btn--icon {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  justify-content: center;
+}
+
+.swift-btn-group {
+  display: inline-flex;
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.swift-btn-group .swift-btn {
+  border-radius: 0;
+  border-right-width: 0;
+}
+.swift-btn-group .swift-btn:first-child { border-radius: var(--r-md) 0 0 var(--r-md); }
+.swift-btn-group .swift-btn:last-child {
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  border-right-width: 1px;
+}
+
+/* ─── Inputs ─────────────────────────────────────────────── */
+.swift-input,
+.swift-select {
+  height: var(--row-input);
+  padding: 0 var(--s-3);
+  font-size: var(--fs-md);
+  font-family: var(--font-ui);
+  border: 1px solid var(--border);
+  background: var(--surface-100);
+  color: var(--text-1);
+  border-radius: var(--r-md);
+  outline: none;
+  width: 100%;
+}
+.swift-input:focus,
+.swift-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+.swift-input::placeholder { color: var(--text-4); }
+
+.swift-input--mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.swift-search {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+.swift-search .ico {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-4);
+  font-size: 11px;
+}
+.swift-search .swift-input {
+  padding-left: 24px;
+  padding-right: 28px;
+}
+.swift-search .kbd {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-4);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 1px 4px;
+  line-height: 1;
+}
+
+.swift-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--s-2);
+}
+
+/* ─── Table ─────────────────────────────────────────────── */
+.swift-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-md);
+}
+.swift-table thead th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  padding: var(--s-4) var(--s-5);
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  user-select: none;
+  white-space: nowrap;
+}
+.swift-table thead th:first-child { padding-left: var(--s-5); }
+.swift-table thead th .sort-ico {
+  font-size: 9px;
+  color: var(--text-4);
+  margin-left: 4px;
+}
+.swift-table thead th.sorted .sort-ico { color: var(--accent); }
+.swift-table thead th.sorted { color: var(--text-1); }
+
+.swift-table tbody td {
+  padding: var(--s-4) var(--s-5);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  height: var(--row-default);
+}
+.swift-table tbody tr:hover td {
+  background: var(--surface-100);
+}
+.swift-table tbody tr.selected td {
+  background: var(--accent-bg);
+}
+
+.swift-table .col-num,
+.swift-table .col-currency {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+}
+.swift-table .col-id {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.swift-table .row-actions {
+  visibility: hidden;
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+}
+.swift-table tbody tr:hover .row-actions { visibility: visible; }
+
+/* ─── Badge / Tag / Status ───────────────────────────────── */
+.swift-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-100);
+  color: var(--text-2);
+  white-space: nowrap;
+  font-family: var(--font-ui);
+}
+
+.swift-tag--success { background: var(--success-bg); color: var(--success); border-color: transparent; }
+.swift-tag--warn { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.swift-tag--error { background: var(--error-bg); color: var(--error); border-color: transparent; }
+.swift-tag--info { background: var(--info-bg); color: var(--info); border-color: transparent; }
+.swift-tag--accent { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+
+.swift-tag--dot::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ─── Card / Panel ───────────────────────────────────────── */
+.swift-panel {
+  background: var(--surface-50);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.swift-panel__header {
+  height: 32px;
+  padding: 0 var(--s-5);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-50);
+}
+.swift-panel__header .swift-tag,
+.swift-panel__header .ico { flex-shrink: 0; }
+.swift-panel__header .spacer { flex: 1; }
+.swift-panel__body { padding: var(--s-5); }
+.swift-panel__body--flush { padding: 0; }
+
+/* ─── Tabs ───────────────────────────────────────────────── */
+.swift-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--s-5);
+}
+.swift-tab {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-4);
+  font-size: var(--fs-md);
+  color: var(--text-3);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+  user-select: none;
+}
+.swift-tab:hover { color: var(--text-1); }
+.swift-tab.active {
+  color: var(--text-1);
+  border-bottom-color: var(--accent);
+}
+.swift-tab .count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-4);
+  background: var(--surface-200);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* ─── Empty state ────────────────────────────────────────── */
+.swift-empty {
+  padding: var(--s-9) var(--s-5);
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--fs-md);
+}
+
+/* ─── Misc ───────────────────────────────────────────────── */
+.swift-divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.swift-kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 1px 4px;
+  line-height: 1;
+  background: var(--surface-100);
+}
+
+.swift-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Scrollbars (subtle) */
+.swift-app ::-webkit-scrollbar { width: 10px; height: 10px; }
+.swift-app ::-webkit-scrollbar-track { background: transparent; }
+.swift-app ::-webkit-scrollbar-thumb {
+  background: var(--surface-300);
+  border-radius: 10px;
+  border: 2px solid var(--surface-0);
+}
+.swift-app ::-webkit-scrollbar-thumb:hover { background: var(--surface-400); }
+
+/* ─── App shell ──────────────────────────────────────────── */
+.swift-shell {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: 100%;
+  width: 100%;
+  background: var(--surface-0);
+  color: var(--text-1);
+  overflow: hidden;
+}
+
+.swift-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.swift-content {
+  flex: 1;
+  overflow: auto;
+}

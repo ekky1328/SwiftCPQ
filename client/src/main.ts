@@ -6,14 +6,23 @@ import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import Tooltip from 'primevue/tooltip';
 
-import Aura from '@primevue/themes/aura';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
 
 import './style.css'
+import './styles/tokens.css'
 import 'primeicons/primeicons.css'
+
+import { SwiftPreset } from './styles/preset';
+import { swiftPt } from './styles/pt';
+import { useTheme } from './composables/useTheme';
 
 import App from './App.vue'
 import router from './router';
 import { useAuthStore } from './store/authStore';
+
+// Initialize theme classes on <html> before first paint.
+useTheme();
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -26,14 +35,14 @@ app.use(ConfirmationService);
 app.use(pinia);
 app.use(PrimeVue, {
     theme: {
-        preset: Aura,
+        preset: SwiftPreset,
         options: {
             darkModeSelector: '.dark'
         }
     },
+    pt: swiftPt,
 });
 
-// Initialize auth state before mounting so route guards have user info
 const auth = useAuthStore();
 auth.initialize().then(() => {
     app.mount('#app');

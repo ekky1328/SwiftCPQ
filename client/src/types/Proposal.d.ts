@@ -10,6 +10,9 @@ export interface Proposal extends CoreSettings {
     author: Author;
     customer: Customer;
     sections: Section[];
+    createdOnDate?: string;
+    modifiedOnDate?: string;
+    expiresOnDate?: string;
     _totals?: Record<string, { total: number; margin: number; cost: number }>;
     _section_totals?: Record<string, { title: string, total: number; margin: number; cost: number }[]>;
 }
