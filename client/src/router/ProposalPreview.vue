@@ -62,6 +62,7 @@
           :page-number="p.n"
           :label="p.label"
           :active="activePage === p.n"
+          :src="iframeUrl ?? undefined"
           @click="scrollToPage(p.n)"
         />
         <div v-if="thumbPages.length === 0" class="swift-empty" style="font-size: 11px">Loading...</div>
@@ -70,9 +71,10 @@
       <!-- Center: A4 canvas with iframe -->
       <div style="background: var(--surface-0); overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 32px; background-image: radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--text-3) 14%, transparent) 1px, transparent 0); background-size: 16px 16px">
         <div :style="{
-          width: zoom + '%',
-          maxWidth: pageSize === 'a4' ? '720px' : '680px',
-          aspectRatio: '1 / 1.414',
+          width: (pageSize === 'a4' ? '720px' : '680px'),
+          transform: `scale(${zoom / 100})`,
+          transformOrigin: 'top center',
+          height: iframeContentHeight + 'px',
           background: 'white',
           boxShadow: '0 1px 0 rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.35)',
           position: 'relative',
@@ -165,6 +167,7 @@ const proposal = ref<Proposal | null>(null);
 const iframeRef = ref<HTMLIFrameElement | null>(null);
 const iframeError = ref(false);
 const pageCount = ref(0);
+const iframeContentHeight = ref(1200);
 const activePage = ref(1);
 const pageSize = ref('a4');
 const zoom = ref(85);
@@ -216,6 +219,7 @@ function onIframeLoad() {
 function onMessage(e: MessageEvent) {
   if (typeof e.data !== 'object') return;
   if (e.data.type === 'page-count') pageCount.value = e.data.value;
+  if (e.data.type === 'scroll-height') iframeContentHeight.value = e.data.value;
   if (e.data.type === 'visible-page') activePage.value = e.data.value;
 }
 

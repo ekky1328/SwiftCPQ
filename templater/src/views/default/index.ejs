@@ -106,13 +106,14 @@
         root.style.setProperty('--accent', mode === 'dark' ? c.dark : c.light);
       }
 
-      // Emit page-count once sheets are known
+      // Emit page-count + scroll-height once sheets are known
       function emitPageCount() {
         const sheets = document.querySelectorAll('.sheet');
         window.parent.postMessage({ type: 'page-count', value: sheets.length }, '*');
+        window.parent.postMessage({ type: 'scroll-height', value: document.documentElement.scrollHeight }, '*');
 
-        // Track which page is visible
-        if (!sheets.length) return;
+        // Track which page is visible (main iframe only; thumbnails don't need this)
+        if (!sheets.length || window !== window.parent) return;
         const observer = new IntersectionObserver((entries) => {
           entries.forEach((e) => {
             if (e.isIntersecting) {
@@ -124,17 +125,23 @@
         sheets.forEach((s) => observer.observe(s));
       }
 
-      // Scroll to a specific page (1-indexed)
-      function scrollToPage(n) {
+      // Scroll to a specific page (1-indexed).
+      // behavior: 'smooth' for main canvas, 'instant' for thumbnail iframes.
+      function scrollToPage(n, behavior) {
         const sheets = document.querySelectorAll('.sheet');
         const target = sheets[n - 1];
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!target) return;
+        if (behavior === 'instant') {
+          window.scrollTo(0, target.offsetTop);
+        } else {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
 
       window.addEventListener('message', (e) => {
         if (typeof e.data !== 'object') return;
         if (e.data.type === 'set-theme') applyTheme(e.data.mode, e.data.accent);
-        if (e.data.type === 'scroll') scrollToPage(e.data.page);
+        if (e.data.type === 'scroll') scrollToPage(e.data.page, e.data.behavior);
       });
 
       window.addEventListener('DOMContentLoaded', emitPageCount);
