@@ -6,6 +6,38 @@
   <title>PDF Template</title>
   <link rel="stylesheet" href="/paper.css">
   <script src="/tailwind.js"></script>
+  <!-- Screen-only theme vars synced from host via postMessage -->
+  <style id="swiftcpq-preview-theme">
+    @media screen {
+      :root {
+        --surface-0: #0d0f14;
+        --surface-50: #13161d;
+        --surface-100: #191c24;
+        --text-1: #f0f2f7;
+        --text-2: #a8b0c0;
+        --text-3: #606880;
+        --border: rgba(255,255,255,0.08);
+        --border-subtle: rgba(255,255,255,0.04);
+        --accent: #f59e0b;
+      }
+      html.theme-light {
+        --surface-0: #ffffff;
+        --surface-50: #f7f8fa;
+        --surface-100: #f0f2f5;
+        --text-1: #0d0f14;
+        --text-2: #3a3f4d;
+        --text-3: #6b7280;
+        --border: rgba(0,0,0,0.10);
+        --border-subtle: rgba(0,0,0,0.05);
+        --accent: #d97706;
+      }
+      body { background: var(--surface-0) !important }
+      .sheet {
+        background: white !important;
+        color: #1a1f2a !important;
+      }
+    }
+  </style>
 </head>
 <body class="A4">
 
@@ -54,6 +86,60 @@
 
   <!-- Helper Scripts -->
   <script src="/pageOverflowHandler.js"></script>
+
+  <!-- SwiftCPQ preview bridge: postMessage handshake with ProposalPreview.vue -->
+  <script>
+    (function () {
+      const ACCENT_VARS = {
+        amber:  { dark: '#f59e0b', light: '#d97706' },
+        indigo: { dark: '#6366f1', light: '#4f46e5' },
+        violet: { dark: '#8b5cf6', light: '#7c3aed' },
+        green:  { dark: '#22c55e', light: '#16a34a' },
+        red:    { dark: '#ef4444', light: '#dc2626' },
+      };
+
+      function applyTheme(mode, accent) {
+        document.documentElement.classList.toggle('theme-dark', mode === 'dark');
+        document.documentElement.classList.toggle('theme-light', mode === 'light');
+        const c = ACCENT_VARS[accent] || ACCENT_VARS.amber;
+        const root = document.documentElement;
+        root.style.setProperty('--accent', mode === 'dark' ? c.dark : c.light);
+      }
+
+      // Emit page-count once sheets are known
+      function emitPageCount() {
+        const sheets = document.querySelectorAll('.sheet');
+        window.parent.postMessage({ type: 'page-count', value: sheets.length }, '*');
+
+        // Track which page is visible
+        if (!sheets.length) return;
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              const idx = Array.from(sheets).indexOf(e.target) + 1;
+              window.parent.postMessage({ type: 'visible-page', value: idx }, '*');
+            }
+          });
+        }, { threshold: 0.5 });
+        sheets.forEach((s) => observer.observe(s));
+      }
+
+      // Scroll to a specific page (1-indexed)
+      function scrollToPage(n) {
+        const sheets = document.querySelectorAll('.sheet');
+        const target = sheets[n - 1];
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      window.addEventListener('message', (e) => {
+        if (typeof e.data !== 'object') return;
+        if (e.data.type === 'set-theme') applyTheme(e.data.mode, e.data.accent);
+        if (e.data.type === 'scroll') scrollToPage(e.data.page);
+      });
+
+      window.addEventListener('DOMContentLoaded', emitPageCount);
+    })();
+  </script>
 
 </body>
 </html>

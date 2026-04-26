@@ -426,8 +426,7 @@ function confirmRevert(v: any) {
 
 function openPreview() {
   if (!proposalStore.data) return;
-  const tpl = (proposalStore.data as any).selectedTemplate ?? 'default';
-  window.open(`http://localhost:5005/pdf/${tpl}/${proposalStore.data.id}`);
+  router.push(`/proposals/${proposalStore.data.id}/preview`);
 }
 
 async function downloadPdf() {

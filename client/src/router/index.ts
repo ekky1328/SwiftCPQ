@@ -12,6 +12,7 @@ const routes = [
     { path: '/change-password', component: () => import('./ChangePassword.vue') },
     { path: '/', component: ProposalList },
     { path: '/proposals/:id', component: ProposalEditor },
+    { path: '/proposals/:id/preview', component: () => import('./ProposalPreview.vue') },
     { path: '/catalogue', component: Catalogue },
     { path: '/customers', component: () => import('./Customers.vue') },
     { path: '/suppliers', component: () => import('./Suppliers.vue') },
