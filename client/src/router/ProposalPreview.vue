@@ -32,18 +32,6 @@
       <div style="width: 1px; height: 16px; background: var(--border)" />
 
       <div class="swift-btn-group">
-        <button
-          v-for="sz in [['a4', 'A4'], ['letter', 'US Letter']]"
-          :key="sz[0]"
-          :class="['swift-btn', pageSize === sz[0] ? 'swift-btn--primary' : '']"
-          style="font-size: 11px"
-          @click="pageSize = sz[0]"
-        >{{ sz[1] }}</button>
-      </div>
-
-      <div style="width: 1px; height: 16px; background: var(--border)" />
-
-      <div class="swift-btn-group">
         <Btn @click="zoom = Math.max(50, zoom - 10)">-</Btn>
         <button class="swift-btn" style="min-width: 52px"><span class="mono">{{ zoom }}%</span></button>
         <Btn @click="zoom = Math.min(150, zoom + 10)">+</Btn>
@@ -52,7 +40,7 @@
     </div>
 
     <!-- Three-pane body -->
-    <div style="flex: 1; display: grid; grid-template-columns: 140px 1fr 280px; overflow: hidden">
+    <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 140px 1fr 280px; grid-template-rows: 1fr; overflow: hidden">
 
       <!-- Left: page thumbnails -->
       <div style="border-right: 1px solid var(--border); background: var(--surface-50); overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px">
@@ -69,22 +57,30 @@
       </div>
 
       <!-- Center: A4 canvas with iframe -->
-      <div style="background: var(--surface-0); overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 32px; background-image: radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--text-3) 14%, transparent) 1px, transparent 0); background-size: 16px 16px">
+      <div style="min-height: 0; background: var(--surface-0); overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 32px; background-image: radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--text-3) 14%, transparent) 1px, transparent 0); background-size: 16px 16px">
         <div :style="{
-          width: (pageSize === 'a4' ? '720px' : '680px'),
-          transform: `scale(${zoom / 100})`,
-          transformOrigin: 'top center',
-          height: iframeContentHeight + 'px',
+          width: ((zoom / 100) * 794) + 'px',
+          height: ((zoom / 100) * iframeContentHeight) + 'px',
           background: 'white',
           boxShadow: '0 1px 0 rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.35)',
           position: 'relative',
           flexShrink: 0,
+          overflow: 'hidden',
         }">
+          <!-- iframe is full natural size; outer div scales it via shrinking -->
           <iframe
             v-if="iframeUrl && !iframeError"
             ref="iframeRef"
             :src="iframeUrl"
-            style="width: 100%; height: 100%; border: none; display: block"
+            scrolling="no"
+            :style="{
+              width: '794px',
+              height: iframeContentHeight + 'px',
+              border: 'none',
+              display: 'block',
+              transform: `scale(${zoom / 100})`,
+              transformOrigin: 'top left',
+            }"
             @load="onIframeLoad"
           />
           <div v-else-if="iframeError" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #999; font-size: 13px; padding: 24px; text-align: center">
@@ -169,7 +165,6 @@ const iframeError = ref(false);
 const pageCount = ref(0);
 const iframeContentHeight = ref(1200);
 const activePage = ref(1);
-const pageSize = ref('a4');
 const zoom = ref(85);
 const downloading = ref(false);
 
