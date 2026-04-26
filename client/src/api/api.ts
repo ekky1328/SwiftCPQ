@@ -1,6 +1,17 @@
 
+import type { Proposal } from '../types/Proposal';
+
 const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : '';
 
+/**
+ * Authenticated fetch wrapper with automatic token refresh on 401.
+ * Redirects to /login if refresh fails or the retry is also unauthorised.
+ *
+ * @param {string} input - Path relative to the API base, e.g. '/api/v1/proposal/1'
+ * @param {RequestInit} [init={}] - Standard fetch options
+ * @param {boolean} [isRetry=false] - True when called recursively after a token refresh
+ * @returns {Promise<Response>} Resolved fetch Response
+ */
 async function apiFetch(input: string, init: RequestInit = {}, isRetry = false): Promise<Response> {
     const res = await fetch(`${domain}${input}`, {
         ...init,
@@ -37,8 +48,7 @@ export async function GetProposals() {
         const data = await apiFetch('/api/v1/proposal/');
         return data.json();
     } catch (error) {
-        console.error(`There was an error with 'GetProposals'.`);
-        console.error(error);
+        console.error('GetProposals error:', error);
         return null;
     }
 }
@@ -54,8 +64,7 @@ export async function GetProposalById(id: string) {
         }
         return data.json();
     } catch (error) {
-        console.error(`There was an error with 'GetProposalById'.`);
-        console.error(error);
+        console.error('GetProposalById error:', error);
         return { error: true, message: `There was an issue getting data for proposal with id '${id}'.` };
     }
 }
@@ -71,14 +80,13 @@ export async function CreateNewProposal(proposalTemplate: string = 'default') {
         });
 
         if (!response.ok) {
-            console.error(`Failed to create proposal. Status: ${response.status}`);
+            console.error(`CreateNewProposal error: HTTP ${response.status}`);
             return null;
         }
 
         return response.json();
     } catch (error) {
-        console.error(`There was an error with 'CreateNewProposal'.`);
-        console.error(error);
+        console.error('CreateNewProposal error:', error);
         return null;
     }
 }
@@ -93,8 +101,7 @@ export async function GetCatalogueItems(search?: string) {
         const data = await apiFetch(url);
         return data.json();
     } catch (error) {
-        console.error(`There was an error with 'GetCatalogueItems'.`);
-        console.error(error);
+        console.error('GetCatalogueItems error:', error);
         return null;
     }
 }
@@ -109,8 +116,7 @@ export async function CreateCatalogueItem(item: Record<string, unknown>) {
         if (!response.ok) return null;
         return response.json();
     } catch (error) {
-        console.error(`There was an error with 'CreateCatalogueItem'.`);
-        console.error(error);
+        console.error('CreateCatalogueItem error:', error);
         return null;
     }
 }
@@ -125,8 +131,7 @@ export async function UpdateCatalogueItem(id: string, item: Record<string, unkno
         if (!response.ok) return null;
         return response.json();
     } catch (error) {
-        console.error(`There was an error with 'UpdateCatalogueItem'.`);
-        console.error(error);
+        console.error('UpdateCatalogueItem error:', error);
         return null;
     }
 }
@@ -137,8 +142,7 @@ export async function DeleteCatalogueItem(id: string) {
         if (!response.ok) return false;
         return true;
     } catch (error) {
-        console.error(`There was an error with 'DeleteCatalogueItem'.`);
-        console.error(error);
+        console.error('DeleteCatalogueItem error:', error);
         return false;
     }
 }
@@ -153,8 +157,7 @@ export async function GetProposalVersion(proposalId: string, versionId: string) 
         const data = await apiFetch(`/api/v1/proposal/${proposalId}/versions/${versionId}`);
         return data.json();
     } catch (error) {
-        console.error(`There was an error with 'GetProposalVersion'.`);
-        console.error(error);
+        console.error('GetProposalVersion error:', error);
         return null;
     }
 }
@@ -167,8 +170,7 @@ export async function GetProposalVersions(proposalId: string) {
         const data = await apiFetch(`/api/v1/proposal/${proposalId}/versions`);
         return data.json();
     } catch (error) {
-        console.error(`There was an error with 'GetProposalVersions'.`);
-        console.error(error);
+        console.error('GetProposalVersions error:', error);
         return null;
     }
 }
@@ -184,8 +186,7 @@ export async function RevertProposalVersion(proposalId: string, versionId: strin
         if (!response.ok) return null;
         return response.json();
     } catch (error) {
-        console.error(`There was an error with 'RevertProposalVersion'.`);
-        console.error(error);
+        console.error('RevertProposalVersion error:', error);
         return null;
     }
 }
@@ -193,7 +194,7 @@ export async function RevertProposalVersion(proposalId: string, versionId: strin
 /**
  * Saves Proposal data via PUT
  */
-export async function SaveProposal(proposal: any) {
+export async function SaveProposal(proposal: Proposal) {
     try {
         const response = await apiFetch(`/api/v1/proposal/${proposal.id}`, {
             method: 'PUT',
@@ -202,14 +203,30 @@ export async function SaveProposal(proposal: any) {
         });
 
         if (!response.ok) {
-            console.error(`Failed to save proposal. Status: ${response.status}`);
+            console.error(`SaveProposal error: HTTP ${response.status}`);
             return null;
         }
 
         return response.json();
     } catch (error) {
-        console.error(`There was an error with 'SaveProposal'.`);
-        console.error(error);
+        console.error('SaveProposal error:', error);
+        return null;
+    }
+}
+
+/**
+ * Fetches the rendered PDF for a proposal as a Blob.
+ *
+ * @param {string | number} id - Proposal ID
+ * @returns {Promise<Blob | null>} PDF blob, or null on failure
+ */
+export async function DownloadProposalPdf(id: string | number): Promise<Blob | null> {
+    try {
+        const res = await apiFetch(`/api/v1/proposal/${id}/pdf`);
+        if (!res.ok) return null;
+        return res.blob();
+    } catch (error) {
+        console.error('DownloadProposalPdf error:', error);
         return null;
     }
 }

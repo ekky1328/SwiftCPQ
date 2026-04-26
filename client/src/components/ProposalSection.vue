@@ -10,22 +10,22 @@
             :key="section.id"
             :class="{
                 is_table: isTableContent(section.type),
-                is_hidden: !sectionVisbility,
+                is_hidden: !sectionVisibility,
                 is_active: sectionIsEntered
             }"
         >
             <template #title>
                 <SectionHeader
                     :section="section"
-                    :visibility="sectionVisbility"
+                    :visibility="sectionVisibility"
                     :open-catalogue-picker="openCataloguePicker"
-                    @update:visibility="sectionVisbility = $event"
+                    @update:visibility="sectionVisibility = $event"
                 />
             </template>
 
             <template #content>
                 <component
-                    v-if="sectionVisbility && SECTION_COMPONENT_MAP[section.type]"
+                    v-if="sectionVisibility && SECTION_COMPONENT_MAP[section.type]"
                     :is="SECTION_COMPONENT_MAP[section.type]"
                     :section="section"
                     :open-catalogue-picker="openCataloguePicker"
@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import { ref, provide } from 'vue';
 import type { Component } from 'vue';
+import type { Section } from '../types/Proposal';
 import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
 import SpeedDial from 'primevue/speeddial';
@@ -72,10 +73,10 @@ const SECTION_COMPONENT_MAP: Record<string, Component> = {
 const toast = useToast();
 const proposalStore = useProposalStore();
 
-const { data: section } = defineProps(['data']);
+const { data: section } = defineProps<{ data: Section }>();
 
 const sectionIsEntered = ref<boolean>(false);
-const sectionVisbility = ref<boolean>(true);
+const sectionVisibility = ref<boolean>(true);
 
 const {
     catalogueDialogVisible,

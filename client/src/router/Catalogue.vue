@@ -36,10 +36,10 @@
           </template>
         </Column>
         <Column field="cost" header="Cost" style="width: 120px">
-          <template #body="{ data }">{{ formatCurrency(data.cost) }}</template>
+          <template #body="{ data }">{{ formatCurrency(data.cost, 'AUD', 'en-AU') }}</template>
         </Column>
         <Column field="price" header="Price" style="width: 120px">
-          <template #body="{ data }">{{ formatCurrency(data.price) }}</template>
+          <template #body="{ data }">{{ formatCurrency(data.price, 'AUD', 'en-AU') }}</template>
         </Column>
         <Column header="Margin" style="width: 100px">
           <template #body="{ data }">{{ calcMargin(data.cost, data.price) }}%</template>
@@ -138,6 +138,7 @@ import {
   UpdateCatalogueItem,
   DeleteCatalogueItem,
 } from '../api/api';
+import { formatCurrency } from '../utils/helpers';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -167,10 +168,6 @@ const emptyForm = () => ({
 const form = ref(emptyForm());
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
-}
 
 function calcMargin(cost: number, price: number): string {
   if (!price || price === 0) return '0.00';

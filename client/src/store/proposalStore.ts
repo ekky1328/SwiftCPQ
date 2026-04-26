@@ -8,6 +8,9 @@ import { DEFAULT_INFO_SECTION, DEFAULT_MILESTONES_SECTION, DEFAULT_PRODUCT_SECTI
 import { Item, Milestone, Proposal, Section} from '../types/Proposal';
 import { concatProposalIdentifier } from '../utils/helpers';
 
+// Scales values to integers before arithmetic to avoid floating-point rounding errors
+const DECIMAL_SCALE_FACTOR = 1000;
+
 export const useProposalStore = defineStore('proposal', () => {
     const data = ref<Proposal | null>(null);
 
@@ -41,21 +44,12 @@ export const useProposalStore = defineStore('proposal', () => {
             if (proposalBroadcast.value === null) {
 
                 // Registering broadcast channel
-                let proposalIdenitifer = `proposal-${newData.id}`;
-                proposalBroadcast.value = new BroadcastChannel(proposalIdenitifer);
-                proposalBroadcast.value.postMessage({
-                    action: 'message',
-                    tabId,
-                    value: `Opened proposal (id: ${proposalIdenitifer}) on another tab.`
-                });
+                let proposalIdentifier = `proposal-${newData.id}`;
+                proposalBroadcast.value = new BroadcastChannel(proposalIdentifier);
 
                 proposalBroadcast.value.onmessage = (event) => {
 
                     switch (event.data.action) {
-                        case 'message':
-                            console.log('Broadcast Received:', event.data.value);
-                            break;
-                    
                         case 'update':
                             lastUpdateByTabId.value = event.data.tabId;
                             data.value = JSON.parse(event.data.value);
@@ -127,7 +121,6 @@ export const useProposalStore = defineStore('proposal', () => {
      */
     function recalculateTotals() {
         if (data.value && data.value.sections) {
-            const scaleFactor = 1000;
             const totals: Record<string, { total: number; margin: number; cost: number }> = {};
 
             data.value.sections.forEach(section => {
@@ -135,9 +128,9 @@ export const useProposalStore = defineStore('proposal', () => {
                 const sectionTotals = section.items?.reduce(
                     (acc, item) => {
                         if (!item.isOptional) {
-                            acc.total += Math.round(item.subtotal * scaleFactor);
-                            acc.margin += Math.round(item.margin * scaleFactor);
-                            acc.cost += Math.round(item.qty * (item.cost * scaleFactor));
+                            acc.total += Math.round(item.subtotal * DECIMAL_SCALE_FACTOR);
+                            acc.margin += Math.round(item.margin * DECIMAL_SCALE_FACTOR);
+                            acc.cost += Math.round(item.qty * (item.cost * DECIMAL_SCALE_FACTOR));
                         }
                         return acc;
                     },
@@ -146,7 +139,7 @@ export const useProposalStore = defineStore('proposal', () => {
 
                 
                 delete section._totals;
-                section._totals = { total: sectionTotals.total / scaleFactor, margin: sectionTotals.margin / scaleFactor, cost: sectionTotals.cost / scaleFactor };
+                section._totals = { total: sectionTotals.total / DECIMAL_SCALE_FACTOR, margin: sectionTotals.margin / DECIMAL_SCALE_FACTOR, cost: sectionTotals.cost / DECIMAL_SCALE_FACTOR };
 
                 if (!section.isOptional && section.recurrance) {
                     if (!totals[section.recurrance]) {
@@ -175,7 +168,7 @@ export const useProposalStore = defineStore('proposal', () => {
 
             delete data.value._totals;
             data.value._totals = Object.fromEntries(
-                Object.entries(totals).map(([key, value]) => [key, { total: value.total / scaleFactor, margin: value.margin / scaleFactor, cost: value.cost / scaleFactor }])
+                Object.entries(totals).map(([key, value]) => [key, { total: value.total / DECIMAL_SCALE_FACTOR, margin: value.margin / DECIMAL_SCALE_FACTOR, cost: value.cost / DECIMAL_SCALE_FACTOR }])
             ) as Record<string, { total: number; margin: number; cost: number }>;
 
             totalsRecalculated.value = true;
@@ -488,27 +481,25 @@ export const useProposalStore = defineStore('proposal', () => {
             throw new Error(`Item with id ${itemId} not found in section '${sectionId}'.`);
         }
     
-        const scaleFactor = 1000;
-    
         switch (fieldUpdated) {
             case 'QTY': {
-                item.subtotal = Math.round(item.qty * item.price * scaleFactor) / scaleFactor;
-                item.margin = Math.round((item.price - item.cost) * item.qty * scaleFactor) / scaleFactor;
+                item.subtotal = Math.round(item.qty * item.price * DECIMAL_SCALE_FACTOR) / DECIMAL_SCALE_FACTOR;
+                item.margin = Math.round((item.price - item.cost) * item.qty * DECIMAL_SCALE_FACTOR) / DECIMAL_SCALE_FACTOR;
                 break;
             }
             case 'PRICE': {
-                item.subtotal = Math.round(item.qty * item.price * scaleFactor) / scaleFactor;
-                item.margin = Math.round((item.price - item.cost) * item.qty * scaleFactor) / scaleFactor;
+                item.subtotal = Math.round(item.qty * item.price * DECIMAL_SCALE_FACTOR) / DECIMAL_SCALE_FACTOR;
+                item.margin = Math.round((item.price - item.cost) * item.qty * DECIMAL_SCALE_FACTOR) / DECIMAL_SCALE_FACTOR;
                 break;
             }
             case 'COST': {
-                item.margin = Math.round((item.price - item.cost) * item.qty * scaleFactor) / scaleFactor;
+                item.margin = Math.round((item.price - item.cost) * item.qty * DECIMAL_SCALE_FACTOR) / DECIMAL_SCALE_FACTOR;
                 break;
             }
             case 'SUB_TOTAL': {
                 if (item.qty !== 0) {
-                    item.price = Math.round((Number(item.subtotal) * scaleFactor) / Number(item.qty)) / scaleFactor;
-                    item.margin = Math.round((Number(item.price - item.cost) * Number(item.qty) * scaleFactor)) / scaleFactor;
+                    item.price = Math.round((Number(item.subtotal) * DECIMAL_SCALE_FACTOR) / Number(item.qty)) / DECIMAL_SCALE_FACTOR;
+                    item.margin = Math.round((Number(item.price - item.cost) * Number(item.qty) * DECIMAL_SCALE_FACTOR)) / DECIMAL_SCALE_FACTOR;
                 } else {
                     item.price = 0;
                     item.margin = 0;
@@ -517,8 +508,8 @@ export const useProposalStore = defineStore('proposal', () => {
             }
             case 'MARGIN': {
                 if (item.qty !== 0) {
-                    item.price = Math.round((item.cost * scaleFactor + (item.margin * scaleFactor) / item.qty)) / scaleFactor;
-                    item.subtotal = Math.round(item.qty * item.price * scaleFactor) / scaleFactor;
+                    item.price = Math.round((item.cost * DECIMAL_SCALE_FACTOR + (item.margin * DECIMAL_SCALE_FACTOR) / item.qty)) / DECIMAL_SCALE_FACTOR;
+                    item.subtotal = Math.round(item.qty * item.price * DECIMAL_SCALE_FACTOR) / DECIMAL_SCALE_FACTOR;
                 } else {
                     item.price = item.cost;
                     item.subtotal = 0;
@@ -649,13 +640,11 @@ export const useProposalStore = defineStore('proposal', () => {
     }
 
     /**
-     * Recalculate the values for an item in a section.
-     * - This will update the subtotal and margin for the item based on the field that was updated.
-     * - The fieldUpdated parameter should be one of: 'QTY', 'PRICE', 'COST', 'SUB_TOTAL', 'MARGIN'.
-     * - This function should be called after any changes to the item data.
-     * @param sectionId 
-     * @param itemId 
-     * @param fieldUpdated 
+     * Recalculates milestone allocation and remaining balance for a milestones section.
+     * - Sums milestone amounts against the combined ONE_TIME + YEARLY proposal totals.
+     * - Updates section._milestone_totals in place.
+     * @param sectionId
+     * @param milestoneSection
      */
     function recalculateMilestones(sectionId: number, milestoneSection: Section) {
         if (!data.value) {
@@ -668,7 +657,6 @@ export const useProposalStore = defineStore('proposal', () => {
             throw new Error(`Section with id ${sectionId} had no milestones.`);
         }
         
-        const scaleFactor = 1000;
         delete section._milestone_totals;
         section._milestone_totals = { allocated: 0, remaining: 0 };
         
@@ -684,13 +672,13 @@ export const useProposalStore = defineStore('proposal', () => {
             let milestoneTotal = 0;
             for (let i = 0; i < section.milestones.length; i++) {
                 const milestone = section.milestones[i];
-                milestoneTotal += Math.round(milestone.amount * scaleFactor);
+                milestoneTotal += Math.round(milestone.amount * DECIMAL_SCALE_FACTOR);
             }
 
-            const combinedTotal = ((ONE_TIME?.total || 0) + (YEARLY?.total || 0)) * scaleFactor;
-        
-            section._milestone_totals.allocated = milestoneTotal / scaleFactor;
-            section._milestone_totals.remaining = (combinedTotal - milestoneTotal) / scaleFactor;
+            const combinedTotal = ((ONE_TIME?.total || 0) + (YEARLY?.total || 0)) * DECIMAL_SCALE_FACTOR;
+
+            section._milestone_totals.allocated = milestoneTotal / DECIMAL_SCALE_FACTOR;
+            section._milestone_totals.remaining = (combinedTotal - milestoneTotal) / DECIMAL_SCALE_FACTOR;
         }
         
 

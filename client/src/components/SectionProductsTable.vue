@@ -83,14 +83,14 @@
                 <tr v-if="section._totals">
                     <td class="p-2 bg-gray-200" colspan="4"></td>
                     <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Cost Total'">
-                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.cost) }}
+                        {{ formatCurrency(section._totals.cost) }}
                     </td>
                     <td class="p-2 pr-3 text-right w-25 bg-gray-200"></td>
                     <td class="p-2 pr-3 text-right w-25 bg-gray-200" v-tooltip.top="'Section Margin Total'">
-                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.margin) }}
+                        {{ formatCurrency(section._totals.margin) }}
                     </td>
                     <td class="p-2 pr-3 text-right w-25 font-semibold bg-gray-200" v-tooltip.top="'Section Subtotal'">
-                        {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(section._totals.total) }}
+                        {{ formatCurrency(section._totals.total) }}
                     </td>
                 </tr>
             </template>
@@ -112,6 +112,7 @@ import Inplace from 'primevue/inplace';
 import { useProposalStore } from '../store/proposalStore';
 import { PRODUCT_TYPES } from '../constants/products';
 import { isComment } from '../composables/useSectionTypeChecks';
+import { formatCurrency } from '../utils/helpers';
 import type { Section } from '../types/Proposal';
 
 const props = defineProps<{

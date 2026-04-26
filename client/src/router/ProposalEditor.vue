@@ -63,7 +63,7 @@
             <ul v-if="section.items?.length" class="mt-1 ml-2 space-y-0.5">
               <li v-for="item in section.items" :key="item.id" class="flex justify-between text-xs text-gray-600">
                 <span>{{ item.title || '(unnamed)' }}</span>
-                <span class="tabular-nums">{{ item.qty }}× {{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.price) }}</span>
+                <span class="tabular-nums">{{ item.qty }}× {{ formatCurrency(item.price) }}</span>
               </li>
             </ul>
             <p v-else-if="section.type === 'PRODUCTS'" class="text-xs text-gray-400 mt-1 ml-2">No items</p>
@@ -188,13 +188,13 @@
                 </div>
                 <div class="text-right">
                   <p class="text-sm text-gray-400">
-                    Cost <span class="inline-block w-24 text-red-500 tabular-nums">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.cost) }}</span>
+                    Cost <span class="inline-block w-24 text-red-500 tabular-nums">{{ formatCurrency(values.cost) }}</span>
                   </p>
                   <p class="text-sm text-gray-400">
-                    Margin <span class="inline-block w-24 text-green-500 tabular-nums">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.margin) }}</span>
+                    Margin <span class="inline-block w-24 text-green-500 tabular-nums">{{ formatCurrency(values.margin) }}</span>
                   </p>
                   <p class="text-sm text-black">
-                    Total <span class="inline-block w-24 tabular-nums">{{ Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(values.total) }}</span>
+                    Total <span class="inline-block w-24 tabular-nums">{{ formatCurrency(values.total) }}</span>
                   </p>
                 </div>
               </div>
@@ -214,12 +214,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useToast } from 'primevue/usetoast';
 import Draggable from "vuedraggable";
 import { cloneDeep } from 'lodash';
 
-import { concatProposalIdentifier } from '../utils/helpers'
+import { concatProposalIdentifier, formatCurrency } from '../utils/helpers'
 import ProposalSection from '../components/ProposalSection.vue';
 import { useProposalStore } from '../store/proposalStore'
 
@@ -229,19 +229,17 @@ import SplitButton from 'primevue/splitbutton'
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import OrderList from 'primevue/orderlist';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Badge from 'primevue/badge';
 import DatePicker from 'primevue/datepicker';
-
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 
-import { GetProposalById, SaveProposal, GetProposalVersions, GetProposalVersion, RevertProposalVersion } from '../api/api'
+import { GetProposalById, SaveProposal, GetProposalVersions, GetProposalVersion, RevertProposalVersion, DownloadProposalPdf } from '../api/api'
 
 import { onMounted, onUnmounted, ref } from 'vue'
 import { SECTION_TYPES } from '../constants/sections';
@@ -295,12 +293,6 @@ const proposalOptions = [
     }
 ];
 
-/**
- * This function takes an array of numbers and returns the sum of all elements.
- *
- * @param {number[]} numbers - An array of numbers to be summed.
- * @returns {number} The sum of all numbers in the array.
- */
 async function triggerSaveProposal() {
 
   const payloadCopy = cloneDeep(proposalStore.data);
@@ -354,27 +346,17 @@ function confirmRevert(versionEntry) {
 }
 
 async function downloadPdf() {
-  try {
-    const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : '';
-    const response = await fetch(`${domain}/api/v1/proposal/${proposalStore.data.id}/pdf`, {
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      toast.add({ severity: 'error', summary: 'PDF Error', detail: 'Failed to generate PDF', life: 4000 });
-      return;
-    }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${proposalStore.data.identifier || proposalStore.data.id}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch {
-    toast.add({ severity: 'error', summary: 'PDF Error', detail: 'An error occurred generating the PDF', life: 4000 });
+  const blob = await DownloadProposalPdf(proposalStore.data!.id);
+  if (!blob) {
+    toast.add({ severity: 'error', summary: 'PDF Error', detail: 'Failed to generate PDF', life: 4000 });
+    return;
   }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${proposalStore.data!.identifier || proposalStore.data!.id}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // Keyboard Shortcuts
@@ -422,9 +404,8 @@ onMounted(async () => {
 onUnmounted(() => {
   proposalStore.data = null;
   window.removeEventListener("keydown", handleKeyDown);
-
-  window.addEventListener('focus', handleFocus);
-  window.addEventListener('blur', handleFocus);
+  window.removeEventListener('focus', handleFocus);
+  window.removeEventListener('blur', handleFocus);
 });
 </script>
 

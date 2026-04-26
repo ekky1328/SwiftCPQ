@@ -72,6 +72,7 @@ export async function seed(): Promise<void> {
     last_name: 'Scott',
     username: 'm.scott@dundermifflin.com',
     description: 'Regional Manager of Dunder Mifflin Scranton',
+    isSuperAdmin: true,
     password_hash: await hashPassword('Dunder_M1fflin_$ux!'),
   }).returning('id');
 

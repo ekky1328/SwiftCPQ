@@ -2,20 +2,21 @@ import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { GetCatalogueItems } from '../api/api';
 import { useProposalStore } from '../store/proposalStore';
+import { formatCurrency } from '../utils/helpers';
 
 export function useCataloguePicker() {
     const toast = useToast();
     const proposalStore = useProposalStore();
 
     const catalogueDialogVisible = ref(false);
-    const catalogueItems = ref<any[]>([]);
+    const catalogueItems = ref<CatalogueItem[]>([]);
     const catalogueLoading = ref(false);
     const catalogueSearch = ref('');
     const catalogueTargetSectionId = ref<number | null>(null);
     let catalogueSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
     function formatCataloguePrice(value: number): string {
-        return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+        return formatCurrency(value, 'AUD', 'en-AU');
     }
 
     async function openCataloguePicker(sectionId: number) {
@@ -42,7 +43,7 @@ export function useCataloguePicker() {
         }, 300);
     }
 
-    function onCatalogueRowClick(event: { data: any }) {
+    function onCatalogueRowClick(event: { data: CatalogueItem }) {
         if (catalogueTargetSectionId.value === null) return;
         proposalStore.addCatalogueItemToSection(catalogueTargetSectionId.value, event.data);
         toast.add({ severity: 'success', summary: 'Added', detail: `"${event.data.title}" added to section`, life: 3000 });
