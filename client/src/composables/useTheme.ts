@@ -22,6 +22,7 @@ const initialAccent: ThemeAccent = ssr ? 'amber' : ((localStorage.getItem(STORAG
 
 const mode = ref<ThemeMode>(initialMode);
 const accent = ref<ThemeAccent>(initialAccent);
+const tenantAccent = ref<ThemeAccent | null>(null);
 
 function applyMode(m: ThemeMode) {
   if (ssr) return;
@@ -58,11 +59,25 @@ watch([mode, accent], ([m, a]) => {
   if (!ssr) localStorage.setItem(STORAGE_ACCENT, a);
 }, { immediate: true });
 
+const VALID_ACCENTS = new Set<ThemeAccent>(['amber', 'indigo', 'violet', 'green', 'red']);
+
 export function useTheme() {
   return {
     mode,
     accent,
+    tenantAccent,
     setMode(m: ThemeMode) { mode.value = m; },
     setAccent(a: ThemeAccent) { accent.value = a; },
+    setTenantDefault(a: string) {
+      if (!VALID_ACCENTS.has(a as ThemeAccent)) return;
+      tenantAccent.value = a as ThemeAccent;
+      if (!localStorage.getItem(STORAGE_ACCENT)) {
+        accent.value = a as ThemeAccent;
+      }
+    },
+    resetToTenantDefault() {
+      localStorage.removeItem(STORAGE_ACCENT);
+      if (tenantAccent.value) accent.value = tenantAccent.value;
+    },
   };
 }

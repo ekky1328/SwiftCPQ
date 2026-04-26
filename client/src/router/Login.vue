@@ -1,85 +1,117 @@
 <template>
-  <main>
-    <div class="login-card">
-      <div class="login-header">
-        <span class="logo">⚡</span>
-        <h1>SwiftCPQ</h1>
+  <div class="swift-app" :class="`theme-${mode}`" style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center">
+    <div style="width: 360px; display: flex; flex-direction: column; gap: 20px">
+
+      <!-- Brand -->
+      <div style="text-align: center; padding-bottom: 4px">
+        <div style="font-size: 22px; font-weight: 600; color: var(--text-1)">⚡ SwiftCPQ</div>
+        <div style="font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px">Sign in to your workspace</div>
       </div>
 
-      <form v-if="authMethods?.local" @submit.prevent="handleLogin" class="login-form">
-        <div class="field">
-          <label for="username">Username</label>
-          <InputText
-            id="username"
+      <!-- Loading config probe -->
+      <div v-if="!authMethods" style="display: flex; justify-content: center; padding: 16px">
+        <span class="spinner" />
+      </div>
+
+      <template v-else>
+        <!-- Error -->
+        <Tag v-if="errorMessage" kind="error" style="width: 100%; justify-content: center">{{ errorMessage }}</Tag>
+
+        <!-- Local form -->
+        <template v-if="authMethods.local">
+          <input
+            ref="usernameInput"
+            class="swift-input"
             v-model="username"
             placeholder="Username"
             autocomplete="username"
             :disabled="loading"
-            fluid
+            style="width: 100%"
           />
-        </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <Password
-            id="password"
+          <input
+            class="swift-input"
+            type="password"
             v-model="password"
             placeholder="Password"
-            :feedback="false"
-            :toggle-mask="true"
             autocomplete="current-password"
             :disabled="loading"
-            fluid
+            style="width: 100%"
+            @keyup.enter="handleLogin"
           />
+          <Btn variant="primary" style="width: 100%; justify-content: center" :disabled="loading" @click="handleLogin">
+            {{ loading ? 'Signing in...' : 'Sign in' }}
+          </Btn>
+        </template>
+
+        <!-- Divider -->
+        <div v-if="authMethods.local && authMethods.entra" style="display: flex; align-items: center; gap: 8px; color: var(--text-3)">
+          <div style="flex: 1; height: 1px; background: var(--border)" />
+          <span class="mono" style="font-size: 10px">OR</span>
+          <div style="flex: 1; height: 1px; background: var(--border)" />
         </div>
 
-        <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
+        <!-- Entra -->
+        <Btn v-if="authMethods.entra" style="width: 100%; justify-content: center; gap: 6px" @click="handleEntraLogin">
+          <Icon name="microsoft" />
+          Continue with Microsoft
+        </Btn>
 
-        <Button
-          type="submit"
-          label="Sign in"
-          :loading="loading"
-          fluid
-        />
-      </form>
-
-      <div v-if="authMethods?.local && authMethods?.entra" class="divider">
-        <span>or</span>
-      </div>
-
-      <Button
-        v-if="authMethods?.entra"
-        label="Sign in with Microsoft"
-        severity="secondary"
-        icon="pi pi-microsoft"
-        fluid
-        @click="handleEntraLogin"
-      />
-
-      <div v-if="!authMethods" class="loading-state">
-        <ProgressSpinner style="width: 32px; height: 32px" />
-      </div>
+        <!-- Dev quickfill -->
+        <template v-if="isDev">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <Tag kind="warn" style="font-size: 10px">Dev</Tag>
+            <span style="font-size: 11px; color: var(--text-3)">Quick login</span>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <button
+              v-for="u in DEV_USERS"
+              :key="u.label"
+              class="swift-btn"
+              style="font-size: 11px"
+              @click="quickLogin(u)"
+            >{{ u.label }}</button>
+          </div>
+        </template>
+      </template>
     </div>
-  </main>
+
+    <!-- Status footer -->
+    <div style="position: fixed; bottom: 0; left: 0; right: 0">
+      <StatusBar>
+        <span><span class="swift-status-dot" style="background: var(--info)" />&nbsp;login</span>
+      </StatusBar>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-import Message from 'primevue/message';
-import ProgressSpinner from 'primevue/progressspinner';
 import { useAuthStore } from '../store/authStore';
+import { useTheme } from '../composables/useTheme';
+import Btn from '../ui/Btn.vue';
+import Tag from '../ui/Tag.vue';
+import Icon from '../ui/Icon.vue';
+import StatusBar from '../ui/StatusBar.vue';
+
+interface AuthConfig { local: boolean; entra: boolean; multiTenant: boolean }
 
 const router = useRouter();
 const auth = useAuthStore();
+const { mode } = useTheme();
 
 const username = ref('');
 const password = ref('');
 const loading = ref(false);
 const errorMessage = ref('');
 const authMethods = ref<AuthConfig | null>(null);
+const usernameInput = ref<HTMLInputElement | null>(null);
+
+const isDev = import.meta.env.DEV;
+const DEV_USERS = [
+  { label: 'Michael Scott (admin)', username: 'm.scott@dundermifflin.com',  password: 'Dunder_M1fflin_$ux!' },
+  { label: 'Dwight Schrute',        username: 'd.schrute@dundermifflin.com', password: 'Dunder_M1fflin_Rule$!' },
+];
 
 const domain = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : '';
 
@@ -94,6 +126,8 @@ onMounted(async () => {
   } catch {
     authMethods.value = { local: true, entra: false, multiTenant: false };
   }
+  await nextTick();
+  usernameInput.value?.focus();
 });
 
 async function handleLogin() {
@@ -114,81 +148,26 @@ async function handleLogin() {
 function handleEntraLogin() {
   window.location.href = `${domain}/api/v1/auth/entra/redirect`;
 }
+
+function quickLogin(u: { username: string; password: string }) {
+  username.value = u.username;
+  password.value = u.password;
+  handleLogin();
+}
 </script>
 
 <style scoped>
-main {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  background-color: #ebeef0;
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }
 
-.login-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2.5rem;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-}
-
-.login-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-}
-
-.logo {
-  font-size: 2rem;
-}
-
-h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1.25rem 0;
-  color: #9ca3af;
-  font-size: 0.875rem;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #e5e7eb;
-}
-
-.loading-state {
-  display: grid;
-  place-items: center;
-  padding: 2rem;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

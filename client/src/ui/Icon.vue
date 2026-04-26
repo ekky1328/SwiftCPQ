@@ -43,6 +43,7 @@ const MAP: Record<string, string> = {
   db: '▤',
   branch: '⎇',
   signOut: '⎋',
+  microsoft: '⊞',
 };
 
 const glyph = computed(() => MAP[props.name] ?? props.name);

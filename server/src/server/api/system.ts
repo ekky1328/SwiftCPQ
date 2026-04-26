@@ -7,10 +7,10 @@ const systemRouter = express.Router();
 
 /**
  * Method: GET
- * Endpoint: /api/v1/system/core-settings
- * - Gets the system core settings from the database
+ * Endpoint: /api/v1/system/settings
+ * - Gets the system settings from the databaseq
  */
-systemRouter.get<{}, MessageResponse>('/core-settings', async (req, res, next) => {
+systemRouter.get<{}, MessageResponse>('/settings', async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     const tenantId = req.user!.tenantId;
 
@@ -77,10 +77,10 @@ systemRouter.get<{}, MessageResponse>('/core-settings', async (req, res, next) =
 
 /**
  * Method: PUT
- * Endpoint: /api/v1/system/core-settings
- * - Updates the system core settings
+ * Endpoint: /api/v1/system/settings
+ * - Updates the system settings
  */
-systemRouter.put<{}, MessageResponse>('/core-settings', async (req, res, next) => {
+systemRouter.put<{}, MessageResponse>('/settings', async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     const tenantId = req.user!.tenantId;
 

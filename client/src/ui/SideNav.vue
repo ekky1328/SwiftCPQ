@@ -41,6 +41,12 @@
       </div>
       <button
         class="swift-btn swift-btn--ghost swift-btn--icon"
+        :title="mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="setMode(mode === 'dark' ? 'light' : 'dark')"
+        style="font-size: 13px"
+      >{{ mode === 'dark' ? '☀' : '☽' }}</button>
+      <button
+        class="swift-btn swift-btn--ghost swift-btn--icon"
         v-tooltip.top="'Sign out'"
         @click="auth.logout()"
       >
@@ -54,6 +60,7 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '../store/authStore';
+import { useTheme } from '../composables/useTheme';
 import Icon from './Icon.vue';
 
 interface Link {
@@ -66,6 +73,7 @@ interface Link {
 
 const auth = useAuthStore();
 const route = useRoute();
+const { mode, setMode } = useTheme();
 
 const workspaceLinks = computed<Link[]>(() => {
   const links: Link[] = [
