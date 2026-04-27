@@ -106,6 +106,16 @@ export async function GetCatalogueItems(search?: string) {
     }
 }
 
+export async function GetCatalogueItem(id: string) {
+    try {
+        const data = await apiFetch(`/api/v1/catalogue/${id}`);
+        return data.json();
+    } catch (error) {
+        console.error('GetCatalogueItem error:', error);
+        return null;
+    }
+}
+
 export async function CreateCatalogueItem(item: Record<string, unknown>) {
     try {
         const response = await apiFetch('/api/v1/catalogue/', {

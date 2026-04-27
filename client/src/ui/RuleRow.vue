@@ -33,7 +33,7 @@ const tones: Record<string, { label: string; kind: string }> = {
   auto:    { label: 'auto',    kind: 'info' },
   default: { label: 'default', kind: 'info' },
   require: { label: 'require', kind: 'warn' },
-  block:   { label: 'block',   kind: 'danger' },
+  block:   { label: 'block',   kind: 'error' },
 };
 
 const tone = computed(() => tones[props.type ?? 'auto']);

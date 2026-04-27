@@ -61,22 +61,18 @@ export function requirePermission(permissionName: string) {
       return;
     }
 
-    if (req.user.isSuperAdmin) {
-      next();
-      return;
-    }
-
     try {
-      const row = await db('tenant_role_user')
-        .join('tenant_role_permission', 'tenant_role_user.role_id', 'tenant_role_permission.role_id')
-        .join('tenant_permission', 'tenant_role_permission.permission_id', 'tenant_permission.id')
-        .where('tenant_role_user.user_id', req.user.userId)
-        .where('tenant_permission.name', permissionName)
-        .where('tenant_permission.is_active', true)
+      const row = await db('tenant')
+        .where('id', req.user.tenantId)
         .first();
 
       if (!row) {
         res.status(403).json({ message: 'Forbidden' });
+        return;
+      }
+
+      if (row.admin_user_ids === req.user.userId) {
+        next();
         return;
       }
 

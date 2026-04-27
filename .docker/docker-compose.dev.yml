@@ -16,6 +16,17 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: swiftcpq-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@swiftcpq.com
+      PGADMIN_DEFAULT_PASSWORD: swiftcpq
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
 volumes:
   pgdata_dev:

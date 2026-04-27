@@ -1,250 +1,211 @@
 <template>
-  <div id="customers-page">
-    <Toolbar class="customers-toolbar m-2 mt-0 !border-none">
-      <template #start>
-        <h1 class="m-0 text-3xl">Customers</h1>
-      </template>
-      <template #end>
-        <Button label="New Customer" icon="pi pi-plus" size="small" severity="contrast" @click="openCreate" />
-      </template>
-    </Toolbar>
+  <div class="swift-app" style="height: 100%; display: flex; flex-direction: column">
 
-    <div class="m-2">
-      <DataTable :value="customers" :loading="loading" size="small" striped-rows data-key="id">
-        <template #empty>
-          <div class="text-center py-12">
-            <p class="text-gray-500">No customers yet.</p>
-            <Button label="Add your first customer" size="small" severity="contrast" class="mt-3" @click="openCreate" />
-          </div>
-        </template>
-        <Column field="name" header="Name" />
-        <Column field="email" header="Email" />
-        <Column field="phone" header="Phone" />
-        <Column style="width: 120px">
-          <template #body="{ data }">
-            <div class="flex gap-2">
-              <Button icon="pi pi-pencil" size="small" text @click="openEdit(data)" v-tooltip="'Edit'" />
-              <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDelete(data)" v-tooltip="'Delete'" />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+    <TopBar :crumbs="['Customers']">
+      <div class="swift-search">
+        <span style="position: absolute; left: 8px; color: var(--text-3); font-size: 13px">⌕</span>
+        <input
+          v-model="searchQuery"
+          class="swift-input"
+          placeholder="Search name, email, phone..."
+          style="padding-left: 28px"
+        />
+      </div>
+      <Btn variant="primary" icon="plus" kbd="N" @click="openCreate">New customer</Btn>
+    </TopBar>
+
+    <div class="swift-tabs" style="flex-shrink: 0">
+      <button
+        v-for="tab in tabs"
+        :key="tab.key"
+        :class="['swift-tab', activeTab === tab.key ? 'active' : '']"
+        @click="activeTab = tab.key"
+      >
+        {{ tab.label }}
+        <span class="count">{{ tabCount(tab.key) }}</span>
+      </button>
     </div>
 
-    <!-- Create Dialog -->
-    <Dialog v-model:visible="createDialogVisible" header="New Customer" modal style="width: 480px">
-      <div class="flex flex-col gap-4 pt-2">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Name <span class="text-red-500">*</span></label>
-          <InputText v-model="createForm.name" placeholder="Acme Corp" fluid />
+    <div style="flex: 1; overflow: auto; min-height: 0">
+      <div style="padding: 4px 16px; font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); font-family: var(--font-mono)">
+        <span>{{ filtered.length }} of {{ customers.length }}</span>
+        <span style="color: var(--text-4)">·</span>
+        <span>sort: name ↑</span>
+      </div>
+
+      <table class="swift-table">
+        <thead>
+          <tr>
+            <th style="width: 32px"><input type="checkbox" @click.stop /></th>
+            <th class="sorted">Name <span class="sort-ico">↑</span></th>
+            <th>Primary contact</th>
+            <th>Email</th>
+            <th style="width: 160px">Phone</th>
+            <th>Location</th>
+            <th style="width: 80px">Status</th>
+            <th style="width: 80px">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="c in filtered"
+            :key="c.id"
+            style="cursor: pointer"
+            @click="navigateTo(c)"
+          >
+            <td><input type="checkbox" @click.stop /></td>
+            <td>{{ c.name }}</td>
+            <td style="color: var(--text-2)">{{ contactName(c) || '—' }}</td>
+            <td style="color: var(--text-2)">{{ c.email || '—' }}</td>
+            <td class="mono" style="color: var(--text-2); font-size: 11px">{{ c.phone || '—' }}</td>
+            <td style="color: var(--text-2); font-size: 11px">{{ formatAddress(c.address) || '—' }}</td>
+            <td>
+              <Tag dot :kind="c.isActive ? 'success' : 'warn'">{{ c.isActive ? 'active' : 'inactive' }}</Tag>
+            </td>
+            <td style="color: var(--text-3); font-size: 11px; font-family: var(--font-mono)">{{ relativeDate(c.modifiedOnDate) }}</td>
+          </tr>
+          <tr v-if="!loading && filtered.length === 0">
+            <td colspan="8">
+              <div class="swift-empty">No customers match your search.</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <StatusBar>
+      <span><span class="swift-status-dot" :style="{ background: loading ? 'var(--warn)' : 'var(--success)' }" />&nbsp;{{ loading ? 'loading' : 'synced' }}</span>
+      <span>{{ customers.length }} customers</span>
+      <template #right>
+        <span>↑↓ navigate · ↵ open · ⌘N new · / search</span>
+      </template>
+    </StatusBar>
+
+    <!-- Create dialog -->
+    <Dialog v-model:visible="createDialogVisible" header="New customer" modal style="width: 480px">
+      <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 8px">
+        <div>
+          <label class="swift-label">Name *</label>
+          <input v-model="createForm.name" class="swift-input" placeholder="Acme Corp" style="width: 100%" />
         </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Email</label>
-          <InputText v-model="createForm.email" placeholder="contact@acme.com" fluid />
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+          <div>
+            <label class="swift-label">Email</label>
+            <input v-model="createForm.email" class="swift-input" placeholder="contact@acme.com" style="width: 100%" />
+          </div>
+          <div>
+            <label class="swift-label">Phone</label>
+            <input v-model="createForm.phone" class="swift-input mono" placeholder="+61 2 0000 0000" style="width: 100%" />
+          </div>
         </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Phone</label>
-          <InputText v-model="createForm.phone" placeholder="+61 2 0000 0000" fluid />
-        </div>
-        <Message v-if="createError" severity="error" :closable="false">{{ createError }}</Message>
+        <div v-if="createError" style="color: var(--error); font-size: 12px">{{ createError }}</div>
       </div>
       <template #footer>
-        <Button label="Cancel" severity="secondary" @click="createDialogVisible = false" />
-        <Button label="Create" :loading="saving" @click="submitCreate" />
+        <div style="display: flex; gap: 8px; justify-content: flex-end">
+          <Btn @click="createDialogVisible = false">Cancel</Btn>
+          <Btn variant="primary" :disabled="saving" @click="submitCreate">
+            {{ saving ? 'Saving...' : 'Create' }}
+          </Btn>
+        </div>
       </template>
     </Dialog>
-
-    <!-- Edit Dialog with tabs -->
-    <Dialog v-model:visible="editDialogVisible" :header="editingCustomer ? `Edit: ${editingCustomer.name}` : ''" modal style="width: 640px">
-      <Tabs v-model:value="editTab">
-        <TabList>
-          <Tab value="details">Details</Tab>
-          <Tab value="contacts">Contacts</Tab>
-          <Tab value="locations">Locations</Tab>
-        </TabList>
-
-        <!-- Details Tab -->
-        <TabPanel value="details">
-          <div class="flex flex-col gap-4 pt-3">
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium">Name <span class="text-red-500">*</span></label>
-              <InputText v-model="editForm.name" fluid />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium">Email</label>
-              <InputText v-model="editForm.email" fluid />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium">Phone</label>
-              <InputText v-model="editForm.phone" fluid />
-            </div>
-            <Message v-if="editError" severity="error" :closable="false">{{ editError }}</Message>
-            <div class="flex justify-end gap-2 mt-2">
-              <Button label="Save Details" :loading="saving" @click="submitEdit" />
-            </div>
-          </div>
-        </TabPanel>
-
-        <!-- Contacts Tab -->
-        <TabPanel value="contacts">
-          <div class="pt-3">
-            <div class="flex justify-end mb-2">
-              <Button label="Add Contact" icon="pi pi-plus" size="small" severity="contrast" @click="openAddContact" />
-            </div>
-            <DataTable :value="contacts" size="small" striped-rows data-key="id">
-              <template #empty><p class="text-center text-gray-500 py-4">No contacts.</p></template>
-              <Column field="name" header="Name" />
-              <Column field="email" header="Email" />
-              <Column field="phone" header="Phone" />
-              <Column style="width: 80px">
-                <template #body="{ data }">
-                  <div class="flex gap-1">
-                    <Button icon="pi pi-pencil" size="small" text @click="openEditContact(data)" />
-                    <Button icon="pi pi-trash" size="small" text severity="danger" @click="deleteContact(data)" />
-                  </div>
-                </template>
-              </Column>
-            </DataTable>
-          </div>
-        </TabPanel>
-
-        <!-- Locations Tab -->
-        <TabPanel value="locations">
-          <div class="pt-3">
-            <div class="flex justify-end mb-2">
-              <Button label="Add Location" icon="pi pi-plus" size="small" severity="contrast" @click="openAddLocation" />
-            </div>
-            <DataTable :value="locations" size="small" striped-rows data-key="id">
-              <template #empty><p class="text-center text-gray-500 py-4">No locations.</p></template>
-              <Column field="street" header="Street" />
-              <Column field="city" header="City" />
-              <Column field="state" header="State" />
-              <Column field="country" header="Country" />
-              <Column style="width: 80px">
-                <template #body="{ data }">
-                  <div class="flex gap-1">
-                    <Button icon="pi pi-pencil" size="small" text @click="openEditLocation(data)" />
-                    <Button icon="pi pi-trash" size="small" text severity="danger" @click="deleteLocation(data)" />
-                  </div>
-                </template>
-              </Column>
-            </DataTable>
-          </div>
-        </TabPanel>
-      </Tabs>
-    </Dialog>
-
-    <!-- Contact sub-dialog -->
-    <Dialog v-model:visible="contactDialogVisible" :header="editingContact ? 'Edit Contact' : 'Add Contact'" modal style="width: 420px">
-      <div class="flex flex-col gap-4 pt-2">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Name <span class="text-red-500">*</span></label>
-          <InputText v-model="contactForm.name" fluid />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Email</label>
-          <InputText v-model="contactForm.email" fluid />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Phone</label>
-          <InputText v-model="contactForm.phone" fluid />
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Cancel" severity="secondary" @click="contactDialogVisible = false" />
-        <Button :label="editingContact ? 'Save' : 'Add'" :loading="saving" @click="submitContact" />
-      </template>
-    </Dialog>
-
-    <!-- Location sub-dialog -->
-    <Dialog v-model:visible="locationDialogVisible" :header="editingLocation ? 'Edit Location' : 'Add Location'" modal style="width: 420px">
-      <div class="flex flex-col gap-4 pt-2">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Street</label>
-          <InputText v-model="locationForm.street" fluid />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium">City</label>
-            <InputText v-model="locationForm.city" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium">State</label>
-            <InputText v-model="locationForm.state" fluid />
-          </div>
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Country</label>
-          <InputText v-model="locationForm.country" fluid />
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Cancel" severity="secondary" @click="locationDialogVisible = false" />
-        <Button :label="editingLocation ? 'Save' : 'Add'" :loading="saving" @click="submitLocation" />
-      </template>
-    </Dialog>
-
-    <ConfirmDialog />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useConfirm } from 'primevue/useconfirm';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Toolbar from 'primevue/toolbar';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
 import Dialog from 'primevue/dialog';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanel from 'primevue/tabpanel';
-import Message from 'primevue/message';
-import ConfirmDialog from 'primevue/confirmdialog';
+
+import TopBar from '../ui/TopBar.vue';
+import StatusBar from '../ui/StatusBar.vue';
+import Btn from '../ui/Btn.vue';
+import Tag from '../ui/Tag.vue';
 
 import {
-  GetCustomers, CreateCustomer, UpdateCustomer, DeleteCustomer,
-  GetCustomerById,
-  CreateCustomerContact, UpdateCustomerContact, DeleteCustomerContact,
-  CreateCustomerLocation, UpdateCustomerLocation, DeleteCustomerLocation,
+  GetCustomers, CreateCustomer,
 } from '../api/api';
 
-const confirm = useConfirm();
+interface CustomerRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  isActive: boolean;
+  contact: { firstName: string; lastName: string };
+  address: { street: string; city: string; state: string; postcode: string; country: string };
+  createdOnDate: string;
+  modifiedOnDate: string;
+}
+
+const router = useRouter();
 const toast = useToast();
 
-// ── List state ──────────────────────────────────────────────────────────────
-const customers = ref<any[]>([]);
+const customers = ref<CustomerRow[]>([]);
 const loading = ref(false);
 const saving = ref(false);
+const searchQuery = ref('');
+const activeTab = ref<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ALL');
 
-// ── Create dialog ────────────────────────────────────────────────────────────
 const createDialogVisible = ref(false);
 const createError = ref('');
 const createForm = ref({ name: '', email: '', phone: '' });
 
-// ── Edit dialog ──────────────────────────────────────────────────────────────
-const editDialogVisible = ref(false);
-const editingCustomer = ref<any>(null);
-const editTab = ref('details');
-const editError = ref('');
-const editForm = ref({ name: '', email: '', phone: '' });
-const contacts = ref<any[]>([]);
-const locations = ref<any[]>([]);
+const tabs = [
+  { key: 'ALL' as const, label: 'All' },
+  { key: 'ACTIVE' as const, label: 'Active' },
+  { key: 'ARCHIVED' as const, label: 'Archived' },
+];
 
-// ── Contact sub-dialog ────────────────────────────────────────────────────────
-const contactDialogVisible = ref(false);
-const editingContact = ref<any>(null);
-const contactForm = ref({ name: '', email: '', phone: '' });
+const filtered = computed(() => {
+  const q = searchQuery.value.toLowerCase();
+  return customers.value.filter((c) => {
+    if (activeTab.value === 'ACTIVE' && !c.isActive) return false;
+    if (activeTab.value === 'ARCHIVED' && c.isActive) return false;
+    if (!q) return true;
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.email.toLowerCase().includes(q) ||
+      c.phone.toLowerCase().includes(q)
+    );
+  });
+});
 
-// ── Location sub-dialog ───────────────────────────────────────────────────────
-const locationDialogVisible = ref(false);
-const editingLocation = ref<any>(null);
-const locationForm = ref({ street: '', city: '', state: '', country: '' });
+function tabCount(key: string): number {
+  if (key === 'ALL') return customers.value.length;
+  if (key === 'ACTIVE') return customers.value.filter((c) => c.isActive).length;
+  if (key === 'ARCHIVED') return customers.value.filter((c) => !c.isActive).length;
+  return 0;
+}
 
-// ── Load ──────────────────────────────────────────────────────────────────────
+function contactName(c: CustomerRow): string {
+  const f = c.contact?.firstName ?? '';
+  const l = c.contact?.lastName ?? '';
+  return `${f} ${l}`.trim();
+}
+
+function formatAddress(a: CustomerRow['address']): string {
+  if (!a) return '';
+  const parts = [a.street, a.city, a.state, a.postcode, a.country].filter(Boolean);
+  return parts.join(', ');
+}
+
+function relativeDate(iso: string): string {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const d = Math.floor(diff / 86400000);
+  if (d === 0) return 'today';
+  if (d === 1) return '1d';
+  if (d < 7) return `${d}d`;
+  if (d < 14) return '1w';
+  return `${Math.floor(d / 7)}w`;
+}
+
+function navigateTo(c: CustomerRow) {
+  router.push(`/customers/${c.id}`);
+}
+
 async function loadCustomers() {
   loading.value = true;
   try {
@@ -254,7 +215,6 @@ async function loadCustomers() {
   }
 }
 
-// ── Create ────────────────────────────────────────────────────────────────────
 function openCreate() {
   createForm.value = { name: '', email: '', phone: '' };
   createError.value = '';
@@ -281,169 +241,5 @@ async function submitCreate() {
   }
 }
 
-// ── Edit ──────────────────────────────────────────────────────────────────────
-async function openEdit(customer: any) {
-  editingCustomer.value = customer;
-  editForm.value = { name: customer.name, email: customer.email ?? '', phone: customer.phone ?? '' };
-  editError.value = '';
-  editTab.value = 'details';
-  contacts.value = [];
-  locations.value = [];
-  editDialogVisible.value = true;
-
-  // Load full customer detail with contacts/locations
-  const full = await GetCustomerById(customer.id);
-  if (full) {
-    contacts.value = full.contacts ?? [];
-    locations.value = full.locations ?? [];
-  }
-}
-
-async function submitEdit() {
-  editError.value = '';
-  if (!editForm.value.name.trim()) {
-    editError.value = 'Name is required.';
-    return;
-  }
-  saving.value = true;
-  try {
-    const updated = await UpdateCustomer(editingCustomer.value.id, editForm.value);
-    if (!updated) throw new Error();
-    const idx = customers.value.findIndex((c) => c.id === editingCustomer.value.id);
-    if (idx !== -1) customers.value[idx] = { ...customers.value[idx], ...updated };
-    editingCustomer.value = { ...editingCustomer.value, ...updated };
-    toast.add({ severity: 'success', summary: 'Saved', detail: 'Customer updated', life: 3000 });
-  } catch {
-    editError.value = 'Failed to save changes.';
-  } finally {
-    saving.value = false;
-  }
-}
-
-// ── Delete ────────────────────────────────────────────────────────────────────
-function confirmDelete(customer: any) {
-  confirm.require({
-    message: `Delete "${customer.name}"? This cannot be undone.`,
-    header: 'Confirm Delete',
-    icon: 'pi pi-trash',
-    rejectProps: { label: 'Cancel', severity: 'secondary' },
-    acceptProps: { label: 'Delete', severity: 'danger' },
-    accept: async () => {
-      const ok = await DeleteCustomer(customer.id);
-      if (ok) {
-        customers.value = customers.value.filter((c) => c.id !== customer.id);
-        toast.add({ severity: 'success', summary: 'Deleted', detail: 'Customer removed', life: 3000 });
-      } else {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 3000 });
-      }
-    },
-  });
-}
-
-// ── Contacts ──────────────────────────────────────────────────────────────────
-function openAddContact() {
-  editingContact.value = null;
-  contactForm.value = { name: '', email: '', phone: '' };
-  contactDialogVisible.value = true;
-}
-
-function openEditContact(contact: any) {
-  editingContact.value = contact;
-  contactForm.value = { name: contact.name, email: contact.email ?? '', phone: contact.phone ?? '' };
-  contactDialogVisible.value = true;
-}
-
-async function submitContact() {
-  saving.value = true;
-  try {
-    if (editingContact.value) {
-      const updated = await UpdateCustomerContact(editingCustomer.value.id, editingContact.value.id, contactForm.value);
-      if (updated) {
-        const idx = contacts.value.findIndex((c) => c.id === editingContact.value.id);
-        if (idx !== -1) contacts.value[idx] = updated;
-        toast.add({ severity: 'success', summary: 'Saved', detail: 'Contact updated', life: 3000 });
-      }
-    } else {
-      const created = await CreateCustomerContact(editingCustomer.value.id, contactForm.value);
-      if (created) {
-        contacts.value.push(created);
-        toast.add({ severity: 'success', summary: 'Added', detail: 'Contact added', life: 3000 });
-      }
-    }
-    contactDialogVisible.value = false;
-  } finally {
-    saving.value = false;
-  }
-}
-
-async function deleteContact(contact: any) {
-  const ok = await DeleteCustomerContact(editingCustomer.value.id, contact.id);
-  if (ok) {
-    contacts.value = contacts.value.filter((c) => c.id !== contact.id);
-    toast.add({ severity: 'success', summary: 'Removed', detail: 'Contact removed', life: 3000 });
-  }
-}
-
-// ── Locations ─────────────────────────────────────────────────────────────────
-function openAddLocation() {
-  editingLocation.value = null;
-  locationForm.value = { street: '', city: '', state: '', country: '' };
-  locationDialogVisible.value = true;
-}
-
-function openEditLocation(location: any) {
-  editingLocation.value = location;
-  locationForm.value = {
-    street: location.street ?? '',
-    city: location.city ?? '',
-    state: location.state ?? '',
-    country: location.country ?? '',
-  };
-  locationDialogVisible.value = true;
-}
-
-async function submitLocation() {
-  saving.value = true;
-  try {
-    if (editingLocation.value) {
-      const updated = await UpdateCustomerLocation(editingCustomer.value.id, editingLocation.value.id, locationForm.value);
-      if (updated) {
-        const idx = locations.value.findIndex((l) => l.id === editingLocation.value.id);
-        if (idx !== -1) locations.value[idx] = updated;
-        toast.add({ severity: 'success', summary: 'Saved', detail: 'Location updated', life: 3000 });
-      }
-    } else {
-      const created = await CreateCustomerLocation(editingCustomer.value.id, locationForm.value);
-      if (created) {
-        locations.value.push(created);
-        toast.add({ severity: 'success', summary: 'Added', detail: 'Location added', life: 3000 });
-      }
-    }
-    locationDialogVisible.value = false;
-  } finally {
-    saving.value = false;
-  }
-}
-
-async function deleteLocation(location: any) {
-  const ok = await DeleteCustomerLocation(editingCustomer.value.id, location.id);
-  if (ok) {
-    locations.value = locations.value.filter((l) => l.id !== location.id);
-    toast.add({ severity: 'success', summary: 'Removed', detail: 'Location removed', life: 3000 });
-  }
-}
-
-onMounted(() => loadCustomers());
+onMounted(loadCustomers);
 </script>
-
-<style scoped>
-#customers-page {
-  min-height: 100vh;
-}
-
-.customers-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-</style>

@@ -11,7 +11,7 @@
     "skipLibCheck": true,  // Skip type-checking of declaration files
     "isolatedModules": true,  // Required by ts-jest; each file transpiled independently
     "baseUrl": ".",  // Set base path for relative imports,
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "*": ["node_modules/*"]
     }
