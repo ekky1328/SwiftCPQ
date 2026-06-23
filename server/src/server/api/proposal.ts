@@ -6,6 +6,7 @@ import { stripBackToProposal } from '../helpers/validators';
 import { Proposal, Section, Item, Milestone } from '../../types/Proposal';
 import { calculateProposalTotals } from '../helpers/calculation';
 import { fromCents, toCents } from '../helpers/money';
+import { signRenderToken } from '../helpers/jwt';
 
 const proposalRouter = express.Router();
 
@@ -105,7 +106,7 @@ export function mapMilestoneFromDb(row: Record<string, unknown>): Milestone {
 /**
  * Fetches a full proposal (with sections, items, milestones, author, customer) by ID.
  */
-async function fetchProposalById(proposalId: string): Promise<Proposal | null> {
+export async function fetchProposalById(proposalId: string): Promise<Proposal | null> {
   const row = await db('proposal')
     .select(
       'proposal.*',
@@ -203,7 +204,7 @@ async function fetchProposalById(proposalId: string): Promise<Proposal | null> {
 /**
  * Fetches CoreSettings from the database for a given tenant.
  */
-async function fetchCoreSettings(tenantId: string): Promise<Record<string, unknown> | null> {
+export async function fetchCoreSettings(tenantId: string): Promise<Record<string, unknown> | null> {
   const settings = await db('tenant_settings').where('tenant_id', tenantId).first();
   if (!settings) return null;
 
@@ -565,8 +566,12 @@ proposalRouter.get<{}, MessageResponse>('/:id/pdf', async (req, res, next) => {
     }
 
     const tenantId = proposal.tenant_id;
+    const renderToken = signRenderToken(id, tenantId);
     const pdfResponse = await fetch(`${templaterUrl}/download/${templateId}/${id}?tenantId=${tenantId}`, {
-      headers: { 'x-service-token': serviceToken },
+      headers: {
+        'x-service-token': serviceToken,
+        'x-render-token': renderToken,
+      },
     });
 
     if (!pdfResponse.ok) {

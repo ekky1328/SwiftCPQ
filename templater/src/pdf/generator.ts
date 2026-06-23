@@ -6,8 +6,12 @@ import puppeteer from 'puppeteer';
  * @param proposalId  The proposal UUID
  * @param port        The port this templater is running on (for the internal render URL)
  */
-export async function generatePdf(templateId: string, proposalId: string, port: number | string, tenantId?: string): Promise<Buffer> {
-  const renderUrl = `http://localhost:${port}/pdf/${templateId}/${proposalId}${tenantId ? `?tenantId=${tenantId}` : ''}`;
+export async function generatePdf(templateId: string, proposalId: string, port: number | string, tenantId?: string, renderToken?: string): Promise<Buffer> {
+  const params = new URLSearchParams();
+  if (tenantId) params.set('tenantId', tenantId);
+  if (renderToken) params.set('renderToken', renderToken);
+  const query = params.toString();
+  const renderUrl = `http://localhost:${port}/pdf/${templateId}/${proposalId}${query ? `?${query}` : ''}`;
 
   const browser = await puppeteer.launch({
     headless: true,

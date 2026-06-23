@@ -33,3 +33,19 @@ export function verifyAccessToken(token: string): TokenPayload {
 export function verifyRefreshToken(token: string): TokenPayload {
   return jwt.verify(token, refreshSecret()) as TokenPayload;
 }
+
+export interface RenderTokenPayload {
+  proposalId: string;
+  tenantId: string;
+  scope: 'render';
+}
+
+export function signRenderToken(proposalId: string, tenantId: string): string {
+  return jwt.sign({ proposalId, tenantId, scope: 'render' }, accessSecret(), { expiresIn: '5m' });
+}
+
+export function verifyRenderToken(token: string): RenderTokenPayload {
+  const decoded = jwt.verify(token, accessSecret()) as RenderTokenPayload;
+  if (decoded.scope !== 'render') throw new Error('Invalid token scope');
+  return decoded;
+}

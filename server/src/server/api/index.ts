@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { requireAuth, requirePermission, requireSuperAdmin } from '../middlewares';
+import { requireAuth, requirePermission, requireSuperAdmin, requireRenderToken } from '../middlewares';
 import { PERMISSIONS } from '../helpers/permissions';
 import authRouter from './auth';
 import proposalRouter from './proposal';
@@ -15,9 +15,11 @@ import supplierSkuMappingRouter from './supplier-sku-mapping';
 import supplierInventoryRouter from './supplier-inventory';
 import ingestionRouter from './ingestion';
 import adminRouter from './admin';
+import renderRouter from './render';
 
 const router = express.Router();
 
+router.use('/render', requireRenderToken, renderRouter);
 router.use('/auth', authRouter);
 router.use('/proposal', requireAuth, proposalRouter);
 router.use('/customer', requireAuth, customerRouter);
